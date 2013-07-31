@@ -1,0 +1,9 @@
+@(
+)(
+	implicit request: com.lucidchart.open.nark.request.AppRequest[_]
+)
+@import play.filters.csrf.CSRF.Token
+@import play.api.Play.configuration
+@import play.api.Play.current
+
+<input name="@configuration.getString("csrf.token.name")" value="@Token.getToken.value" type="hidden" />

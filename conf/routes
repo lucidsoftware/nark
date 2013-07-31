@@ -3,7 +3,13 @@
 # ~~~~
 
 # Home page
-GET     /                           controllers.Application.index
+GET     /                           com.lucidchart.open.nark.controllers.Application.index
+
+# authentication
+GET     /login                      com.lucidchart.open.nark.controllers.AuthController.login
+POST    /login                      com.lucidchart.open.nark.controllers.AuthController.loginSubmit
+GET     /logout                     com.lucidchart.open.nark.controllers.AuthController.logout
+GET     /openid-callback            com.lucidchart.open.nark.controllers.AuthController.openidCallback
 
 # Map static resources from the /public folder to the /assets URL path
 GET     /assets/*file               controllers.Assets.at(path="/public", file)
