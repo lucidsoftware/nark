@@ -6,16 +6,10 @@
 @import com.lucidchart.open.nark.views
 @import play.api.i18n.Messages
 
-@com.lucidchart.open.nark.views.html.layouts.main("Hello World!") {
-
-<div class="container">
-
+@com.lucidchart.open.nark.views.html.layouts.main("Login") {
 	<h3>OpenID Login</h3>
 	@helper.form(action = routes.AuthController.loginSubmit()) {
 		@views.html.helpers.csrfHiddenInput()
 		<button class="btn btn-large btn-primary" type="submit">Login with Google</button>
 	}
-
-</div>
-
 }
