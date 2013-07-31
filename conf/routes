@@ -12,4 +12,5 @@ GET     /logout                     com.lucidchart.open.nark.controllers.AuthCon
 GET     /openid-callback            com.lucidchart.open.nark.controllers.AuthController.openidCallback
 
 # Map static resources from the /public folder to the /assets URL path
+GET     /favicon.ico                controllers.Assets.at(path="/public", file = "img/favicon.png")
 GET     /assets/*file               controllers.Assets.at(path="/public", file)
