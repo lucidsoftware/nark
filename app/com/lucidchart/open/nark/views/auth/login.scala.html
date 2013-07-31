@@ -8,22 +8,14 @@
 
 @com.lucidchart.open.nark.views.html.layouts.main("Hello World!") {
 
-<style type="text/css">
-  body {
-    padding-top: 40px;
-    padding-bottom: 40px;
-    background-color: #f5f5f5;
-  }
-</style>
-
 <div class="container">
 
-	<h3>OpenID</h3>
+	<h3>OpenID Login</h3>
 	@helper.form(action = routes.AuthController.loginSubmit()) {
 		@views.html.helpers.csrfHiddenInput()
 		<button class="btn btn-large btn-primary" type="submit">Login with Google</button>
 	}
 
-</div> <!-- /container -->
+</div>
 
 }

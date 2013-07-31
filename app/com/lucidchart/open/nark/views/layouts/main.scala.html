@@ -7,21 +7,55 @@
 )(
 	implicit request: com.lucidchart.open.nark.request.AppRequest[_]
 )
+@import com.lucidchart.open.nark.controllers
 
 <!DOCTYPE HTML>
 <html>
 	<head>
 		<title>@title</title>
 		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+		<link rel="stylesheet" type="text/css" href="@routes.Assets.at("css/main.css")" />
+		<link rel="stylesheet" type="text/css" href="@routes.Assets.at("bootstrap-2.3.2/css/bootstrap.min.css")" />
+		<style>
+			body {
+				padding-top: 60px; /* 60px to make the container go all the way to the bottom of the topbar */
+			}
+		</style>
 
 		@for(style <- styles) {
 			<link rel="stylesheet" type="text/css" href="@routes.Assets.at("css/" + style)" />
 		}
 	</head>
 	<body>
-		@content
+		<div class="navbar navbar-inverse navbar-fixed-top">
+			<div class="navbar-inner">
+				<div class="container">
+					<button type="button" class="btn btn-navbar" data-toggle="collapse" data-target=".nav-collapse">
+						<span class="icon-bar">a</span>
+						<span class="icon-bar">b</span>
+						<span class="icon-bar">c</span>
+					</button>
+					<a class="brand" href="@controllers.routes.Application.index()">Nark</a>
+					<div class="nav-collapse collapse">
+						<ul class="nav">
+							<li class="active"><a href="#">Home</a></li>
+							<li><a href="#about">About</a></li>
+							<li><a href="#contact">Contact</a></li>
+						</ul>
+					</div>
+				</div>
+			</div>
+		</div>
+		
+		<div class="container">
+			@content
+		</div>
 
 		@* JS at the end so the page renders faster (except jquery because we use the onload wrapper all over) *@
+		<script type="text/javascript" src="@routes.Assets.at("js/jquery-1.9.0.min.js")"></script>
+		<script type="text/javascript" src="@routes.Assets.at("bootstrap-2.3.2/js/bootstrap.min.js")"></script>
 		@for(script <- scripts) {
 			<script type="text/javascript" src="@routes.Assets.at("js/" + script)"></script>
 		}
