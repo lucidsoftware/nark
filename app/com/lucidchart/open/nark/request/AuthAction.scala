@@ -47,7 +47,7 @@ trait AuthActionBuilder {
 			}
 			
 			// we discard the auth cookie here mostly for dev purposes
-			Done(Redirect(routes.AuthController.login()).discardingCookies(Auth.discardingCookie).withCookies(origDestCookie))
+			Done(Redirect(routes.Application.index()).discardingCookies(Auth.discardingCookie).withCookies(origDestCookie))
 		}
 	}
 	
@@ -73,6 +73,15 @@ trait AuthActionBuilder {
 	 * Action to ensure the requester is logged out.
 	 */
 	def loggedOut(block: => EssentialAction): EssentialAction = logged(block)(defaultInAction)
+
+	/**
+	 * Action to check whether or not a user is logged in
+	 */
+	def maybeAuthenticatedUser(block: (Option[User]) => EssentialAction): EssentialAction = logged {
+		block(None)
+	} { session =>
+		block(UserModel.findUserByID(session.userId))
+	}
 	
 	/**
 	 * Action to ensure an authenticated user is logged in

@@ -1,12 +1,13 @@
 @(
 )(
-	implicit request: com.lucidchart.open.nark.request.AppRequest[_]
+	implicit
+	request: com.lucidchart.open.nark.request.AppRequest[_],
+	userOption: Option[com.lucidchart.open.nark.models.records.User]
 )
 @import com.lucidchart.open.nark.controllers.routes
 @import com.lucidchart.open.nark.views
-@import play.api.i18n.Messages
 
-@com.lucidchart.open.nark.views.html.layouts.main("Home") {
+@com.lucidchart.open.nark.views.html.layouts.main("Home", userOption = userOption) {
 	<h3>Welcome to Nark!</h3>
 	<div class="well">
 		Nark was originally created by <a href="https://www.lucidchart.com/" target="_blank">Lucid Software Inc.</a>

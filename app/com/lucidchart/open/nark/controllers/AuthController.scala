@@ -78,23 +78,11 @@ class AuthController extends AppController {
 	}
 	
 	/**
-	 * Show the login page
+	 * Begin an OpenID login
 	 */
-	def login = AuthAction.loggedOut {
-		TimedAction("auth.login.form") {
+	def openidLogin = AuthAction.loggedOut {
+		TimedAction("auth.login.openid") {
 			AppAction { implicit request =>
-				Ok(views.html.auth.login())
-			}
-		}
-	}
-	
-	/**
-	 * Called when the form on the login page (email/password)
-	 * has been submitted
-	 */
-	def loginSubmit = AuthAction.loggedOut {
-		TimedAction("auth.login.formSubmit") {
-			AppAction(BodyParsers.parse.urlFormEncoded) { implicit request =>
 				try {
 					// this code was taken, almost copy/paste, from
 					// https://code.google.com/p/openid4java/wiki/SampleConsumer
@@ -123,7 +111,7 @@ class AuthController extends AppController {
 				catch {
 					case e: OpenIDException => {
 						Logger.error("OpenID login error", e)
-						BadRequest(views.html.auth.login())
+						BadRequest
 					}
 				}
 			}
@@ -139,7 +127,7 @@ class AuthController extends AppController {
 				val discardDiscovery = DiscardingCookie("openid-discovery")
 				
 				request.cookies.get("openid-discovery") match {
-					case None => Redirect(routes.AuthController.login()).flashing(AppFlash.error("The OpenID request failed. Are your cookies turned on?", "OpenID Failure"))
+					case None => Redirect(routes.Application.index()).flashing(AppFlash.error("The OpenID request failed. Are your cookies turned on?", "OpenID Failure"))
 					case Some(discoveredCookie) => {
 						val discoveredOption = try {
 							val parts = URLDecoder.decode(discoveredCookie.value, "UTF-8").split("\\|", 2).toList
@@ -159,7 +147,7 @@ class AuthController extends AppController {
 						}
 						
 						discoveredOption match {
-							case None => Redirect(routes.AuthController.login()).discardingCookies(discardDiscovery) // they tampered with their cookie
+							case None => Redirect(routes.Application.index()).discardingCookies(discardDiscovery) // they tampered with their cookie
 							case Some(discovered) => try {
 								val receivingURL = "http://" + request.host + request.request.uri.toString
 								val response = new ParameterList(JavaConversions.mapAsJavaMap(request.queryString.map { case (k,v) => (k, v.toArray) }))
@@ -211,12 +199,10 @@ class AuthController extends AppController {
 	def logout = AuthAction.loggedIn {
 		TimedAction("auth.logout") {
 			AppAction { implicit request =>
-				Redirect(routes.AuthController.login()).discardingCookies(Auth.discardingCookie).flashing(AppFlash.success("You have been logged out successfully.", "Logged Out"))
+				Redirect(routes.Application.index()).discardingCookies(Auth.discardingCookie).flashing(AppFlash.success("You have been logged out successfully.", "Logged Out"))
 			}
 		}
 	}
 }
 
 object AuthController extends AuthController
-
-case class AuthOpenIDSubmission(identity: String)

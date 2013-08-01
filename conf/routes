@@ -6,8 +6,7 @@
 GET     /                           com.lucidchart.open.nark.controllers.Application.index
 
 # authentication
-GET     /login                      com.lucidchart.open.nark.controllers.AuthController.login
-POST    /login                      com.lucidchart.open.nark.controllers.AuthController.loginSubmit
+GET     /login                      com.lucidchart.open.nark.controllers.AuthController.openidLogin
 GET     /logout                     com.lucidchart.open.nark.controllers.AuthController.logout
 GET     /openid-callback            com.lucidchart.open.nark.controllers.AuthController.openidCallback
 
