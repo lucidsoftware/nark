@@ -73,7 +73,7 @@ class AuthController extends AppController {
 	protected def loginRedirect(userId: UUID, rememberme: Boolean)(implicit request: RequestHeader) = {
 		val authCookie = Auth.generateAuthCookie(userId, rememberme, request.headers.get("User-Agent").getOrElse(""))
 		val origDestCookie = DiscardingCookie("origdest")
-		val destination = request.cookies.get("origdest").map(_.value).getOrElse(routes.Application.index().url)
+		val destination = request.cookies.get("origdest").map(_.value).getOrElse(routes.HomeController.index().url)
 		Redirect(destination).withCookies(authCookie).discardingCookies(origDestCookie)
 	}
 	
@@ -127,7 +127,7 @@ class AuthController extends AppController {
 				val discardDiscovery = DiscardingCookie("openid-discovery")
 				
 				request.cookies.get("openid-discovery") match {
-					case None => Redirect(routes.Application.index()).flashing(AppFlash.error("The OpenID request failed. Are your cookies turned on?", "OpenID Failure"))
+					case None => Redirect(routes.HomeController.index()).flashing(AppFlash.error("The OpenID request failed. Are your cookies turned on?", "OpenID Failure"))
 					case Some(discoveredCookie) => {
 						val discoveredOption = try {
 							val parts = URLDecoder.decode(discoveredCookie.value, "UTF-8").split("\\|", 2).toList
@@ -147,7 +147,7 @@ class AuthController extends AppController {
 						}
 						
 						discoveredOption match {
-							case None => Redirect(routes.Application.index()).discardingCookies(discardDiscovery) // they tampered with their cookie
+							case None => Redirect(routes.HomeController.index()).discardingCookies(discardDiscovery) // they tampered with their cookie
 							case Some(discovered) => try {
 								val receivingURL = "http://" + request.host + request.request.uri.toString
 								val response = new ParameterList(JavaConversions.mapAsJavaMap(request.queryString.map { case (k,v) => (k, v.toArray) }))
@@ -199,7 +199,7 @@ class AuthController extends AppController {
 	def logout = AuthAction.loggedIn {
 		TimedAction("auth.logout") {
 			AppAction { implicit request =>
-				Redirect(routes.Application.index()).discardingCookies(Auth.discardingCookie).flashing(AppFlash.success("You have been logged out successfully.", "Logged Out"))
+				Redirect(routes.HomeController.index()).discardingCookies(Auth.discardingCookie).flashing(AppFlash.success("You have been logged out successfully.", "Logged Out"))
 			}
 		}
 	}

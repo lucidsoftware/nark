@@ -47,7 +47,7 @@ trait AuthActionBuilder {
 			}
 			
 			// we discard the auth cookie here mostly for dev purposes
-			Done(Redirect(routes.Application.index()).discardingCookies(Auth.discardingCookie).withCookies(origDestCookie))
+			Done(Redirect(routes.HomeController.index()).discardingCookies(Auth.discardingCookie).withCookies(origDestCookie))
 		}
 	}
 	
@@ -66,7 +66,7 @@ trait AuthActionBuilder {
 	 */
 	def defaultInAction(session: Auth.Session) = EssentialAction { requestHeader =>
 		StatsD.increment("authaction.notloggedout")
-		Done(Redirect(routes.Application.index()))
+		Done(Redirect(routes.HomeController.index()))
 	}
 	
 	/**

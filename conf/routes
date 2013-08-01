@@ -3,7 +3,7 @@
 # ~~~~
 
 # Home page
-GET     /                           com.lucidchart.open.nark.controllers.Application.index
+GET     /                           com.lucidchart.open.nark.controllers.HomeController.index
 
 # authentication
 GET     /login                      com.lucidchart.open.nark.controllers.AuthController.openidLogin
