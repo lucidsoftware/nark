@@ -15,7 +15,8 @@ object ApplicationBuild extends Build {
 		"mysql" % "mysql-connector-java" % "5.1.23",
 		"commons-io" % "commons-io" % "2.4",
 		"org.apache.commons" % "commons-email" % "1.3",
-		"org.openid4java" % "openid4java" % "0.9.7"
+		"org.openid4java" % "openid4java" % "0.9.7",
+		"org.apache.httpcomponents" % "httpclient" % "4.2.5"
 	)
 
 
