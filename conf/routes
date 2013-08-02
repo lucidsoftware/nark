@@ -14,8 +14,8 @@ GET     /openid-callback            com.lucidchart.open.nark.controllers.AuthCon
 GET     /dashboard/create           com.lucidchart.open.nark.controllers.DashboardsController.create
 POST    /dashboard/create           com.lucidchart.open.nark.controllers.DashboardsController.createSubmit
 GET     /dashboard/edit/:uuid       com.lucidchart.open.nark.controllers.DashboardsController.edit(uuid: java.util.UUID)
-GET     /dashboard/:url             com.lucidchart.open.nark.controllers.DashboardsController.dashboard(url: String)
 GET     /dashboard/toggle/:uuid     com.lucidchart.open.nark.controllers.DashboardsController.toggleActivation(uuid: java.util.UUID)
+GET     /d/:url                     com.lucidchart.open.nark.controllers.DashboardsController.dashboard(url: String)
 
 # Graphs
 GET     /graph/:dashboardId/add     com.lucidchart.open.nark.controllers.GraphsController.add(dashboardId: java.util.UUID)
