@@ -1,0 +1,47 @@
+@(
+	dashboard: com.lucidchart.open.nark.models.records.Dashboard,
+	dashboards: List[com.lucidchart.open.nark.models.records.Dashboard]
+)(
+	implicit
+	request: com.lucidchart.open.nark.request.AppRequest[_],
+	user: com.lucidchart.open.nark.models.records.User
+)
+@import com.lucidchart.open.nark.controllers.routes
+@import com.lucidchart.open.nark.views
+
+@com.lucidchart.open.nark.views.html.layouts.main("Home", userOption = Some(user), dashboards = dashboards) {
+	<h3>Edit dashboard <a href="/dashboard/@dashboard.url">@dashboard.name</a></h3>
+	<br>
+	<form class="form-horizontal" action="/dashboard/create" method="post">
+		<fieldset>
+
+			<input type="hidden" name=@request.TOKEN_NAME value=@request.tokenValue />
+			<input type="hidden" name="uuid" value=@dashboard.id />
+			<!-- Text input-->
+			<div class="control-group">
+				<label class="control-label" for="name">Name</label>
+				<div class="controls">
+					<input id="name" name="name" type="text" placeholder="Dashboard's name" class="input-xlarge" required="" value=@dashboard.name>
+				</div>
+			</div>
+
+			<!-- Text input-->
+			<div class="control-group">
+				<label class="control-label" for="url">URL</label>
+				<div class="controls">
+					<input id="url" name="url" type="text" placeholder="Dashboard's shortcut url" class="input-xlarge" required="" value=@dashboard.url>
+				</div>
+			</div>
+
+			<!-- Button -->
+			<div class="control-group">
+				<label class="control-label" for="edit"></label>
+				<div class="controls">
+					<button id="edit" name="edit" class="btn btn-primary">Edit</button>
+				</div>
+			</div>
+
+		</fieldset>
+	</form>
+
+}

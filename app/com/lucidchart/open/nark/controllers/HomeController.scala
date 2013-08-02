@@ -5,6 +5,7 @@ import play.api.mvc.Action
 import com.lucidchart.open.nark.request.AppAction
 import com.lucidchart.open.nark.request.AuthAction
 import com.lucidchart.open.nark.views
+import com.lucidchart.open.nark.models.DashboardModel
 
 class HomeController extends AppController {
 	/**
@@ -13,7 +14,7 @@ class HomeController extends AppController {
 	 */
 	def index = AuthAction.maybeAuthenticatedUser { implicit userOption =>
 		AppAction { implicit request =>
-			Ok(views.html.application.index())
+			Ok(views.html.application.index(DashboardModel.findAll()))
 		}
 	}
 }

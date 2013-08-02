@@ -1,0 +1,38 @@
+@(
+	graphs: List[com.lucidchart.open.nark.models.records.Graph],
+	dashboard: com.lucidchart.open.nark.models.records.Dashboard,
+	dashboards: List[com.lucidchart.open.nark.models.records.Dashboard]
+)(
+	implicit
+	request: com.lucidchart.open.nark.request.AppRequest[_],
+	user: com.lucidchart.open.nark.models.records.User
+)
+@import com.lucidchart.open.nark.controllers.routes
+@import com.lucidchart.open.nark.views
+
+@com.lucidchart.open.nark.views.html.layouts.main("Home", userOption = Some(user), dashboards = dashboards) {
+	<h3>List of graphs for dashboard <a href="/dashboard/@dashboard.url">@dashboard.name</a></h3>
+	<br>
+
+	<table cellpadding="0" cellspacing="0" border="0" class="table table-striped table-bordered" id="graph-table">
+		<thead>
+		<tr>
+			<th>Graph</th>
+			<th>Active</th>
+		</tr>
+		</thead>
+		<tbody>
+		@graphs.map { case graph =>
+		<tr>
+			<td>@graph.name</td>
+			@if(user.id == graph.userId) {
+				<td><a href="/graph/toggle/@graph.id?return_url=@request.path">@{!graph.deleted}</a></td>
+			} else {
+				<td>@{!graph.deleted}</td>
+			}
+		</tr>
+		}
+		</tbody>
+	</table>
+
+}

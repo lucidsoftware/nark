@@ -2,13 +2,15 @@
 	title: String,
 	scripts: List[String] = List(),
 	styles: List[String] = List(),
-	userOption: Option[com.lucidchart.open.nark.models.records.User] = None
+	userOption: Option[com.lucidchart.open.nark.models.records.User] = None,
+	dashboards: List[com.lucidchart.open.nark.models.records.Dashboard]
 )(
 	content: Html
 )(
 	implicit request: com.lucidchart.open.nark.request.AppRequest[_]
 )
 @import com.lucidchart.open.nark.controllers
+@import com.lucidchart.open.nark.controllers.{routes=>lucidRoutes}
 
 <!DOCTYPE HTML>
 <html>
@@ -51,10 +53,13 @@
 							<li class="dropdown">
 								<a href="#" class="dropdown-toggle" data-toggle="dropdown">Dashboards <b class="caret"></b></a>
 								<ul class="dropdown-menu">
-									<li><a href="#">Dashboard 1 (last used)</a></li>
-									<li><a href="#">Dashboard 2</a></li>
-									<li><a href="#">Dashboard 3</a></li>
-									<li><a href="#">Dashboard 4</a></li>
+									@if(userOption.isDefined) {
+										<li><a href="@lucidRoutes.DashboardsController.create">Create a new dashboard</a></li>
+										<li class="divider"></li>
+									}
+									@dashboards.map { case dashboard =>
+										<li><a href=/dashboard/@dashboard.url>@dashboard.name</a></li>
+									}
 								</ul>
 							</li>
 							<li><a href="#">Alerts</a></li>

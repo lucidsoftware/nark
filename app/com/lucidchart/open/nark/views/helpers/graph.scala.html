@@ -1,0 +1,19 @@
+@(
+	graph: com.lucidchart.open.nark.models.records.Graph
+)(
+	implicit
+	request: com.lucidchart.open.nark.request.AppRequest[_],
+	userOption: Option[com.lucidchart.open.nark.models.records.User]
+)
+@import com.lucidchart.open.nark.controllers.routes
+@import com.lucidchart.open.nark.views
+
+<b>@graph.name</b>
+@if(userOption.isDefined && userOption.get.id == graph.userId) {
+	&nbsp;<a href="">edit</a>
+}
+<br>
+@if(!graph.deleted) {
+	SHOW GRAPH HERE
+	<br>
+}

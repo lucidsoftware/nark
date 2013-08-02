@@ -1,0 +1,39 @@
+@(
+	graph: com.lucidchart.open.nark.models.records.Graph,
+	dashboard: com.lucidchart.open.nark.models.records.Dashboard,
+	dashboards: List[com.lucidchart.open.nark.models.records.Dashboard]
+)(
+	implicit
+	request: com.lucidchart.open.nark.request.AppRequest[_],
+	user: com.lucidchart.open.nark.models.records.User
+)
+@import com.lucidchart.open.nark.controllers.routes
+@import com.lucidchart.open.nark.views
+
+@com.lucidchart.open.nark.views.html.layouts.main("Home", userOption = Some(user), dashboards = dashboards) {
+	<h3>Add a new target to graph @graph.name for dashboard <a href="/dashboard/@dashboard.url">@dashboard.name</a></h3>
+	<br>
+	<form class="form-horizontal" action="/target/@graph.id/add" method="post">
+		<fieldset>
+
+			<input type="hidden" name=@request.TOKEN_NAME value=@request.tokenValue />
+			<!-- Text input-->
+			<div class="control-group">
+				<label class="control-label" for="target">Target</label>
+				<div class="controls">
+					<input id="target" name="target" type="text" placeholder="Graphite Target" class="input-xlarge" required="">
+					<p class="help-block">Eg. stats.counters.servers.com.lucidchart.mt.eiger.mongod.27018.insert.count</p>
+				</div>
+			</div>
+
+			<!-- Button -->
+			<div class="control-group">
+				<label class="control-label" for="add"></label>
+				<div class="controls">
+					<button id="add" name="add" class="btn btn-primary">Add</button>
+				</div>
+			</div>
+
+		</fieldset>
+	</form>
+}
