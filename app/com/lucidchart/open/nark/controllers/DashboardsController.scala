@@ -5,12 +5,28 @@ import com.lucidchart.open.nark.views
 import com.lucidchart.open.nark.models.{GraphModel, DashboardModel}
 import com.lucidchart.open.nark.models.records.Dashboard
 import java.util.UUID
+import play.api.data._
+import play.api.data.Forms._
+import validation.Constraints
 
 class DashboardsController extends AppController {
 
+	private case class CreateDashboard(name: String, url: String, id: Option[String]) {
+		val uuid = id.map(i => UUID.fromString(i))
+	}
+
+	private val createForm = Form(
+		mapping(
+			"name" -> text.verifying(Constraints.pattern("^[a-zA-Z0-9]*$".r, error = "Only alpha-numberic text allowed")),
+			"url" -> text.verifying(Constraints.pattern("^[a-zA-Z0-9]*$".r, error = "Only alpha-numberic text allowed")),
+			"uuid" -> optional(text.verifying(Constraints.pattern("[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}".r)))
+		)(CreateDashboard.apply)(CreateDashboard.unapply)
+	)
+
 	def create = AuthAction.authenticatedUser { implicit user =>
 		AppAction { implicit request =>
-			Ok(views.html.dashboards.create(DashboardModel.findAll()))
+			val form = createForm.fill(CreateDashboard("", "", None))
+			Ok(views.html.dashboards.create(form, DashboardModel.findAll()))
 		}
 	}
 
@@ -24,6 +40,7 @@ class DashboardsController extends AppController {
 				Redirect(routes.HomeController.index()).flashing(AppFlash.warning("Dashboard does not belong to the current user."))
 			}
 			else {
+				routes.DashboardsController.createSubmit()
 				Ok(views.html.dashboards.edit(dashboard.get, DashboardModel.findAll()))
 			}
 		}
@@ -31,18 +48,24 @@ class DashboardsController extends AppController {
 
 	def createSubmit = AuthAction.authenticatedUser { implicit user =>
 		AppAction { implicit request =>
-			val data : Map[String, Seq[String]] = request.body.asFormUrlEncoded.getOrElse(Map())
-			val name = data("name").head
-			val url = data("url").head
-			if (data.get("uuid").isDefined) {
-				val existingDashboard = DashboardModel.findDashboardByID(UUID.fromString(data("uuid").head)).get
-				DashboardModel.createDashboard(existingDashboard.copy(name = name, url = url))
-				Redirect(routes.DashboardsController.create()).flashing(AppFlash.success(name + " dashboard has been updated successfully."))
-			}
-			else {
-				DashboardModel.createDashboard(new Dashboard(name, url, user.id, false))
-				Redirect(routes.DashboardsController.create()).flashing(AppFlash.success(name + " dashboard added successfully."))
-			}
+				createForm.bindFromRequest().fold(
+					formWithErrors => {
+						Ok(views.html.dashboards.create(formWithErrors, DashboardModel.findAll()))
+					},
+					data => {
+					val name = data.name
+					val url = data.url
+					if (data.uuid.isDefined) {
+						val existingDashboard = DashboardModel.findDashboardByID(data.uuid.get).get
+						DashboardModel.createDashboard(existingDashboard.copy(name = name, url = url))
+						Redirect(routes.DashboardsController.create()).flashing(AppFlash.success(name + " dashboard has been updated successfully."))
+					}
+					else {
+						DashboardModel.createDashboard(new Dashboard(name, url, user.id, false))
+						Redirect(routes.DashboardsController.create()).flashing(AppFlash.success(name + " dashboard added successfully."))
+					}
+				}
+			)
 		}
 	}
 

@@ -2,19 +2,17 @@ package com.lucidchart.open.nark.models
 
 import java.util.UUID
 
-import records.{Target, Graph}
+import records.Graph
 
 import AnormImplicits._
 import anorm._
 import anorm.SqlParser._
 import play.api.Play.current
 import play.api.db.DB
-import annotation.target
-import scala.annotation
 
 object GraphTypes extends Enumeration {
-	val NORMAL = Value(0,"normal")
-	val STACKED = Value(1,"stacked")
+	val NORMAL = Value(0,"Normal")
+	val STACKED = Value(1,"Stacked")
 }
 
 class GraphModel extends AppModel {

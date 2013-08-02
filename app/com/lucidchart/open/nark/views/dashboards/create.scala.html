@@ -1,4 +1,5 @@
 @(
+	formCreate:Form[_],
 	dashboards: List[com.lucidchart.open.nark.models.records.Dashboard]
 )(
 	implicit
@@ -8,41 +9,18 @@
 @import com.lucidchart.open.nark.controllers.{routes=>narkRoutes}
 @import com.lucidchart.open.nark.views
 @import com.lucidchart.open.nark.views.html.helpers
+@import helper.twitterBootstrap._
+@import helper._
 
 @com.lucidchart.open.nark.views.html.layouts.main("Home", userOption = Some(user), dashboards = dashboards) {
 	<h3>Create a new dashboard</h3>
-		<br>
-	<form class="form-horizontal" action="@narkRoutes.DashboardsController.create()" method="post">
+	<br>
+	@helper.form(action=narkRoutes.DashboardsController.createSubmit()) {
 		<fieldset>
-
 			@helpers.csrfHiddenInput()
-			<!-- Text input-->
-			<div class="control-group">
-				<label class="control-label" for="name">Name</label>
-				<div class="controls">
-					<input id="name" name="name" type="text" placeholder="Dashboard's name" class="input-xlarge" required="">
-					<p class="help-block">Eg. Vitals</p>
-				</div>
-			</div>
-
-			<!-- Text input-->
-			<div class="control-group">
-				<label class="control-label" for="url">URL</label>
-				<div class="controls">
-					<input id="url" name="url" type="text" placeholder="Dashboard's shortcut url" class="input-xlarge" required="">
-					<p class="help-block">Eg. vitals</p>
-				</div>
-			</div>
-
-			<!-- Button -->
-			<div class="control-group">
-				<label class="control-label" for="create"></label>
-				<div class="controls">
-					<button id="create" name="create" class="btn btn-primary">Create</button>
-				</div>
-			</div>
-
+			@helper.inputText(formCreate("name"), 'class -> "input-xlarge", '_label -> "Name", 'placeholder -> "Eg. Vitals", 'required -> true, '_showConstraints -> false)
+			@helper.inputText(formCreate("url"), 'class -> "input-xlarge", '_label -> "URL", 'placeholder -> "Eg. vitals", 'required -> true, '_showConstraints -> false)
+			<button id="create" name="create" class="btn btn-primary">Create</button>
 		</fieldset>
-	</form>
-
+	}
 }
