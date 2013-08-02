@@ -14,7 +14,7 @@
 	<form class="form-horizontal" action="@narkRoutes.DashboardsController.create()" method="post">
 		<fieldset>
 
-			<input type="hidden" name=@request.TOKEN_NAME value=@request.tokenValue />
+			<input type="hidden" name="@request.TOKEN_NAME" value="@request.tokenValue" />
 			<!-- Text input-->
 			<div class="control-group">
 				<label class="control-label" for="name">Name</label>
