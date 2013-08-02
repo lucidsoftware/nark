@@ -18,6 +18,7 @@ import scala.util.Random
 
 import play.api.libs.concurrent.Akka
 import play.api.Logger
+import play.api.Play
 import play.api.Play.current
 import play.api.Play.configuration
 
@@ -43,6 +44,8 @@ object HostDiscoverer {
 }
 
 class HostDiscoverer(stateChangeTime: Int, patterns: List[HostDiscovererPattern]) extends Actor {
+	private var runOnce = false
+
 	protected def discoverNew(start: Date) {
 		patterns.foreach { pattern =>
 			Logger.info("HostDiscovery pattern " + pattern.target)
@@ -77,14 +80,16 @@ class HostDiscoverer(stateChangeTime: Int, patterns: List[HostDiscovererPattern]
 
 	def receive = {
 		case _ => {
-			// we do this in a mutex to avoid overloading graphite needlessly
-			MutexModel.lock("hostdiscovery", 0, false) {
-				Logger.info("HostDiscovery Starting")
-				val start = new Date()
-				discoverNew(start)
-				cleanOld(start)
-				Logger.info("HostDiscovery done!")
-				true
+			if (Play.isProd || (Play.isDev && !runOnce)) {
+				// we do this in a mutex to avoid overloading graphite needlessly
+				runOnce = MutexModel.lock("hostdiscovery", 0, false) {
+					Logger.info("HostDiscovery Starting")
+					val start = new Date()
+					discoverNew(start)
+					cleanOld(start)
+					Logger.info("HostDiscovery done!")
+					true
+				}
 			}
 		}
 	}
