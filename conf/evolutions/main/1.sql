@@ -75,11 +75,11 @@ CREATE TABLE `graph_targets` (
 CREATE TABLE `hosts` (
 	`hiddenid` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
 	`name` VARCHAR(100) CHARACTER SET UTF8 COLLATE UTF8_BIN NOT NULL,
-	`active` BOOLEAN NOT NULL,
+	`state` TINYINT UNSIGNED NOT NULL,
 	`last_confirmed` DATETIME NOT NULL,
 	PRIMARY KEY (`hiddenid`),
 	UNIQUE KEY `app_pk` (`name`),
-	KEY `active_key` (`active`, `name`),
+	KEY `state_key` (`state`, `name`),
 	KEY `last_confirmed_key` (`last_confirmed`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_general_ci;
 
