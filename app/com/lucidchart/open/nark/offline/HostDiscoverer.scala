@@ -39,7 +39,7 @@ object HostDiscoverer {
 		}
 
 		val instance = Akka.system.actorOf(Props(new HostDiscoverer(stateChangeTime, patterns)), name = "HostDiscoverer")
-		Akka.system.scheduler.schedule(0.seconds, frequency.seconds, instance, "go")
+		Akka.system.scheduler.schedule(frequency.seconds, frequency.seconds, instance, "go")
 	}
 }
 
