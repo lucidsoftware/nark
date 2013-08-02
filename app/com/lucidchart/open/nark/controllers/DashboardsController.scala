@@ -48,11 +48,11 @@ class DashboardsController extends AppController {
 
 	def createSubmit = AuthAction.authenticatedUser { implicit user =>
 		AppAction { implicit request =>
-				createForm.bindFromRequest().fold(
-					formWithErrors => {
-						Ok(views.html.dashboards.create(formWithErrors, DashboardModel.findAll()))
-					},
-					data => {
+			createForm.bindFromRequest().fold(
+				formWithErrors => {
+					Ok(views.html.dashboards.create(formWithErrors, DashboardModel.findAll()))
+				},
+				data => {
 					val name = data.name
 					val url = data.url
 					if (data.uuid.isDefined) {
