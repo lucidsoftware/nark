@@ -8,6 +8,7 @@
 )
 @import com.lucidchart.open.nark.controllers.{routes=>narkRoutes}
 @import com.lucidchart.open.nark.views
+@import com.lucidchart.open.nark.views.html.helpers
 
 @com.lucidchart.open.nark.views.html.layouts.main("Home", userOption = Some(user), dashboards = dashboards) {
 	<h3>Edit dashboard <a href="@narkRoutes.DashboardsController.dashboard(dashboard.url)">@dashboard.name</a></h3>
@@ -15,13 +16,13 @@
 	<form class="form-horizontal" action="@narkRoutes.DashboardsController.create()" method="post">
 		<fieldset>
 
-			<input type="hidden" name=@request.TOKEN_NAME value=@request.tokenValue />
-			<input type="hidden" name="uuid" value=@dashboard.id />
+			@helpers.csrfHiddenInput()
+			<input type="hidden" name="uuid" value="@dashboard.id" />
 			<!-- Text input-->
 			<div class="control-group">
 				<label class="control-label" for="name">Name</label>
 				<div class="controls">
-					<input id="name" name="name" type="text" placeholder="Dashboard's name" class="input-xlarge" required="" value=@dashboard.name>
+					<input id="name" name="name" type="text" placeholder="My Cool Dashboard" class="input-xlarge" required="" value="@dashboard.name">
 				</div>
 			</div>
 
@@ -29,7 +30,7 @@
 			<div class="control-group">
 				<label class="control-label" for="url">URL</label>
 				<div class="controls">
-					<input id="url" name="url" type="text" placeholder="Dashboard's shortcut url" class="input-xlarge" required="" value=@dashboard.url>
+					<input id="url" name="url" type="text" placeholder="my-cool-dashboard" class="input-xlarge" required="" value="@dashboard.url">
 				</div>
 			</div>
 

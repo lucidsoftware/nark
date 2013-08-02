@@ -9,6 +9,7 @@
 )
 @import com.lucidchart.open.nark.controllers.{routes=>narkRoutes}
 @import com.lucidchart.open.nark.views
+@import com.lucidchart.open.nark.views.html.helpers
 
 @com.lucidchart.open.nark.views.html.layouts.main("Home", userOption = Some(user), dashboards = dashboards) {
 	<h3>Add a new target to graph @graph.name for dashboard <a href="@narkRoutes.DashboardsController.dashboard(dashboard.url)">@dashboard.name</a></h3>
@@ -16,13 +17,17 @@
 	<form class="form-horizontal" action="@narkRoutes.TargetsController.add(graph.id)" method="post">
 		<fieldset>
 
-			<input type="hidden" name="@request.TOKEN_NAME" value="@request.tokenValue" />
+			@helpers.csrfHiddenInput()
 			<!-- Text input-->
 			<div class="control-group">
 				<label class="control-label" for="target">Target</label>
 				<div class="controls">
 					<input id="target" name="target" type="text" placeholder="Graphite Target" class="input-xlarge" required="">
-					<p class="help-block">Eg. stats.counters.servers.com.lucidchart.mt.eiger.mongod.27018.insert.count</p>
+					<p class="help-block">
+						Eg. stats.counters.servers.com.lucidchart.mt.eiger.mongod.27018.insert.count<br />
+						OR stats.counters.servers.{REVERSE_HOSTNAME}.mongod.27018.insert.count<br />
+						OR stats.gauges.application.*.logins
+					</p>
 				</div>
 			</div>
 

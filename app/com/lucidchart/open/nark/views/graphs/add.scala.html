@@ -8,6 +8,7 @@
 )
 @import com.lucidchart.open.nark.controllers.{routes=>narkRoutes}
 @import com.lucidchart.open.nark.views
+@import com.lucidchart.open.nark.views.html.helpers
 
 @com.lucidchart.open.nark.views.html.layouts.main("Home", userOption = Some(user), dashboards = dashboards) {
 	<h3>Add a new graph to dashboard <a href="@narkRoutes.DashboardsController.dashboard(dashboard.url)">@dashboard.name</a></h3>
@@ -15,12 +16,12 @@
 	<form class="form-horizontal" action="@narkRoutes.GraphsController.add(dashboard.id)" method="post">
 		<fieldset>
 
-			<input type="hidden" name="@request.TOKEN_NAME" value="@request.tokenValue" />
+			@helpers.csrfHiddenInput()
 			<!-- Text input-->
 			<div class="control-group">
 				<label class="control-label" for="name">Name</label>
 				<div class="controls">
-					<input id="name" name="name" type="text" placeholder="Dashboard" class="input-xlarge" required="">
+					<input id="name" name="name" type="text" placeholder="My Graph" class="input-xlarge" required="">
 					<p class="help-block">Eg. CPU</p>
 				</div>
 			</div>
@@ -29,7 +30,7 @@
 			<div class="control-group">
 				<label class="control-label" for="sort">Sort</label>
 				<div class="controls">
-					<input id="sort" name="sort" type="text" placeholder="" class="input-xlarge" required="">
+					<input id="sort" name="sort" type="text" placeholder="15" class="input-xlarge" required="">
 
 				</div>
 			</div>
