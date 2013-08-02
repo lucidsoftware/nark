@@ -6,13 +6,13 @@
 	request: com.lucidchart.open.nark.request.AppRequest[_],
 	user: com.lucidchart.open.nark.models.records.User
 )
-@import com.lucidchart.open.nark.controllers.routes
+@import com.lucidchart.open.nark.controllers.{routes=>narkRoutes}
 @import com.lucidchart.open.nark.views
 
 @com.lucidchart.open.nark.views.html.layouts.main("Home", userOption = Some(user), dashboards = dashboards) {
-	<h3>Add a new graph to dashboard <a href="/dashboard/@dashboard.url">@dashboard.name</a></h3>
+	<h3>Add a new graph to dashboard <a href="@narkRoutes.DashboardsController.dashboard(dashboard.url)">@dashboard.name</a></h3>
 	<br>
-	<form class="form-horizontal" action="/graph/@dashboard.id/add" method="post">
+	<form class="form-horizontal" action="@narkRoutes.GraphsController.add(dashboard.id)" method="post">
 		<fieldset>
 
 			<input type="hidden" name=@request.TOKEN_NAME value=@request.tokenValue />

@@ -7,7 +7,7 @@
 	request: com.lucidchart.open.nark.request.AppRequest[_],
 	user: com.lucidchart.open.nark.models.records.User
 )
-@import com.lucidchart.open.nark.controllers.routes
+@import com.lucidchart.open.nark.controllers.{routes=>narkRoutes}
 @import com.lucidchart.open.nark.views
 
 @com.lucidchart.open.nark.views.html.layouts.main("Home", userOption = Some(user), dashboards = dashboards) {
@@ -26,7 +26,7 @@
 		<tr>
 			<td>@target.target</td>
 			@if(user.id == target.userId) {
-				<td><a href="/target/toggle/@target.id?return_url=@request.path">@{!target.deleted}</a></td>
+				<td><a href="@narkRoutes.TargetsController.toggleActivation(target.id)?return_url=@request.path">@{!target.deleted}</a></td>
 			} else {
 				<td>@{!target.deleted}</td>
 			}

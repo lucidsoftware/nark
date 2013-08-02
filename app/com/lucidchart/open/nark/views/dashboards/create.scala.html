@@ -5,13 +5,13 @@
 	request: com.lucidchart.open.nark.request.AppRequest[_],
 	user: com.lucidchart.open.nark.models.records.User
 )
-@import com.lucidchart.open.nark.controllers.routes
+@import com.lucidchart.open.nark.controllers.{routes=>narkRoutes}
 @import com.lucidchart.open.nark.views
 
 @com.lucidchart.open.nark.views.html.layouts.main("Home", userOption = Some(user), dashboards = dashboards) {
 	<h3>Create a new dashboard</h3>
 		<br>
-	<form class="form-horizontal" action="/dashboard/create" method="post">
+	<form class="form-horizontal" action="@narkRoutes.DashboardsController.create()" method="post">
 		<fieldset>
 
 			<input type="hidden" name=@request.TOKEN_NAME value=@request.tokenValue />

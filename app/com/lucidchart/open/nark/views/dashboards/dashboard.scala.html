@@ -7,14 +7,14 @@
 	request: com.lucidchart.open.nark.request.AppRequest[_],
 	userOption: Option[com.lucidchart.open.nark.models.records.User]
 )
-@import com.lucidchart.open.nark.controllers.routes
+@import com.lucidchart.open.nark.controllers.{routes=>narkRoutes}
 @import com.lucidchart.open.nark.views
 
 @com.lucidchart.open.nark.views.html.layouts.main("Home", userOption = userOption, dashboards = dashboards) {
 	@if(dashboard.deleted) {
 		@if(userOption.isDefined && userOption.get.id == dashboard.userId) {
-			<h3>@dashboard.name (<a href="/graph/@dashboard.id/add">Add a new graph</a>)</h3>
-			<a href="/dashboard/toggle/@dashboard.id?return_url=@request.path">Activate</a>
+			<h3>@dashboard.name (<a href="@narkRoutes.GraphsController.add(dashboard.id)">Add a new graph</a>)</h3>
+			<a href="@narkRoutes.DashboardsController.toggleActivation(dashboard.id)?return_url=@request.path">Activate</a>
 		} else {
 			<h3>@dashboard.name</h3>
 			Deactivated
@@ -22,14 +22,14 @@
 	} else {
 		@if(userOption.isDefined && userOption.get.id == dashboard.userId) {
 			<h3>@dashboard.name</h3>
-			<a href="/dashboard/edit/@dashboard.id">Edit</a>&nbsp;&nbsp;&nbsp;
-			<a href="/graph/@dashboard.id/add">Add a new graph</a>&nbsp;&nbsp;&nbsp;
-			<a href="/dashboard/toggle/@dashboard.id?return_url=@request.path">Deactivate</a>&nbsp;&nbsp;&nbsp;
+		<a href="@narkRoutes.DashboardsController.edit(dashboard.id)">Edit</a>&nbsp;&nbsp;&nbsp;
+			<a href="@narkRoutes.GraphsController.add(dashboard.id)">Add a new graph</a>&nbsp;&nbsp;&nbsp;
+			<a href="@narkRoutes.DashboardsController.toggleActivation(dashboard.id)?return_url=@request.path">Deactivate</a>&nbsp;&nbsp;&nbsp;
 		} else {
 			<h3>@dashboard.name</h3>
 		}
 		@if(userOption.isDefined) {
-			<a href="/graph/list/@dashboard.id">List all the graphs</a>
+			<a href="@narkRoutes.GraphsController.list(dashboard.id)">List all the graphs</a>
 			<br>
 			<br>
 		}
@@ -39,14 +39,14 @@
 				@com.lucidchart.open.nark.views.html.helpers.graph(graph)
 				@if(userOption.isDefined && userOption.get.id == dashboard.userId) {
 					@if(!graph.deleted) {
-						<a href="/target/@graph.id/add">Add a new target</a>&nbsp;&nbsp;&nbsp;
-						<a href="/graph/toggle/@graph.id?return_url=@request.path">Deactivate</a>&nbsp;&nbsp;&nbsp;
+						<a href="@narkRoutes.TargetsController.add(graph.id)">Add a new target</a>&nbsp;&nbsp;&nbsp;
+						<a href="@narkRoutes.GraphsController.toggleActivation(graph.id)?return_url=@request.path">Deactivate</a>&nbsp;&nbsp;&nbsp;
 					} else {
-						<a href="/graph/toggle/@graph.id?return_url=@request.path">Activate</a>&nbsp;&nbsp;&nbsp;
+						<a href="@narkRoutes.GraphsController.toggleActivation(graph.id)?return_url=@request.path">Activate</a>&nbsp;&nbsp;&nbsp;
 					}
 				}
 				@if(userOption.isDefined) {
-					<a href="/target/list/@graph.id">List of all targets</a>
+					<a href="@narkRoutes.TargetsController.list(graph.id)">List of all targets</a>
 				}
 			</div>
 			<br>

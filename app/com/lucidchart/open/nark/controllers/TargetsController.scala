@@ -9,9 +9,9 @@ import views.html.dashboards.dashboard
 
 class TargetsController extends AppController {
 
-	def add(graphId: String) = AuthAction.authenticatedUser { implicit user =>
+	def add(graphId: UUID) = AuthAction.authenticatedUser { implicit user =>
 		AppAction { implicit request =>
-			val graph = GraphModel.findGraphByID(UUID.fromString(graphId))
+			val graph = GraphModel.findGraphByID(graphId)
 			if (graph.isEmpty) {
 				Redirect(routes.HomeController.index()).flashing(AppFlash.warning("Graph does not exist."))
 			}
@@ -25,9 +25,9 @@ class TargetsController extends AppController {
 		}
 	}
 
-	def addSubmit(graphId: String) = AuthAction.authenticatedUser { implicit user =>
+	def addSubmit(graphId: UUID) = AuthAction.authenticatedUser { implicit user =>
 		AppAction { implicit request =>
-			val graph = GraphModel.findGraphByID(UUID.fromString(graphId))
+			val graph = GraphModel.findGraphByID(graphId)
 			if (graph.isEmpty) {
 				Redirect(routes.HomeController.index()).flashing(AppFlash.warning("Graph does not exist."))
 			}
@@ -43,9 +43,9 @@ class TargetsController extends AppController {
 		}
 	}
 
-	def list(graphId: String) = AuthAction.authenticatedUser { implicit user =>
+	def list(graphId: UUID) = AuthAction.authenticatedUser { implicit user =>
 		AppAction { implicit request =>
-			val graph = GraphModel.findGraphByID(UUID.fromString(graphId))
+			val graph = GraphModel.findGraphByID(graphId)
 			if (graph.isEmpty) {
 				Redirect(routes.HomeController.index()).flashing(AppFlash.warning("Graph does not exist."))
 			}
@@ -56,9 +56,9 @@ class TargetsController extends AppController {
 		}
 	}
 
-	def toggleActivation(uuid: String) = AuthAction.authenticatedUser { implicit user =>
+	def toggleActivation(uuid: UUID) = AuthAction.authenticatedUser { implicit user =>
 		AppAction { implicit request =>
-			val target = TargetModel.findTargetByID(UUID.fromString(uuid))
+			val target = TargetModel.findTargetByID(uuid)
 			if (target.isEmpty) {
 				Redirect(routes.HomeController.index()).flashing(AppFlash.warning("Target does not exist."))
 			}

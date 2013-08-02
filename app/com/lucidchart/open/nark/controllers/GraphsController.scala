@@ -12,9 +12,9 @@ import views.html.helpers.graph
 
 class GraphsController extends AppController {
 
-	def add(dashboardId: String) = AuthAction.authenticatedUser { implicit user =>
+	def add(dashboardId: UUID) = AuthAction.authenticatedUser { implicit user =>
 		AppAction { implicit request =>
-			val dashboard = DashboardModel.findDashboardByID(UUID.fromString(dashboardId))
+			val dashboard = DashboardModel.findDashboardByID(dashboardId)
 			if (dashboard.isEmpty) {
 				Redirect(routes.HomeController.index()).flashing(AppFlash.warning("Dashboard does not exist."))
 			}
@@ -27,9 +27,9 @@ class GraphsController extends AppController {
 		}
 	}
 
-	def addSubmit(dashboardId: String) = AuthAction.authenticatedUser { implicit user =>
+	def addSubmit(dashboardId: UUID) = AuthAction.authenticatedUser { implicit user =>
 		AppAction { implicit request =>
-			val dashboard = DashboardModel.findDashboardByID(UUID.fromString(dashboardId))
+			val dashboard = DashboardModel.findDashboardByID(dashboardId)
 			if (dashboard.isEmpty) {
 				Redirect(routes.HomeController.index()).flashing(AppFlash.warning("Dashboard does not exist."))
 			}
@@ -47,9 +47,9 @@ class GraphsController extends AppController {
 		}
 	}
 
-	def list(dashboardId: String) = AuthAction.authenticatedUser { implicit user =>
+	def list(dashboardId: UUID) = AuthAction.authenticatedUser { implicit user =>
 		AppAction { implicit request =>
-			val dashboard = DashboardModel.findDashboardByID(UUID.fromString(dashboardId))
+			val dashboard = DashboardModel.findDashboardByID(dashboardId)
 			if (dashboard.isEmpty) {
 				Redirect(routes.HomeController.index()).flashing(AppFlash.warning("Dashboard does not exist."))
 			}
@@ -60,9 +60,9 @@ class GraphsController extends AppController {
 		}
 	}
 
-	def toggleActivation(uuid: String) = AuthAction.authenticatedUser { implicit user =>
+	def toggleActivation(uuid: UUID) = AuthAction.authenticatedUser { implicit user =>
 		AppAction { implicit request =>
-			val graph = GraphModel.findGraphByID(UUID.fromString(uuid))
+			val graph = GraphModel.findGraphByID(uuid)
 			if (graph.isEmpty) {
 				Redirect(routes.HomeController.index()).flashing(AppFlash.warning("Graph does not exist."))
 			}

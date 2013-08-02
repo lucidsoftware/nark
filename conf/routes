@@ -13,21 +13,21 @@ GET     /openid-callback            com.lucidchart.open.nark.controllers.AuthCon
 # Dashboards
 GET     /dashboard/create           com.lucidchart.open.nark.controllers.DashboardsController.create
 POST    /dashboard/create           com.lucidchart.open.nark.controllers.DashboardsController.createSubmit
-GET     /dashboard/edit/:uuid       com.lucidchart.open.nark.controllers.DashboardsController.edit(uuid: String)
+GET     /dashboard/edit/:uuid       com.lucidchart.open.nark.controllers.DashboardsController.edit(uuid: java.util.UUID)
 GET     /dashboard/:url             com.lucidchart.open.nark.controllers.DashboardsController.dashboard(url: String)
-GET     /dashboard/toggle/:uuid     com.lucidchart.open.nark.controllers.DashboardsController.toggleActivation(uuid: String)
+GET     /dashboard/toggle/:uuid     com.lucidchart.open.nark.controllers.DashboardsController.toggleActivation(uuid: java.util.UUID)
 
 # Graphs
-GET     /graph/:dashboardId/add     com.lucidchart.open.nark.controllers.GraphsController.add(dashboardId: String)
-POST    /graph/:dashboardId/add     com.lucidchart.open.nark.controllers.GraphsController.addSubmit(dashboardId: String)
-GET     /graph/list/:dashboardId    com.lucidchart.open.nark.controllers.GraphsController.list(dashboardId: String)
-GET     /graph/toggle/:uuid         com.lucidchart.open.nark.controllers.GraphsController.toggleActivation(uuid: String)
+GET     /graph/:dashboardId/add     com.lucidchart.open.nark.controllers.GraphsController.add(dashboardId: java.util.UUID)
+POST    /graph/:dashboardId/add     com.lucidchart.open.nark.controllers.GraphsController.addSubmit(dashboardId: java.util.UUID)
+GET     /graph/list/:dashboardId    com.lucidchart.open.nark.controllers.GraphsController.list(dashboardId: java.util.UUID)
+GET     /graph/toggle/:uuid         com.lucidchart.open.nark.controllers.GraphsController.toggleActivation(uuid: java.util.UUID)
 
 # Targets
-GET     /target/:graphId/add        com.lucidchart.open.nark.controllers.TargetsController.add(graphId: String)
-POST    /target/:graphId/add        com.lucidchart.open.nark.controllers.TargetsController.addSubmit(graphId: String)
-GET     /target/list/:graphId       com.lucidchart.open.nark.controllers.TargetsController.list(graphId: String)
-GET     /target/toggle/:uuid        com.lucidchart.open.nark.controllers.TargetsController.toggleActivation(uuid: String)
+GET     /target/:graphId/add        com.lucidchart.open.nark.controllers.TargetsController.add(graphId: java.util.UUID)
+POST    /target/:graphId/add        com.lucidchart.open.nark.controllers.TargetsController.addSubmit(graphId: java.util.UUID)
+GET     /target/list/:graphId       com.lucidchart.open.nark.controllers.TargetsController.list(graphId: java.util.UUID)
+GET     /target/toggle/:uuid        com.lucidchart.open.nark.controllers.TargetsController.toggleActivation(uuid: java.util.UUID)
 
 # Map static resources from the /public folder to the /assets URL path
 GET     /favicon.ico                controllers.Assets.at(path="/public", file = "img/favicon.png")

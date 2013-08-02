@@ -9,8 +9,7 @@
 )(
 	implicit request: com.lucidchart.open.nark.request.AppRequest[_]
 )
-@import com.lucidchart.open.nark.controllers
-@import com.lucidchart.open.nark.controllers.{routes=>lucidRoutes}
+@import com.lucidchart.open.nark.controllers.{routes=>narkRoutes}
 
 <!DOCTYPE HTML>
 <html>
@@ -47,17 +46,17 @@
 		<div class="navbar navbar-inverse navbar-fixed-top">
 			<div class="navbar-inner">
 				<div class="container">
-					<a class="brand" href="@controllers.routes.HomeController.index()">Nark</a>
+					<a class="brand" href="@narkRoutes.HomeController.index()">Nark</a>
 					<div class="nav-collapse collapse">
 						<ul class="nav">
 							<li class="dropdown">
 								<a href="#" class="dropdown-toggle" data-toggle="dropdown">Dashboards <b class="caret"></b></a>
 								<ul class="dropdown-menu">
-									<li><a href="@lucidRoutes.DashboardsController.create">Create a new dashboard</a></li>
+									<li><a href="@narkRoutes.DashboardsController.create">Create a new dashboard</a></li>
 									@if(!dashboards.isEmpty) {
 										<li class="divider"></li>
 										@dashboards.map { case dashboard =>
-											<li><a href=/dashboard/@dashboard.url>@dashboard.name</a></li>
+											<li><a href="@narkRoutes.DashboardsController.dashboard(dashboard.url)">@dashboard.name</a></li>
 										}
 									}
 								</ul>
@@ -69,7 +68,7 @@
 								<li class="dropdown">
 									<a href="#" class="dropdown-toggle" data-toggle="dropdown">@userOption.get.name <b class="caret"></b></a>
 									<ul class="dropdown-menu">
-										<li><a href="@controllers.routes.AuthController.logout()">Logout</a></li>
+										<li><a href="@narkRoutes.AuthController.logout()">Logout</a></li>
 									</ul>
 								</li>
 								
@@ -77,7 +76,7 @@
 								<li class="dropdown">
 									<a href="#" class="dropdown-toggle" data-toggle="dropdown">Login <b class="caret"></b></a>
 									<ul class="dropdown-menu">
-										<li><a href="@controllers.routes.AuthController.openidLogin()">Google OpenID</a></li>
+										<li><a href="@narkRoutes.AuthController.openidLogin()">Google OpenID</a></li>
 									</ul>
 								</li>
 							}

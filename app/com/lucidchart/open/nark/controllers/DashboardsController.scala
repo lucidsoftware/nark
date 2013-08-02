@@ -14,9 +14,9 @@ class DashboardsController extends AppController {
 		}
 	}
 
-	def edit(uuid: String) = AuthAction.authenticatedUser { implicit user =>
+	def edit(uuid: UUID) = AuthAction.authenticatedUser { implicit user =>
 		AppAction { implicit request =>
-			val dashboard = DashboardModel.findDashboardByID(UUID.fromString(uuid))
+			val dashboard = DashboardModel.findDashboardByID(uuid)
 			if (dashboard.isEmpty) {
 				Redirect(routes.HomeController.index()).flashing(AppFlash.warning("Dashboard does not exist."))
 			}
@@ -59,9 +59,9 @@ class DashboardsController extends AppController {
 		}
 	}
 
-	def toggleActivation(uuid: String) = AuthAction.authenticatedUser { implicit user =>
+	def toggleActivation(uuid: UUID) = AuthAction.authenticatedUser { implicit user =>
 		AppAction { implicit request =>
-			val dashboard = DashboardModel.findDashboardByID(UUID.fromString(uuid))
+			val dashboard = DashboardModel.findDashboardByID(uuid)
 			if (dashboard.isEmpty) {
 				Redirect(routes.HomeController.index()).flashing(AppFlash.warning("Dashboard does not exist."))
 			}
