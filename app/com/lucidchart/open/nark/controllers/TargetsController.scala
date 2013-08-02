@@ -20,7 +20,7 @@ class TargetsController extends AppController {
 			}
 			else {
 				val dashboard = DashboardModel.findDashboardByID(graph.get.dashboardId)
-				Ok(views.html.targets.add(graph.get, dashboard.get, DashboardModel.findAll()))
+				Ok(views.html.targets.add(graph.get, dashboard.get))
 			}
 		}
 	}
@@ -51,7 +51,7 @@ class TargetsController extends AppController {
 			}
 			else {
 				val targets = TargetModel.findTargetByGraphId(graph.get.id)
-				Ok(views.html.targets.list(targets, graph.get, DashboardModel.findAll()))
+				Ok(views.html.targets.list(targets, graph.get))
 			}
 		}
 	}

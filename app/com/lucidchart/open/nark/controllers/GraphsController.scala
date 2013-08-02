@@ -38,7 +38,7 @@ class GraphsController extends AppController {
 			}
 			else {
 				val form = addForm.fill(AddGraph("", 0))
-				Ok(views.html.graphs.add(form, dashboard.get, DashboardModel.findAll()))
+				Ok(views.html.graphs.add(form, dashboard.get))
 			}
 		}
 	}
@@ -80,7 +80,7 @@ class GraphsController extends AppController {
 			}
 			else {
 				val graphs = GraphModel.findGraphsByDashboardId(dashboard.get.id)
-				Ok(views.html.graphs.list(graphs, dashboard.get, DashboardModel.findAll()))
+				Ok(views.html.graphs.list(graphs, dashboard.get))
 			}
 		}
 	}

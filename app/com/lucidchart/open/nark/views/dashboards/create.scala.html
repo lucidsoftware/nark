@@ -1,6 +1,5 @@
 @(
-	formCreate:Form[_],
-	dashboards: List[com.lucidchart.open.nark.models.records.Dashboard]
+	formCreate:Form[_]
 )(
 	implicit
 	request: com.lucidchart.open.nark.request.AppRequest[_],
@@ -12,7 +11,7 @@
 @import helper.twitterBootstrap._
 @import helper._
 
-@com.lucidchart.open.nark.views.html.layouts.main("Home", userOption = Some(user), dashboards = dashboards) {
+@com.lucidchart.open.nark.views.html.layouts.main("Home", userOption = Some(user)) {
 	<h3>Create a new dashboard</h3>
 	<br>
 	@helper.form(action=narkRoutes.DashboardsController.createSubmit()) {

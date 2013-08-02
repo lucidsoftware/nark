@@ -2,6 +2,8 @@ package com.lucidchart.open.nark.controllers
 
 import com.lucidchart.open.nark.request.{AppFlash, AppAction, AuthAction}
 import com.lucidchart.open.nark.views
+import com.lucidchart.open.nark.utils.DashboardHistory
+import com.lucidchart.open.nark.utils.DashboardHistoryItem
 import com.lucidchart.open.nark.models.{GraphModel, DashboardModel}
 import com.lucidchart.open.nark.models.records.Dashboard
 import java.util.UUID
@@ -26,7 +28,7 @@ class DashboardsController extends AppController {
 	def create = AuthAction.authenticatedUser { implicit user =>
 		AppAction { implicit request =>
 			val form = createForm.fill(CreateDashboard("", "", None))
-			Ok(views.html.dashboards.create(form, DashboardModel.findAll()))
+			Ok(views.html.dashboards.create(form))
 		}
 	}
 
@@ -40,8 +42,7 @@ class DashboardsController extends AppController {
 				Redirect(routes.HomeController.index()).flashing(AppFlash.warning("Dashboard does not belong to the current user."))
 			}
 			else {
-				routes.DashboardsController.createSubmit()
-				Ok(views.html.dashboards.edit(dashboard.get, DashboardModel.findAll()))
+				Ok(views.html.dashboards.edit(dashboard.get))
 			}
 		}
 	}
@@ -77,7 +78,9 @@ class DashboardsController extends AppController {
 			}
 			else {
 				val graphs = GraphModel.findGraphsByDashboardId(dashboard.get.id)
-				Ok(views.html.dashboards.dashboard(dashboard.get, graphs, DashboardModel.findAll()))
+				val historyItem = new DashboardHistoryItem(dashboard.get)
+				val newHistoryCookie = DashboardHistory.addToHistory(request, historyItem)
+				Ok(views.html.dashboards.dashboard(dashboard.get, graphs)).withCookies(newHistoryCookie)
 			}
 		}
 	}

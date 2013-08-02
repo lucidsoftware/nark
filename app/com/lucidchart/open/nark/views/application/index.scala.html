@@ -8,7 +8,7 @@
 @import com.lucidchart.open.nark.controllers.{routes=>narkRoutes}
 @import com.lucidchart.open.nark.views
 
-@com.lucidchart.open.nark.views.html.layouts.main("Home", userOption = userOption, dashboards = dashboards) {
+@com.lucidchart.open.nark.views.html.layouts.main("Home", userOption = userOption) {
 	<h3>Welcome to Nark!</h3>
 	@if(userOption.isDefined) {
 		<br>
