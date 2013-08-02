@@ -47,7 +47,7 @@ trait AuthActionBuilder {
 			}
 			
 			// we discard the auth cookie here mostly for dev purposes
-			Done(Redirect(routes.HomeController.index()).discardingCookies(Auth.discardingCookie).withCookies(origDestCookie))
+			Done(Redirect(routes.AuthController.openidLogin()).discardingCookies(Auth.discardingCookie).withCookies(origDestCookie))
 		}
 	}
 	
