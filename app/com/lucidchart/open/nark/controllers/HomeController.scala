@@ -7,6 +7,10 @@ import com.lucidchart.open.nark.request.AuthAction
 import com.lucidchart.open.nark.views
 
 class HomeController extends AppController {
+	/**
+	 * Home / Intro / Welcome page.
+	 * Authentication not required
+	 */
 	def index = AuthAction.maybeAuthenticatedUser { implicit userOption =>
 		AppAction { implicit request =>
 			Ok(views.html.application.index())
