@@ -1,6 +1,5 @@
 @(
-	dashboard: com.lucidchart.open.nark.models.records.Dashboard,
-	graphs: List[com.lucidchart.open.nark.models.records.Graph]
+	dashboard: com.lucidchart.open.nark.models.records.Dashboard
 )(
 	implicit
 	request: com.lucidchart.open.nark.request.AppRequest[_],
@@ -12,7 +11,7 @@
 @com.lucidchart.open.nark.views.html.layouts.main("Home", userOption = userOption) {
 	@if(dashboard.deleted) {
 		@if(userOption.isDefined && userOption.get.id == dashboard.userId) {
-			<h3>@dashboard.name (<a href="@narkRoutes.GraphsController.add(dashboard.id)">Add a new graph</a>)</h3>
+			<h3>@dashboard.name</h3>
 			<a href="@narkRoutes.DashboardsController.toggleActivation(dashboard.id)?return_url=@request.path">Activate</a>
 		} else {
 			<h3>@dashboard.name</h3>
@@ -33,9 +32,9 @@
 			<br>
 		}
 		<h4>Graphs</h4>
-		@graphs.sortWith(_.sort < _.sort).map { case graph =>
+		@dashboard.graphs.sortWith(_.sort < _.sort).map { case graph =>
 			<div>
-				@com.lucidchart.open.nark.views.html.helpers.graph(graph, dashboard)
+				@com.lucidchart.open.nark.views.html.helpers.graph(graph)
 				@if(userOption.isDefined && userOption.get.id == dashboard.userId) {
 					@if(!graph.deleted) {
 						<a href="@narkRoutes.TargetsController.add(graph.id)">Add a new target</a>&nbsp;&nbsp;&nbsp;

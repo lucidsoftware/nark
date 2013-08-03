@@ -9,7 +9,6 @@ import play.api.GlobalSettings
 import play.api.Logger
 import play.api.libs.concurrent.Akka
 import play.api.mvc._
-import play.api.mvc.Results._
 import play.filters.csrf.CSRFFilter
 
 import scala.concurrent.ExecutionContext.Implicits.global

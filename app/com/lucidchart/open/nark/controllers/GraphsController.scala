@@ -11,16 +11,14 @@ import play.api.data.validation.Constraints
 
 class GraphsController extends AppController {
 
-	private case class AddGraph(name: String, graphType: Int, id: Option[String]) {
+	private case class AddGraph(name: String, graphType: Int) {
 		val graphTypeVal = GraphTypes(graphType)
-		val uuid = id.map(i => UUID.fromString(i))
 	}
 
 	private val addForm = Form(
 		mapping(
 			"name" -> text.verifying(Constraints.pattern("^[a-zA-Z0-9]*$".r, error = "Only alpha-numberic text allowed")),
-			"type" -> number.verifying(Constraints.min(0), Constraints.max(GraphTypes.maxId)),
-			"uuid" -> optional(text.verifying(Constraints.pattern("[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}".r)))
+			"type" -> number.verifying(Constraints.min(0), Constraints.max(GraphTypes.maxId))
 		)(AddGraph.apply)(AddGraph.unapply)
 	)
 
@@ -34,25 +32,24 @@ class GraphsController extends AppController {
 				Redirect(routes.HomeController.index()).flashing(AppFlash.warning("Dashboard does not belong to the current user."))
 			}
 			else {
-				val form = addForm.fill(AddGraph("", 0, None))
+				val form = addForm.fill(AddGraph("", 0))
 				Ok(views.html.graphs.add(form, dashboard.get))
 			}
 		}
 	}
 
-	def edit(dashboardId: UUID, graphId: UUID) = AuthAction.authenticatedUser { implicit user =>
+	def edit(graphId: UUID) = AuthAction.authenticatedUser { implicit user =>
 		AppAction { implicit request =>
-			val dashboard = DashboardModel.findDashboardByID(dashboardId)
-			if (dashboard.isEmpty) {
-				Redirect(routes.HomeController.index()).flashing(AppFlash.warning("Dashboard does not exist."))
+			val graph = GraphModel.findGraphByID(graphId)
+			if (graph.isEmpty) {
+				Redirect(routes.HomeController.index()).flashing(AppFlash.warning("Graph does not exist."))
 			}
-			else if (dashboard.get.userId != user.id) {
-				Redirect(routes.HomeController.index()).flashing(AppFlash.warning("Dashboard does not belong to the current user."))
+			else if (graph.get.userId != user.id) {
+				Redirect(routes.HomeController.index()).flashing(AppFlash.warning("Graph does not belong to the current user."))
 			}
 			else {
-				val graph = GraphModel.findGraphByID(graphId).get
-				val form = addForm.fill(AddGraph(graph.name, graph.typeGraph.id, None))
-				Ok(views.html.graphs.edit(form, graph, dashboard.get))
+				val form = addForm.fill(AddGraph(graph.get.name, graph.get.typeGraph.id))
+				Ok(views.html.graphs.edit(form, graph.get))
 			}
 		}
 	}
@@ -75,17 +72,38 @@ class GraphsController extends AppController {
 						else {
 							val name = data.name
 							val graphType = data.graphTypeVal
-							if (data.uuid.isDefined) {
-								val existingGraph = GraphModel.findGraphByID(data.uuid.get).get
-								GraphModel.createGraph(existingGraph.copy(name = name, typeGraph = graphType))
-								Redirect(routes.GraphsController.edit(dashboardId, existingGraph.id)).flashing(AppFlash.success(name + " graph has been updated successfully."))
-							}
-							else {
-								val graphs = GraphModel.findGraphsByDashboardId(dashboard.get.id)
-								val sort = if (!graphs.isEmpty) graphs.map(_.sort).min - 1 else 1000000
-								GraphModel.createGraph(new Graph(name, dashboard.get.id, sort, graphType, user.id, false))
-								Redirect(routes.GraphsController.add(dashboardId)).flashing(AppFlash.success(name + " graph added successfully."))
-							}
+							val graphs = GraphModel.findGraphsByDashboardId(dashboard.get.id)
+							val sort = if (!graphs.isEmpty) graphs.map(_.sort).min - 1 else 1000000
+							GraphModel.createGraph(new Graph(name, dashboard.get.id, sort, graphType, false))
+							Redirect(routes.GraphsController.add(dashboardId)).flashing(AppFlash.success(name + " graph added successfully."))
+						}
+					}
+				)
+			}
+		}
+	}
+
+	def editSubmit(graphId: UUID) = AuthAction.authenticatedUser { implicit user =>
+		AppAction { implicit request =>
+			val graph = GraphModel.findGraphByID(graphId)
+			if (graph.isEmpty) {
+				Redirect(routes.HomeController.index()).flashing(AppFlash.warning("Graph does not exist."))
+			}
+			else {
+				addForm.bindFromRequest().fold(
+					formWithErrors => {
+						Ok(views.html.graphs.edit(formWithErrors, graph.get))
+					},
+					data => {
+						if (graph.get.userId != user.id) {
+							Redirect(routes.HomeController.index()).flashing(AppFlash.warning("Graph does not belong to the current user."))
+						}
+						else {
+							val name = data.name
+							val graphType = data.graphTypeVal
+							val existingGraph = GraphModel.findGraphByID(graphId).get
+							GraphModel.createGraph(existingGraph.copy(name = name, typeGraph = graphType))
+							Redirect(routes.GraphsController.edit(existingGraph.id)).flashing(AppFlash.success(name + " graph has been updated successfully."))
 						}
 					}
 				)
@@ -100,8 +118,7 @@ class GraphsController extends AppController {
 				Redirect(routes.HomeController.index()).flashing(AppFlash.warning("Dashboard does not exist."))
 			}
 			else {
-				val graphs = GraphModel.findGraphsByDashboardId(dashboard.get.id)
-				Ok(views.html.graphs.list(graphs, dashboard.get))
+				Ok(views.html.graphs.list(dashboard.get))
 			}
 		}
 	}

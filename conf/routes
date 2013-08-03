@@ -14,20 +14,23 @@ GET     /openid-callback            com.lucidchart.open.nark.controllers.AuthCon
 GET     /dashboard/create           com.lucidchart.open.nark.controllers.DashboardsController.create
 POST    /dashboard/create           com.lucidchart.open.nark.controllers.DashboardsController.createSubmit
 GET     /dashboard/edit/:uuid       com.lucidchart.open.nark.controllers.DashboardsController.edit(uuid: java.util.UUID)
+POST    /dashboard/edit/:uuid       com.lucidchart.open.nark.controllers.DashboardsController.editSubmit(uuid: java.util.UUID)
 GET     /dashboard/toggle/:uuid     com.lucidchart.open.nark.controllers.DashboardsController.toggleActivation(uuid: java.util.UUID)
 GET     /d/:url                     com.lucidchart.open.nark.controllers.DashboardsController.dashboard(url: String)
 
 # Graphs
 GET     /graph/:dashboardId/add              com.lucidchart.open.nark.controllers.GraphsController.add(dashboardId: java.util.UUID)
 POST    /graph/:dashboardId/add              com.lucidchart.open.nark.controllers.GraphsController.addSubmit(dashboardId: java.util.UUID)
-GET     /graph/edit/:dashboardId/:uuid       com.lucidchart.open.nark.controllers.GraphsController.edit(dashboardId: java.util.UUID, uuid: java.util.UUID)
+GET     /graph/edit/:uuid                    com.lucidchart.open.nark.controllers.GraphsController.edit(uuid: java.util.UUID)
+POST    /graph/edit/:uuid                    com.lucidchart.open.nark.controllers.GraphsController.editSubmit(uuid: java.util.UUID)
 GET     /graph/list/:dashboardId             com.lucidchart.open.nark.controllers.GraphsController.list(dashboardId: java.util.UUID)
 GET     /graph/toggle/:uuid                  com.lucidchart.open.nark.controllers.GraphsController.toggleActivation(uuid: java.util.UUID)
 
 # Targets
 GET     /target/:graphId/add                 com.lucidchart.open.nark.controllers.TargetsController.add(graphId: java.util.UUID)
 POST    /target/:graphId/add                 com.lucidchart.open.nark.controllers.TargetsController.addSubmit(graphId: java.util.UUID)
-GET     /target/edit/:graphId/:uuid          com.lucidchart.open.nark.controllers.TargetsController.edit(graphId: java.util.UUID, uuid: java.util.UUID)
+GET     /target/edit/:uuid                   com.lucidchart.open.nark.controllers.TargetsController.edit(uuid: java.util.UUID)
+POST    /target/edit/:uuid                   com.lucidchart.open.nark.controllers.TargetsController.editSubmit(uuid: java.util.UUID)
 GET     /target/list/:graphId                com.lucidchart.open.nark.controllers.TargetsController.list(graphId: java.util.UUID)
 GET     /target/toggle/:uuid                 com.lucidchart.open.nark.controllers.TargetsController.toggleActivation(uuid: java.util.UUID)
 

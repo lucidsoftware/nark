@@ -1,5 +1,4 @@
 @(
-	graphs: List[com.lucidchart.open.nark.models.records.Graph],
 	dashboard: com.lucidchart.open.nark.models.records.Dashboard
 )(
 	implicit
@@ -21,7 +20,7 @@
 		</tr>
 		</thead>
 		<tbody>
-		@graphs.map { case graph =>
+		@dashboard.graphs.map { case graph =>
 		<tr>
 			<td>@graph.name</td>
 			@if(user.id == graph.userId) {

@@ -1,7 +1,6 @@
 @(
 	formEdit: Form[_],
-	target: com.lucidchart.open.nark.models.records.Target,
-	graph: com.lucidchart.open.nark.models.records.Graph
+	target: com.lucidchart.open.nark.models.records.Target
 )(
 	implicit
 	request: com.lucidchart.open.nark.request.AppRequest[_],
@@ -16,10 +15,9 @@
 @com.lucidchart.open.nark.views.html.layouts.main("Home", userOption = Some(user)) {
 	<h3>Edit Target</h3>
 	<br>
-	@helper.form(action=narkRoutes.TargetsController.addSubmit(graph.id)) {
+	@helper.form(action=narkRoutes.TargetsController.editSubmit(target.id)) {
 		<fieldset>
 			@helpers.csrfHiddenInput()
-			<input type="hidden" name="uuid" value="@target.id" />
 			@helper.inputText(formEdit("target"), 'class -> "input-xlarge", '_label -> "Target", 'required -> true, '_showConstraints -> false)
 			<p class="help-block">
 				Eg. stats.counters.servers.com.lucidchart.mt.eiger.mongod.27018.insert.count<br />

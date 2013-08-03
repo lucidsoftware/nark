@@ -11,16 +11,15 @@ import AnormImplicits._
 
 class TargetModel extends AppModel {
 	protected val tableName = "graph_targets"
-	protected val fields = "`id`, `graph_id`, `target`, `user_id`, `deleted`"
+	protected val fields = "`id`, `graph_id`, `target`, `deleted`"
 
 	protected val targetsRowParser = {
 		get[UUID]("id") ~
 		get[UUID]("graph_id") ~
 		get[String]("target") ~
-		get[UUID]("user_id") ~
 		get[Int]("deleted") map {
-			case id ~ graph_id ~ target ~ user_id ~ deleted =>
-				new Target(id, graph_id, target, user_id, (deleted == 1))
+			case id ~ graph_id ~ target ~ deleted =>
+				new Target(id, graph_id, target, (deleted == 1))
 		}
 	}
 
@@ -98,13 +97,12 @@ class TargetModel extends AppModel {
 	def createTarget(target: Target) {
 		DB.withConnection("main") { connection =>
 			SQL("""
-				INSERT INTO """ + tableName + """ (`id`, `graph_id`, `target`, `user_id`, `deleted`)
-				VALUES ({id}, {graph_id}, {target}, {user_id}, {deleted})
+				INSERT INTO """ + tableName + """ (`id`, `graph_id`, `target`, `deleted`)
+				VALUES ({id}, {graph_id}, {target}, {deleted})
 				ON DUPLICATE KEY UPDATE `target`= {target}""").on(
 				"id"         -> target.id,
 				"graph_id"   -> target.graphId,
 				"target"     -> target.target,
-				"user_id"    -> target.userId,
 				"deleted"    -> target.deleted
 			).executeUpdate()(connection)
 		}

@@ -17,7 +17,7 @@ object GraphTypes extends Enumeration {
 
 class GraphModel extends AppModel {
 	protected val tableName = "graphs"
-	protected val fields = "`id`, `name`, `dashboard_id`, `sort`, `type`, `user_id`, `deleted`"
+	protected val fields = "`id`, `name`, `dashboard_id`, `sort`, `type`, `deleted`"
 
 	protected val graphsRowParser = {
 		get[UUID]("id") ~
@@ -25,10 +25,9 @@ class GraphModel extends AppModel {
 		get[UUID]("dashboard_id") ~
 		get[Int]("sort") ~
 		get[Int]("type") ~
-		get[UUID]("user_id") ~
 		get[Int]("deleted") map {
-			case id ~ name ~ dashboard_id ~ sort ~ type_graph ~ user_id ~ deleted =>
-				new Graph(id, name, dashboard_id, sort, GraphTypes(type_graph), user_id, (deleted == 1))
+			case id ~ name ~ dashboard_id ~ sort ~ type_graph ~ deleted =>
+				new Graph(id, name, dashboard_id, sort, GraphTypes(type_graph), (deleted == 1))
 		}
 	}
 	
@@ -106,15 +105,14 @@ class GraphModel extends AppModel {
 	def createGraph(graph: Graph) {
 		DB.withConnection("main") { connection =>
 			SQL("""
-				INSERT INTO """ + tableName + """ (`id`, `name`, `dashboard_id`, `sort`, `type`, `user_id`, `deleted`)
-				VALUES ({id}, {name}, {dashboard_id}, {sort}, {type}, {user_id}, {deleted})
+				INSERT INTO """ + tableName + """ (`id`, `name`, `dashboard_id`, `sort`, `type`, `deleted`)
+				VALUES ({id}, {name}, {dashboard_id}, {sort}, {type}, {deleted})
 				ON DUPLICATE KEY UPDATE `name`= {name}, `type`={type}""").on(
 				"id"         -> graph.id,
 				"name"       -> graph.name,
 				"dashboard_id" -> graph.dashboardId,
 				"sort"       -> graph.sort,
 				"type"       -> graph.typeGraph.id,
-				"user_id"    -> graph.userId,
 				"deleted"    -> graph.deleted
 			).executeUpdate()(connection)
 		}

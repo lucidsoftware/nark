@@ -1,5 +1,4 @@
 @(
-	targets: List[com.lucidchart.open.nark.models.records.Target],
 	graph: com.lucidchart.open.nark.models.records.Graph
 )(
 	implicit
@@ -21,12 +20,13 @@
 		</tr>
 		</thead>
 		<tbody>
-		@targets.map { case target =>
+		@graph.targets.map { case target =>
 		<tr>
-			<td>@target.target&nbsp;&nbsp;&nbsp;<a href="@narkRoutes.TargetsController.edit(graph.id, target.id)">edit</a></td>
 			@if(user.id == target.userId) {
+				<td>@target.target&nbsp;&nbsp;&nbsp;<a href="@narkRoutes.TargetsController.edit(target.id)">edit</a></td>
 				<td><a href="@narkRoutes.TargetsController.toggleActivation(target.id)?return_url=@request.path">@{!target.deleted}</a></td>
 			} else {
+				<td>@target.target</td>
 				<td>@{!target.deleted}</td>
 			}
 		</tr>

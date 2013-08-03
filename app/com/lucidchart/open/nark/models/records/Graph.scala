@@ -1,8 +1,7 @@
 package com.lucidchart.open.nark.models.records
 
 import java.util.UUID
-import java.util.Date
-import com.lucidchart.open.nark.models.GraphTypes
+import com.lucidchart.open.nark.models.{TargetModel, DashboardModel, GraphTypes}
 
 case class Graph(
 	id: UUID,
@@ -10,9 +9,13 @@ case class Graph(
 	dashboardId: UUID,
 	sort: Int,
 	typeGraph: GraphTypes.Value,
-	userId: UUID,
 	deleted: Boolean
 ) extends AppRecord {
-	def this(name: String, dashboardId: UUID, sort: Int, typeGraph: GraphTypes.Value, userId: UUID, deleted: Boolean) =
-		this(UUID.randomUUID(), name, dashboardId, sort, typeGraph, userId, deleted)
+
+	def this(name: String, dashboardId: UUID, sort: Int, typeGraph: GraphTypes.Value, deleted: Boolean) =
+		this(UUID.randomUUID(), name, dashboardId, sort, typeGraph, deleted)
+
+	lazy val dashboard = DashboardModel.findDashboardByID(dashboardId).get
+	lazy val userId = dashboard.userId
+	lazy val targets = TargetModel.findTargetByGraphId(id)
 }

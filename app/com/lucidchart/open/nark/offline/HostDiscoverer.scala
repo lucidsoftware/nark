@@ -14,7 +14,6 @@ import java.util.Date
 import scala.collection.JavaConversions
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration._
-import scala.util.Random
 
 import play.api.libs.concurrent.Akka
 import play.api.Logger
