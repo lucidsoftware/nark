@@ -52,7 +52,7 @@ class GraphsController extends AppController {
 			else {
 				addForm.bindFromRequest().fold(
 					formWithErrors => {
-							Ok(views.html.graphs.add(formWithErrors, dashboard.get, DashboardModel.findAll()))
+							Ok(views.html.graphs.add(formWithErrors, dashboard.get))
 					},
 					data => {
 						if (dashboard.get.userId != user.id) {

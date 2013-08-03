@@ -42,7 +42,8 @@ class DashboardsController extends AppController {
 				Redirect(routes.HomeController.index()).flashing(AppFlash.warning("Dashboard does not belong to the current user."))
 			}
 			else {
-				Ok(views.html.dashboards.edit(dashboard.get))
+				val form = createForm.fill(CreateDashboard(dashboard.get.name, dashboard.get.url, None))
+				Ok(views.html.dashboards.edit(form, dashboard.get))
 			}
 		}
 	}
@@ -51,7 +52,7 @@ class DashboardsController extends AppController {
 		AppAction { implicit request =>
 			createForm.bindFromRequest().fold(
 				formWithErrors => {
-					Ok(views.html.dashboards.create(formWithErrors, DashboardModel.findAll()))
+					Ok(views.html.dashboards.create(formWithErrors))
 				},
 				data => {
 					val name = data.name

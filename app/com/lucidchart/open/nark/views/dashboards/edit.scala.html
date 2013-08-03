@@ -1,4 +1,5 @@
 @(
+	formEdit: Form[_],
 	dashboard: com.lucidchart.open.nark.models.records.Dashboard
 )(
 	implicit
@@ -8,40 +9,19 @@
 @import com.lucidchart.open.nark.controllers.{routes=>narkRoutes}
 @import com.lucidchart.open.nark.views
 @import com.lucidchart.open.nark.views.html.helpers
+@import helper.twitterBootstrap._
+@import helper._
 
 @com.lucidchart.open.nark.views.html.layouts.main("Home", userOption = Some(user)) {
 	<h3>Edit dashboard <a href="@narkRoutes.DashboardsController.dashboard(dashboard.url)">@dashboard.name</a></h3>
 	<br>
-	<form class="form-horizontal" action="@narkRoutes.DashboardsController.create()" method="post">
+	@helper.form(action=narkRoutes.DashboardsController.createSubmit()) {
 		<fieldset>
-
 			@helpers.csrfHiddenInput()
 			<input type="hidden" name="uuid" value="@dashboard.id" />
-			<!-- Text input-->
-			<div class="control-group">
-				<label class="control-label" for="name">Name</label>
-				<div class="controls">
-					<input id="name" name="name" type="text" placeholder="My Cool Dashboard" class="input-xlarge" required="" value="@dashboard.name">
-				</div>
-			</div>
-
-			<!-- Text input-->
-			<div class="control-group">
-				<label class="control-label" for="url">URL</label>
-				<div class="controls">
-					<input id="url" name="url" type="text" placeholder="my-cool-dashboard" class="input-xlarge" required="" value="@dashboard.url">
-				</div>
-			</div>
-
-			<!-- Button -->
-			<div class="control-group">
-				<label class="control-label" for="edit"></label>
-				<div class="controls">
-					<button id="edit" name="edit" class="btn btn-primary">Edit</button>
-				</div>
-			</div>
-
+			@helper.inputText(formEdit("name"), 'class -> "input-xlarge", '_label -> "Name", 'required -> true, '_showConstraints -> false)
+			@helper.inputText(formEdit("url"), 'class -> "input-xlarge", '_label -> "URL", 'required -> true, '_showConstraints -> false)
+			<button id="edit" name="edit" class="btn btn-primary">Edit</button>
 		</fieldset>
-	</form>
-
+	}
 }

@@ -6,8 +6,20 @@ import com.lucidchart.open.nark.models.{TargetModel, GraphTypes, GraphModel, Das
 import com.lucidchart.open.nark.models.records.{Target, Graph}
 import java.util.UUID
 import views.html.dashboards.dashboard
+import play.api.data.Form
+import play.api.data.Forms._
+import com.lucidchart.open.nark.models.records.Target
+import play.api.data.validation.Constraints
 
 class TargetsController extends AppController {
+
+	private case class AddTarget(target: String)
+	private val addForm = Form(
+		mapping(
+			"target" -> text
+		)(AddTarget.apply)(AddTarget.unapply)
+	)
+
 
 	def add(graphId: UUID) = AuthAction.authenticatedUser { implicit user =>
 		AppAction { implicit request =>
@@ -19,8 +31,9 @@ class TargetsController extends AppController {
 				Redirect(routes.HomeController.index()).flashing(AppFlash.warning("Graph does not belong to the current user."))
 			}
 			else {
+				val form = addForm.fill(AddTarget(""))
 				val dashboard = DashboardModel.findDashboardByID(graph.get.dashboardId)
-				Ok(views.html.targets.add(graph.get, dashboard.get))
+				Ok(views.html.targets.add(form, graph.get, dashboard.get))
 			}
 		}
 	}
@@ -31,15 +44,24 @@ class TargetsController extends AppController {
 			if (graph.isEmpty) {
 				Redirect(routes.HomeController.index()).flashing(AppFlash.warning("Graph does not exist."))
 			}
-			else if (graph.get.userId != user.id) {
-				Redirect(routes.HomeController.index()).flashing(AppFlash.warning("Graph does not belong to the current user."))
-			}
-			else {
-				val data : Map[String, Seq[String]] = request.body.asFormUrlEncoded.getOrElse(Map())
-				val target = data("target").head
-				TargetModel.createTarget(new Target(graph.get.id, target, user.id, false))
-				Redirect(routes.TargetsController.add(graphId)).flashing(AppFlash.success("Target added successfully."))
-			}
+			addForm.bindFromRequest().fold(
+				formWithErrors => {
+					println(formWithErrors)
+					val dashboard = DashboardModel.findDashboardByID(graph.get.dashboardId)
+					Ok(views.html.targets.add(formWithErrors, graph.get, dashboard.get))
+				},
+				data => {
+					if (graph.get.userId != user.id) {
+						Redirect(routes.HomeController.index()).flashing(AppFlash.warning("Graph does not belong to the current user."))
+					}
+					else {
+						val data : Map[String, Seq[String]] = request.body.asFormUrlEncoded.getOrElse(Map())
+						val target = data("target").head
+						TargetModel.createTarget(new Target(graph.get.id, target, user.id, false))
+						Redirect(routes.TargetsController.add(graphId)).flashing(AppFlash.success("Target added successfully."))
+					}
+				}
+			)
 		}
 	}
 
