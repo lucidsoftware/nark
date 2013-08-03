@@ -5,10 +5,9 @@ import java.util.UUID
 import anorm._
 import play.api.db.DB
 import anorm.~
-import records.{Dashboard, Target}
+import records.Target
 import play.api.Play.current
 import AnormImplicits._
-import com.lucidchart.open.nark.views.html.dashboards.dashboard
 
 class TargetModel extends AppModel {
 	protected val tableName = "graph_targets"
@@ -101,7 +100,7 @@ class TargetModel extends AppModel {
 			SQL("""
 				INSERT INTO """ + tableName + """ (`id`, `graph_id`, `target`, `user_id`, `deleted`)
 				VALUES ({id}, {graph_id}, {target}, {user_id}, {deleted})
-			""").on(
+				ON DUPLICATE KEY UPDATE `target`= {target}""").on(
 				"id"         -> target.id,
 				"graph_id"   -> target.graphId,
 				"target"     -> target.target,

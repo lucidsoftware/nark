@@ -1,7 +1,7 @@
 @(
-	formAdd: Form[_],
-	graph: com.lucidchart.open.nark.models.records.Graph,
-	dashboard: com.lucidchart.open.nark.models.records.Dashboard
+	formEdit: Form[_],
+	target: com.lucidchart.open.nark.models.records.Target,
+	graph: com.lucidchart.open.nark.models.records.Graph
 )(
 	implicit
 	request: com.lucidchart.open.nark.request.AppRequest[_],
@@ -14,18 +14,19 @@
 @import helper._
 
 @com.lucidchart.open.nark.views.html.layouts.main("Home", userOption = Some(user)) {
-	<h3>Add a new target to graph @graph.name for dashboard <a href="@narkRoutes.DashboardsController.dashboard(dashboard.url)">@dashboard.name</a></h3>
+	<h3>Edit Target</h3>
 	<br>
 	@helper.form(action=narkRoutes.TargetsController.addSubmit(graph.id)) {
 		<fieldset>
 			@helpers.csrfHiddenInput()
-			@helper.inputText(formAdd("target"), 'class -> "input-xlarge", 'placeholder -> "Graphite Target", '_label -> "Target", 'required -> true, '_showConstraints -> false)
+			<input type="hidden" name="uuid" value="@target.id" />
+			@helper.inputText(formEdit("target"), 'class -> "input-xlarge", '_label -> "Target", 'required -> true, '_showConstraints -> false)
 			<p class="help-block">
 				Eg. stats.counters.servers.com.lucidchart.mt.eiger.mongod.27018.insert.count<br />
 				OR stats.counters.servers.{REVERSE_HOSTNAME}.mongod.27018.insert.count<br />
 				OR stats.gauges.application.*.logins
 			</p>
-			<button id="add" name="add" class="btn btn-primary">Add</button>
+			<button id="edit" name="edit" class="btn btn-primary">Edit</button>
 		</fieldset>
 	}
 }

@@ -23,7 +23,7 @@
 		<tbody>
 		@targets.map { case target =>
 		<tr>
-			<td>@target.target</td>
+			<td>@target.target&nbsp;&nbsp;&nbsp;<a href="@narkRoutes.TargetsController.edit(graph.id, target.id)">edit</a></td>
 			@if(user.id == target.userId) {
 				<td><a href="@narkRoutes.TargetsController.toggleActivation(target.id)?return_url=@request.path">@{!target.deleted}</a></td>
 			} else {

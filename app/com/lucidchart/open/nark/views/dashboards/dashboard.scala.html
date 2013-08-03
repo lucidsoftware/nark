@@ -21,7 +21,7 @@
 	} else {
 		@if(userOption.isDefined && userOption.get.id == dashboard.userId) {
 			<h3>@dashboard.name</h3>
-		<a href="@narkRoutes.DashboardsController.edit(dashboard.id)">Edit</a>&nbsp;&nbsp;&nbsp;
+			<a href="@narkRoutes.DashboardsController.edit(dashboard.id)">Edit</a>&nbsp;&nbsp;&nbsp;
 			<a href="@narkRoutes.GraphsController.add(dashboard.id)">Add a new graph</a>&nbsp;&nbsp;&nbsp;
 			<a href="@narkRoutes.DashboardsController.toggleActivation(dashboard.id)?return_url=@request.path">Deactivate</a>&nbsp;&nbsp;&nbsp;
 		} else {
@@ -35,7 +35,7 @@
 		<h4>Graphs</h4>
 		@graphs.sortWith(_.sort < _.sort).map { case graph =>
 			<div>
-				@com.lucidchart.open.nark.views.html.helpers.graph(graph)
+				@com.lucidchart.open.nark.views.html.helpers.graph(graph, dashboard)
 				@if(userOption.isDefined && userOption.get.id == dashboard.userId) {
 					@if(!graph.deleted) {
 						<a href="@narkRoutes.TargetsController.add(graph.id)">Add a new target</a>&nbsp;&nbsp;&nbsp;

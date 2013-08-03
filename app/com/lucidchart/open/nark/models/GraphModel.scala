@@ -108,7 +108,7 @@ class GraphModel extends AppModel {
 			SQL("""
 				INSERT INTO """ + tableName + """ (`id`, `name`, `dashboard_id`, `sort`, `type`, `user_id`, `deleted`)
 				VALUES ({id}, {name}, {dashboard_id}, {sort}, {type}, {user_id}, {deleted})
-			""").on(
+				ON DUPLICATE KEY UPDATE `name`= {name}, `type`={type}""").on(
 				"id"         -> graph.id,
 				"name"       -> graph.name,
 				"dashboard_id" -> graph.dashboardId,

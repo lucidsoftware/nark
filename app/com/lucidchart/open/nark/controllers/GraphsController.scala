@@ -2,13 +2,8 @@ package com.lucidchart.open.nark.controllers
 
 import com.lucidchart.open.nark.request.{AppFlash, AppAction, AuthAction}
 import com.lucidchart.open.nark.views
-import com.lucidchart.open.nark.models.{TargetModel, GraphTypes, GraphModel, DashboardModel}
-import com.lucidchart.open.nark.models.records.{Graph, Dashboard}
+import com.lucidchart.open.nark.models.{GraphTypes, GraphModel, DashboardModel}
 import java.util.UUID
-import annotation.target
-import scala.annotation
-import views.html.dashboards.dashboard
-import views.html.helpers.graph
 import play.api.data.Form
 import play.api.data.Forms._
 import com.lucidchart.open.nark.models.records.Graph
@@ -16,14 +11,16 @@ import play.api.data.validation.Constraints
 
 class GraphsController extends AppController {
 
-	private case class AddGraph(name: String, graphType: Int) {
+	private case class AddGraph(name: String, graphType: Int, id: Option[String]) {
 		val graphTypeVal = GraphTypes(graphType)
+		val uuid = id.map(i => UUID.fromString(i))
 	}
 
 	private val addForm = Form(
 		mapping(
 			"name" -> text.verifying(Constraints.pattern("^[a-zA-Z0-9]*$".r, error = "Only alpha-numberic text allowed")),
-			"type" -> number.verifying(Constraints.min(0), Constraints.max(GraphTypes.maxId))
+			"type" -> number.verifying(Constraints.min(0), Constraints.max(GraphTypes.maxId)),
+			"uuid" -> optional(text.verifying(Constraints.pattern("[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}".r)))
 		)(AddGraph.apply)(AddGraph.unapply)
 	)
 
@@ -37,8 +34,25 @@ class GraphsController extends AppController {
 				Redirect(routes.HomeController.index()).flashing(AppFlash.warning("Dashboard does not belong to the current user."))
 			}
 			else {
-				val form = addForm.fill(AddGraph("", 0))
+				val form = addForm.fill(AddGraph("", 0, None))
 				Ok(views.html.graphs.add(form, dashboard.get))
+			}
+		}
+	}
+
+	def edit(dashboardId: UUID, graphId: UUID) = AuthAction.authenticatedUser { implicit user =>
+		AppAction { implicit request =>
+			val dashboard = DashboardModel.findDashboardByID(dashboardId)
+			if (dashboard.isEmpty) {
+				Redirect(routes.HomeController.index()).flashing(AppFlash.warning("Dashboard does not exist."))
+			}
+			else if (dashboard.get.userId != user.id) {
+				Redirect(routes.HomeController.index()).flashing(AppFlash.warning("Dashboard does not belong to the current user."))
+			}
+			else {
+				val graph = GraphModel.findGraphByID(graphId).get
+				val form = addForm.fill(AddGraph(graph.name, graph.typeGraph.id, None))
+				Ok(views.html.graphs.edit(form, graph, dashboard.get))
 			}
 		}
 	}
@@ -61,10 +75,17 @@ class GraphsController extends AppController {
 						else {
 							val name = data.name
 							val graphType = data.graphTypeVal
-							val graphs = GraphModel.findGraphsByDashboardId(dashboard.get.id)
-							val sort = if (!graphs.isEmpty) graphs.map(_.sort).min - 1 else 1000000
-							GraphModel.createGraph(new Graph(name, dashboard.get.id, sort, graphType, user.id, false))
-							Redirect(routes.GraphsController.add(dashboardId)).flashing(AppFlash.success(name + " graph added successfully."))
+							if (data.uuid.isDefined) {
+								val existingGraph = GraphModel.findGraphByID(data.uuid.get).get
+								GraphModel.createGraph(existingGraph.copy(name = name, typeGraph = graphType))
+								Redirect(routes.GraphsController.edit(dashboardId, existingGraph.id)).flashing(AppFlash.success(name + " graph has been updated successfully."))
+							}
+							else {
+								val graphs = GraphModel.findGraphsByDashboardId(dashboard.get.id)
+								val sort = if (!graphs.isEmpty) graphs.map(_.sort).min - 1 else 1000000
+								GraphModel.createGraph(new Graph(name, dashboard.get.id, sort, graphType, user.id, false))
+								Redirect(routes.GraphsController.add(dashboardId)).flashing(AppFlash.success(name + " graph added successfully."))
+							}
 						}
 					}
 				)

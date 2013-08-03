@@ -1,5 +1,6 @@
 @(
-	graph: com.lucidchart.open.nark.models.records.Graph
+	graph: com.lucidchart.open.nark.models.records.Graph,
+	dashboard: com.lucidchart.open.nark.models.records.Dashboard
 )(
 	implicit
 	request: com.lucidchart.open.nark.request.AppRequest[_],
@@ -10,7 +11,7 @@
 
 <b>@graph.name</b>
 @if(userOption.isDefined && userOption.get.id == graph.userId) {
-	&nbsp;<a href="">edit</a>
+	&nbsp;<a href="@narkRoutes.GraphsController.edit(dashboard.id, graph.id)">edit</a>
 }
 <br>
 @if(!graph.deleted) {
