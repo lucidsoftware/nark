@@ -122,6 +122,19 @@ class DashboardsController extends AppController {
 			}
 		}
 	}
+
+	def search(term: String) = AuthAction.maybeAuthenticatedUser { implicit userOption =>
+		AppAction { implicit request =>
+			val matches = if (term.isEmpty) {
+				Nil
+			}
+			else {
+				DashboardModel.searchByName(term)
+			}
+
+			Ok(views.html.dashboards.search(term, matches))
+		}
+	}
 }
 
 object DashboardsController extends DashboardsController

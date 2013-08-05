@@ -18,6 +18,7 @@ GET     /graphite/hosts             com.lucidchart.open.nark.controllers.Graphit
 # Dashboards
 GET     /dashboard/create           com.lucidchart.open.nark.controllers.DashboardsController.create
 POST    /dashboard/create           com.lucidchart.open.nark.controllers.DashboardsController.createSubmit
+GET     /dashboard/search           com.lucidchart.open.nark.controllers.DashboardsController.search(term: String ?= "")
 GET     /dashboard/edit/:uuid       com.lucidchart.open.nark.controllers.DashboardsController.edit(uuid: java.util.UUID)
 POST    /dashboard/edit/:uuid       com.lucidchart.open.nark.controllers.DashboardsController.editSubmit(uuid: java.util.UUID)
 GET     /dashboard/toggle/:uuid     com.lucidchart.open.nark.controllers.DashboardsController.toggleActivation(uuid: java.util.UUID)

@@ -9,6 +9,7 @@ import AnormImplicits._
 import anorm._
 import anorm.SqlParser._
 import play.api.Play.current
+import play.api.Play.configuration
 import play.api.db.DB
 import com.lucidchart.open.nark.views.html.dashboards.dashboard
 
@@ -63,6 +64,23 @@ class DashboardModel extends AppModel {
 			""").on(
 				"url" -> url
 			).as(dashboardsRowParser.singleOpt)(connection)
+		}
+	}
+
+	/**
+	 * Search for dashboards by name
+	 */
+	def searchByName(name: String): List[Dashboard] = {
+		DB.withConnection("main") { connection =>
+			SQL("""
+				SELECT """ + fields + """
+				FROM """ + tableName + """
+				WHERE `name` LIKE {name}
+				LIMIT {limit}
+			""").on(
+				"name" -> ("%" + name + "%"),
+				"limit" -> configuration.getInt("search.limit").get
+			).as(dashboardsRowParser *)(connection)
 		}
 	}
 
