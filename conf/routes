@@ -11,7 +11,8 @@ GET     /logout                     com.lucidchart.open.nark.controllers.AuthCon
 GET     /openid-callback            com.lucidchart.open.nark.controllers.AuthController.openidCallback
 
 # Graphite data
-GET     /graphite/data              com.lucidchart.open.nark.controllers.GraphiteDataController.retrieve()
+GET     /graphite/datapoints        com.lucidchart.open.nark.controllers.GraphiteDataController.dataPoints()
+GET     /graphite/metrics           com.lucidchart.open.nark.controllers.GraphiteDataController.metrics()
 
 # Dashboards
 GET     /dashboard/create           com.lucidchart.open.nark.controllers.DashboardsController.create

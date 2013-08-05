@@ -11,29 +11,39 @@ import play.api.data.Forms._
 import play.api.data.validation.Constraints
 
 class GraphiteDataController extends AppController {
-	private case class RetrieveFormSubmission(
+	private case class DataPointsFormSubmission(
 		targets: List[String],
 		secondsOption: Option[Int],
 		fromOption: Option[Date],
 		toOption: Option[Date]
 	)
 
-	private val retrieveForm = Form(
+	private case class MetricsFormSubmission(
+		target: String
+	)
+
+	private val dataPointsForm = Form(
 		mapping(
 			"target" -> list(text).verifying { l => l.size > 0 },
 			"seconds" -> optional(number.verifying(Constraints.min(1))),
 			"from" -> optional(Forms.internetDate),
 			"to" -> optional(Forms.internetDate)
-		)(RetrieveFormSubmission.apply)(RetrieveFormSubmission.unapply).verifying { f =>
+		)(DataPointsFormSubmission.apply)(DataPointsFormSubmission.unapply).verifying { f =>
 			f.secondsOption.isDefined || (f.fromOption.isDefined && f.toOption.isDefined)
 		}
+	)
+
+	private val metricsForm = Form(
+		mapping(
+			"target" -> text.verifying(Constraints.minLength(1))
+		)(MetricsFormSubmission.apply)(MetricsFormSubmission.unapply)
 	)
 
 	/**
 	 * Get data from graphite and return it
 	 */
-	def retrieve = AppAction { implicit request =>
-		retrieveForm.bindFromRequest().fold(
+	def dataPoints = AppAction { implicit request =>
+		dataPointsForm.bindFromRequest().fold(
 			formWithErrors => {
 				Logger.error("Graphite data request failed with errors: " + formWithErrors.errors.toString)
 				BadRequest
@@ -52,6 +62,22 @@ class GraphiteDataController extends AppController {
 
 				val filteredReturnedData = returnedData.filterEmptyTargets()
 				Ok(views.models.graphiteData(filteredReturnedData))
+			}
+		)
+	}
+
+	/**
+	 * Search for metrics in graphite
+	 */
+	def metrics = AppAction { implicit request =>
+		metricsForm.bindFromRequest().fold(
+			formWithErrors => {
+				Logger.error("Graphite metric request failed with errors: " + formWithErrors.errors.toString)
+				BadRequest
+			},
+			data => {
+				val metrics = Graphite.metrics(data.target)
+				Ok(views.models.graphiteMetricData(metrics))
 			}
 		)
 	}
