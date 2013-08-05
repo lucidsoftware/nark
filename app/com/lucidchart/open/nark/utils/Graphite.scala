@@ -39,7 +39,7 @@ class Graphite(protocol: String, host: String, port: Int) {
 
 	protected def addTargets(builder: URIBuilder, targets: List[String]) {
 		targets.foreach { target =>
-			builder.setParameter("target", target)
+			builder.addParameter("target", target)
 		}
 	}
 
