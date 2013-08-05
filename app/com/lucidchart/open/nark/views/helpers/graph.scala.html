@@ -7,13 +7,49 @@
 )
 @import com.lucidchart.open.nark.controllers.{routes=>narkRoutes}
 @import com.lucidchart.open.nark.views
+<script type="text/javascript">
+	$(document).ready(function() {
+		@if(!graph.deleted && !graph.targets.isEmpty) {
+
+			var targets = "@graph.targets.filter(!_.deleted).map(_.target).mkString("&target[]=")";
+			var query = (targets == '') ? '' : "target[]=" + targets;
+
+			$.ajax({
+				type: 'GET',
+				url: "/graphite/datapoints?seconds=3600&" + query,
+				dataType: 'json',
+				timeout: 300000,
+				success: function(data) {
+					@if(graph.typeGraph == com.lucidchart.open.nark.models.GraphTypes.NORMAL) {
+						plotLineGraph("graph-@graph.id.toString svg", data)
+					} else {
+						plotStackedGraph("graph-@graph.id.toString svg", data)
+					}
+				},
+				failure: function(data) {
+					console.log("Call to graphite failed");
+				}
+			});
+		}
+	});
+</script>
 
 <b>@graph.name</b>
 @if(userOption.isDefined && userOption.get.id == graph.userId) {
 	&nbsp;<a href="@narkRoutes.GraphsController.edit(graph.id)">edit</a>
 }
 <br>
+<style>
+
+	#graph-@graph.id.toString svg {
+	height: 400px;
+	}
+
+</style>
+
 @if(!graph.deleted) {
-	SHOW GRAPH HERE
+	<div id="graph-@graph.id.toString">
+		<svg></svg>
+	</div>
 	<br>
 }
