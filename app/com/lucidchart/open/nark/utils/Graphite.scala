@@ -16,7 +16,6 @@ case class GraphiteTarget(target: String, datapoints: List[GraphiteDataPoint])
 case class GraphiteDataPoint(date: Date, value: Option[BigDecimal])
 
 class Graphite(protocol: String, host: String, port: Int) {
-	protected val client = new AutoRetryHttpClient()
 	protected val dateFormatter = new SimpleDateFormat("kk:mm_yyyyMMdd")
 
 	protected def basicUriBuilder() = {
@@ -39,6 +38,7 @@ class Graphite(protocol: String, host: String, port: Int) {
 	}
 
 	protected def execute(uri: URI): JsValue = {
+		val client = new AutoRetryHttpClient()
 		val request = new HttpGet(uri)
 		val response = client.execute(request)
 		if (response.getStatusLine().getStatusCode() != 200) {
