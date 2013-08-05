@@ -35,7 +35,7 @@ class GraphiteDataController extends AppController {
 
 	private val metricsForm = Form(
 		mapping(
-			"target" -> text.verifying(Constraints.minLength(1))
+			"target" -> text
 		)(MetricsFormSubmission.apply)(MetricsFormSubmission.unapply)
 	)
 

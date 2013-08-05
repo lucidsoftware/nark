@@ -19,6 +19,7 @@
 		<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 		<link rel="stylesheet" type="text/css" href="@routes.Assets.at("css/main.css")" />
+		<link rel="stylesheet" type="text/css" href="@routes.Assets.at("jquery-ui-1.10.3/core/themes/base/minified/jquery-ui.min.css")" />
 		<link rel="stylesheet" type="text/css" href="@routes.Assets.at("bootstrap-2.3.2/css/bootstrap.min.css")" />
 		<style>
 			body {
@@ -30,6 +31,8 @@
 		@for(style <- styles) {
 			<link rel="stylesheet" type="text/css" href="@routes.Assets.at("css/" + style)" />
 		}
+
+		<script type="text/javascript" src="@routes.Assets.at("js/jquery-2.0.3.min.js")"></script>
 
 		<!--[if lt IE 9]>
 		<script type="text/javascript">
@@ -112,7 +115,7 @@
 			</footer>
 		</div>
 
-		<script type="text/javascript" src="@routes.Assets.at("js/jquery-2.0.3.min.js")"></script>
+		<script type="text/javascript" src="@routes.Assets.at("jquery-ui-1.10.3/core/ui/minified/jquery-ui.min.js")"></script>
 		<script type="text/javascript" src="@routes.Assets.at("bootstrap-2.3.2/js/bootstrap.min.js")"></script>
 		@for(script <- scripts) {
 			<script type="text/javascript" src="@routes.Assets.at("js/" + script)"></script>

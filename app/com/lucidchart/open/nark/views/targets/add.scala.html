@@ -12,13 +12,17 @@
 @import helper.twitterBootstrap._
 @import helper._
 
-@com.lucidchart.open.nark.views.html.layouts.main("Home", userOption = Some(user)) {
+@com.lucidchart.open.nark.views.html.layouts.main("Home", userOption = Some(user), scripts = List("graphite-metric-search.js")) {
+	<style type="text/css">
+		#target-input { width: 100%; }
+	</style>
+
 	<h3>Add a new target to graph @graph.name for dashboard <a href="@narkRoutes.DashboardsController.dashboard(graph.dashboard.url)">@graph.dashboard.name</a></h3>
 	<br>
 	@helper.form(action=narkRoutes.TargetsController.addSubmit(graph.id)) {
 		<fieldset>
 			@helpers.csrfHiddenInput()
-			@helper.inputText(formAdd("target"), 'class -> "input-xlarge", 'placeholder -> "Graphite Target", '_label -> "Target", 'required -> true, '_showConstraints -> false)
+			@helper.inputText(formAdd("target"), 'id -> "target-input", 'class -> "input-xlarge", 'placeholder -> "Graphite Target", '_label -> "Target", 'required -> true, '_showConstraints -> false)
 			<p class="help-block">
 				Eg. stats.counters.servers.com.lucidchart.mt.eiger.mongod.27018.insert.count<br />
 				OR stats.counters.servers.{REVERSE_HOSTNAME}.mongod.27018.insert.count<br />
