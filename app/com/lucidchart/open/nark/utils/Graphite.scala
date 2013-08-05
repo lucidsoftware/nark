@@ -11,7 +11,14 @@ import scala.io.Source
 import play.api.libs.json._
 import java.text.SimpleDateFormat
 
-case class GraphiteData(targets: List[GraphiteTarget])
+case class GraphiteData(targets: List[GraphiteTarget]) {
+	def filterEmptyTargets() = copy(
+		targets = targets.filter { target =>
+			target.datapoints.exists(_.value.isDefined)
+		}
+	)
+}
+
 case class GraphiteTarget(target: String, datapoints: List[GraphiteDataPoint])
 case class GraphiteDataPoint(date: Date, value: Option[BigDecimal])
 

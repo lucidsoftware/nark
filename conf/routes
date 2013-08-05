@@ -10,6 +10,9 @@ GET     /login                      com.lucidchart.open.nark.controllers.AuthCon
 GET     /logout                     com.lucidchart.open.nark.controllers.AuthController.logout
 GET     /openid-callback            com.lucidchart.open.nark.controllers.AuthController.openidCallback
 
+# Graphite data
+GET     /graphite/data              com.lucidchart.open.nark.controllers.GraphiteDataController.retrieve()
+
 # Dashboards
 GET     /dashboard/create           com.lucidchart.open.nark.controllers.DashboardsController.create
 POST    /dashboard/create           com.lucidchart.open.nark.controllers.DashboardsController.createSubmit
