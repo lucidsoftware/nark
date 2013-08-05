@@ -60,7 +60,7 @@
 										@if(!history.isEmpty) {
 											<li class="divider"></li>
 											@history.map { item =>
-												<li><a href="@narkRoutes.DashboardsController.dashboard(item.url)">abc @item.name</a></li>
+												<li><a href="@narkRoutes.DashboardsController.dashboard(item.url)">@item.name</a></li>
 											}
 										}
 									}
