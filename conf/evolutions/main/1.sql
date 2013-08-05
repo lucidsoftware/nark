@@ -49,7 +49,8 @@ CREATE TABLE `dashboards` (
 	`deleted` TINYINT NOT NULL DEFAULT 0,
 	PRIMARY KEY (`hiddenid`),
 	UNIQUE KEY `app_pk` (`id`),
-	UNIQUE KEY `url_key` (`url`)
+	UNIQUE KEY `url_key` (`url`),
+	KEY `name_key` (`name`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_general_ci;
 
 CREATE TABLE `graphs` (
