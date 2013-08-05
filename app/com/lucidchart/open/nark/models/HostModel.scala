@@ -53,6 +53,19 @@ class HostModel extends AppModel {
 			).executeUpdate()(connection)
 		}
 	}
+
+	/**
+	 * Find all the hosts that match the name
+	 */
+	def findAllByName(name: String) = {
+		DB.withConnection("main") { connection =>
+			SQL("""
+				SELECT """ + hostsSelectAllFields + """ FROM `hosts` WHERE `name` LIKE {name}
+			""").on(
+				"name" -> ("%" + name + "%")
+			).as(hostsRowParser *)(connection)
+		}
+	}
 }
 
 object HostModel extends HostModel

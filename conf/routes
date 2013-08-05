@@ -13,6 +13,7 @@ GET     /openid-callback            com.lucidchart.open.nark.controllers.AuthCon
 # Graphite data
 GET     /graphite/datapoints        com.lucidchart.open.nark.controllers.GraphiteDataController.dataPoints()
 GET     /graphite/metrics           com.lucidchart.open.nark.controllers.GraphiteDataController.metrics()
+GET     /graphite/hosts             com.lucidchart.open.nark.controllers.GraphiteDataController.hosts()
 
 # Dashboards
 GET     /dashboard/create           com.lucidchart.open.nark.controllers.DashboardsController.create

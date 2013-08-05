@@ -3,11 +3,13 @@ package com.lucidchart.open.nark.controllers
 import com.lucidchart.open.nark.request.{AppFlash, AppAction, AuthAction}
 import com.lucidchart.open.nark.views
 import com.lucidchart.open.nark.utils.Graphite
+import com.lucidchart.open.nark.models.HostModel
 import com.lucidchart.open.nark.forms.Forms
 import java.util.Date
 import play.api.Logger
 import play.api.data.Form
 import play.api.data.Forms._
+import play.api.libs.json.Json
 import play.api.data.validation.Constraints
 
 class GraphiteDataController extends AppController {
@@ -20,6 +22,10 @@ class GraphiteDataController extends AppController {
 
 	private case class MetricsFormSubmission(
 		target: String
+	)
+
+	private case class HostFormSubmission(
+		search: String
 	)
 
 	private val dataPointsForm = Form(
@@ -37,6 +43,12 @@ class GraphiteDataController extends AppController {
 		mapping(
 			"target" -> text
 		)(MetricsFormSubmission.apply)(MetricsFormSubmission.unapply)
+	)
+
+	private val hostForm = Form(
+		mapping(
+			"search" -> text
+		)(HostFormSubmission.apply)(HostFormSubmission.unapply)
 	)
 
 	/**
@@ -78,6 +90,21 @@ class GraphiteDataController extends AppController {
 			data => {
 				val metrics = Graphite.metrics(data.target)
 				Ok(views.models.graphiteMetricData(metrics))
+			}
+		)
+	}
+
+	/**
+	 * Search for graphite hosts in the host cache
+	 */
+	def hosts = AppAction { implicit request =>
+		hostForm.bindFromRequest().fold(
+			formWithErrors => {
+				BadRequest
+			},
+			data => {
+				val hosts = HostModel.findAllByName(data.search)
+				Ok(Json.toJson(hosts.map(views.models.host(_))))
 			}
 		)
 	}
