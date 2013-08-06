@@ -19,7 +19,7 @@
 		<fieldset>
 			@helpers.csrfHiddenInput()
 			@helper.inputText(formAdd("name"), 'class -> "input-xlarge", '_label -> "Name", 'placeholder -> "Eg. CPU", 'required -> true, '_showConstraints -> false)
-			@helper.select(formAdd("type"), com.lucidchart.open.nark.models.GraphTypes.values.map(m => m.id.toString -> m.toString).toSeq, '_label -> "Type", '_showConstraints -> false)
+			@helper.select(formAdd("type"), com.lucidchart.open.nark.models.records.GraphType.values.map(m => m.id.toString -> m.toString).toSeq, '_label -> "Type", '_showConstraints -> false)
 			<button id="add" name="create" class="btn btn-primary">Add</button>
 		</fieldset>
 	}

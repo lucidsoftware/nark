@@ -3,17 +3,13 @@ package com.lucidchart.open.nark.models
 import java.util.UUID
 
 import records.Graph
+import records.GraphType
 
 import AnormImplicits._
 import anorm._
 import anorm.SqlParser._
 import play.api.Play.current
 import play.api.db.DB
-
-object GraphTypes extends Enumeration {
-	val NORMAL = Value(0,"Normal")
-	val STACKED = Value(1,"Stacked")
-}
 
 class GraphModel extends AppModel {
 	protected val graphsRowParser = {
@@ -24,7 +20,7 @@ class GraphModel extends AppModel {
 		get[Int]("type") ~
 		get[Int]("deleted") map {
 			case id ~ name ~ dashboard_id ~ sort ~ type_graph ~ deleted =>
-				new Graph(id, name, dashboard_id, sort, GraphTypes(type_graph), (deleted == 1))
+				new Graph(id, name, dashboard_id, sort, GraphType(type_graph), (deleted == 1))
 		}
 	}
 	

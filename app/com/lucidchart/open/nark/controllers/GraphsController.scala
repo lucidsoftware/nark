@@ -2,7 +2,8 @@ package com.lucidchart.open.nark.controllers
 
 import com.lucidchart.open.nark.request.{AppFlash, AppAction, AuthAction}
 import com.lucidchart.open.nark.views
-import com.lucidchart.open.nark.models.{GraphTypes, GraphModel, DashboardModel}
+import com.lucidchart.open.nark.models.{GraphModel, DashboardModel}
+import com.lucidchart.open.nark.models.records.GraphType
 import java.util.UUID
 import play.api.data.Form
 import play.api.data.Forms._
@@ -10,12 +11,12 @@ import com.lucidchart.open.nark.models.records.Graph
 import play.api.data.validation.Constraints
 
 class GraphsController extends AppController {
-	private case class AddGraph(name: String, graphType: GraphTypes.Value)
+	private case class AddGraph(name: String, graphType: GraphType.Value)
 
 	private val addForm = Form(
 		mapping(
 			"name" -> text.verifying(Constraints.minLength(1)),
-			"type" -> number.verifying("Invalid graph type", x => GraphTypes.values.map(_.id).contains(x)).transform[GraphTypes.Value](GraphTypes(_), _.id)
+			"type" -> number.verifying("Invalid graph type", x => GraphType.values.map(_.id).contains(x)).transform[GraphType.Value](GraphType(_), _.id)
 		)(AddGraph.apply)(AddGraph.unapply)
 	)
 
@@ -29,7 +30,7 @@ class GraphsController extends AppController {
 				Redirect(routes.HomeController.index()).flashing(AppFlash.warning("Dashboard does not belong to the current user."))
 			}
 			else {
-				val form = addForm.fill(AddGraph("", GraphTypes.NORMAL))
+				val form = addForm.fill(AddGraph("", GraphType.normal))
 				Ok(views.html.graphs.add(form, dashboard.get))
 			}
 		}

@@ -20,7 +20,7 @@
 				dataType: 'json',
 				timeout: 300000,
 				success: function(data) {
-					@if(graph.typeGraph == com.lucidchart.open.nark.models.GraphTypes.NORMAL) {
+					@if(graph.typeGraph == com.lucidchart.open.nark.models.records.GraphType.normal) {
 						plotLineGraph("graph-@graph.id.toString svg", data)
 					} else {
 						plotStackedGraph("graph-@graph.id.toString svg", data)
