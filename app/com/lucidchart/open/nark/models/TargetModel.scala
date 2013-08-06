@@ -14,7 +14,7 @@ class TargetModel extends AppModel {
 		get[UUID]("id") ~
 		get[UUID]("graph_id") ~
 		get[String]("target") ~
-		get[Int]("deleted") map {
+		get[Boolean]("deleted") map {
 			case id ~ graph_id ~ target ~ deleted =>
 				new Target(id, graph_id, target, (deleted == 1))
 		}

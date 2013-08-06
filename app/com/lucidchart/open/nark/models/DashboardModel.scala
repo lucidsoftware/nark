@@ -20,7 +20,7 @@ class DashboardModel extends AppModel {
 		get[String]("url") ~
 		get[Date]("created") ~
 		get[UUID]("user_id") ~
-		get[Int]("deleted") map {
+		get[Boolean]("deleted") map {
 			case id ~ name ~ url ~ created ~ user_id ~ deleted =>
 				new Dashboard(id, name, url, created, user_id, (deleted == 1))
 		}
@@ -120,12 +120,31 @@ class DashboardModel extends AppModel {
 			SQL("""
 				INSERT INTO `dashboards` (`id`, `name`, `url`, `created`, `user_id`, `deleted`)
 				VALUES ({id}, {name}, {url}, {created}, {user_id}, {deleted})
-				ON DUPLICATE KEY UPDATE `name`= {name}, `url`={url}""").on(
+			""").on(
 				"id"         -> dashboard.id,
 				"name"       -> dashboard.name,
 				"url"        -> dashboard.url,
 				"created"    -> new Date(),
 				"user_id"    -> dashboard.userId,
+				"deleted"    -> dashboard.deleted
+			).executeUpdate()(connection)
+		}
+	}
+
+	/**
+	 * Edit an existing dashboard. not all fields can be updated.
+	 * Throws an exception on failure
+	 * 
+	 * @param dashboard
+	 */
+	def editDashboard(dashboard: Dashboard) {
+		DB.withConnection("main") { connection =>
+			SQL("""
+				UPDATE `dashboards` SET `name` = {name}, `url` = {url}, `deleted` = {deleted} WHERE `id` = {id}
+			""").on(
+				"id"         -> dashboard.id,
+				"name"       -> dashboard.name,
+				"url"        -> dashboard.url,
 				"deleted"    -> dashboard.deleted
 			).executeUpdate()(connection)
 		}

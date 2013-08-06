@@ -1,6 +1,6 @@
 package com.lucidchart.open.nark.controllers
 
-import com.lucidchart.open.nark.request.{AppFlash, AppAction, AuthAction}
+import com.lucidchart.open.nark.request.{AppFlash, AppAction, AuthAction, DashboardAction}
 import com.lucidchart.open.nark.views
 import com.lucidchart.open.nark.utils.DashboardHistory
 import com.lucidchart.open.nark.utils.DashboardHistoryItem
@@ -12,8 +12,8 @@ import play.api.data.Forms._
 import validation.Constraints
 
 class DashboardsController extends AppController {
-
 	private case class CreateDashboard(name: String, url: String)
+	private case class EditDashboard(name: String, url: String)
 
 	private val createForm = Form(
 		mapping(
@@ -21,7 +21,16 @@ class DashboardsController extends AppController {
 			"url" -> text.verifying(Constraints.pattern("^[a-zA-Z0-9\\.\\-_]*$".r, error = "Only alpha-numberic text and periods (.), dashes (-), and underscores (_) allowed"))
 		)(CreateDashboard.apply)(CreateDashboard.unapply)
 	)
+	private val editForm = Form(
+		mapping(
+			"name" -> text.verifying(Constraints.minLength(1)),
+			"url" -> text.verifying(Constraints.pattern("^[a-zA-Z0-9\\.\\-_]*$".r, error = "Only alpha-numberic text and periods (.), dashes (-), and underscores (_) allowed"))
+		)(EditDashboard.apply)(EditDashboard.unapply)
+	)
 
+	/**
+	 * Create a new dashboard
+	 */
 	def create = AuthAction.authenticatedUser { implicit user =>
 		AppAction { implicit request =>
 			val form = createForm.fill(CreateDashboard("", ""))
@@ -29,22 +38,9 @@ class DashboardsController extends AppController {
 		}
 	}
 
-	def edit(uuid: UUID) = AuthAction.authenticatedUser { implicit user =>
-		AppAction { implicit request =>
-			val dashboard = DashboardModel.findDashboardByID(uuid)
-			if (dashboard.isEmpty) {
-				Redirect(routes.HomeController.index()).flashing(AppFlash.warning("Dashboard does not exist."))
-			}
-			else if (dashboard.get.userId != user.id) {
-				Redirect(routes.HomeController.index()).flashing(AppFlash.warning("Dashboard does not belong to the current user."))
-			}
-			else {
-				val form = createForm.fill(CreateDashboard(dashboard.get.name, dashboard.get.url))
-				Ok(views.html.dashboards.edit(form, dashboard.get))
-			}
-		}
-	}
-
+	/**
+	 * Submit the create form
+	 */
 	def createSubmit = AuthAction.authenticatedUser { implicit user =>
 		AppAction { implicit request =>
 			createForm.bindFromRequest().fold(
@@ -52,50 +48,53 @@ class DashboardsController extends AppController {
 					Ok(views.html.dashboards.create(formWithErrors))
 				},
 				data => {
-					val name = data.name
-					val url = data.url
-					DashboardModel.createDashboard(new Dashboard(name, url, user.id, false))
-					Redirect(routes.DashboardsController.create()).flashing(AppFlash.success(name + " dashboard added successfully."))
+					DashboardModel.createDashboard(new Dashboard(data.name, data.url, user.id, false))
+					Redirect(routes.DashboardsController.dashboard(data.url)).flashing(AppFlash.success("Dashboard was created successfully."))
 				}
 			)
 		}
 	}
 
-	def editSubmit(dashboardId: UUID) = AuthAction.authenticatedUser { implicit user =>
-		AppAction { implicit request =>
-			val existingDashboard = DashboardModel.findDashboardByID(dashboardId)
-			if (existingDashboard.isEmpty) {
-				Redirect(routes.HomeController.index()).flashing(AppFlash.warning("Dashboard does not exist."))
+	/**
+	 * Edit an existing dashboard
+	 */
+	def edit(dashboardId: UUID) = AuthAction.authenticatedUser { implicit user =>
+		DashboardAction.dashboardManagementAccess(dashboardId, user.id) { dashboard =>
+			AppAction { implicit request =>
+				val form = editForm.fill(EditDashboard(dashboard.name, dashboard.url))
+				Ok(views.html.dashboards.edit(form, dashboard))
 			}
-			else {
-				createForm.bindFromRequest().fold(
+		}
+	}
+
+	/**
+	 * Submit the edit form
+	 */
+	def editSubmit(dashboardId: UUID) = AuthAction.authenticatedUser { implicit user =>
+		DashboardAction.dashboardManagementAccess(dashboardId, user.id) { dashboard =>
+			AppAction { implicit request =>
+				editForm.bindFromRequest().fold(
 					formWithErrors => {
-						Ok(views.html.dashboards.edit(formWithErrors, existingDashboard.get))
+						Ok(views.html.dashboards.edit(formWithErrors, dashboard))
 					},
 					data => {
-						if (existingDashboard.get.userId != user.id) {
-							Redirect(routes.HomeController.index()).flashing(AppFlash.warning("Dashboard does not belong to the current user."))
-						}
-						val name = data.name
-						val url = data.url
-						DashboardModel.createDashboard(existingDashboard.get.copy(name = name, url = url))
-						Redirect(routes.DashboardsController.edit(existingDashboard.get.id)).flashing(AppFlash.success(name + " dashboard has been updated successfully."))
+						DashboardModel.editDashboard(dashboard.copy(name = data.name, url = data.url))
+						Redirect(routes.DashboardsController.dashboard(data.url)).flashing(AppFlash.success("Dashboard was updated successfully."))
 					}
 				)
 			}
 		}
 	}
 
-	def dashboard(url: String) = AuthAction.maybeAuthenticatedUser { implicit userOption =>
-		AppAction { implicit request =>
-			val dashboard = DashboardModel.findDashboardByURL(url)
-			if (dashboard.isEmpty) {
-				Redirect(routes.HomeController.index()).flashing(AppFlash.warning("Dashboard does not exist."))
-			}
-			else {
-				val historyItem = new DashboardHistoryItem(dashboard.get)
+	/**
+	 * Show the dashboard with its graphs, targets, and filters.
+	 */
+	def dashboard(url: String) = DashboardAction.existingDashboardByUrl(url) { dashboard =>
+		AuthAction.maybeAuthenticatedUser { implicit userOption =>
+			AppAction { implicit request =>
+				val historyItem = new DashboardHistoryItem(dashboard)
 				val newHistoryCookie = DashboardHistory.addToHistory(request, historyItem)
-				Ok(views.html.dashboards.dashboard(dashboard.get)).withCookies(newHistoryCookie)
+				Ok(views.html.dashboards.dashboard(dashboard)).withCookies(newHistoryCookie)
 			}
 		}
 	}

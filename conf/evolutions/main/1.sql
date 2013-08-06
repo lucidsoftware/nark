@@ -46,7 +46,7 @@ CREATE TABLE `dashboards` (
 	`url` VARCHAR(15) CHARACTER SET UTF8 COLLATE UTF8_BIN NOT NULL,
 	`created` DATETIME NOT NULL,
 	`user_id` BINARY(16) NOT NULL,
-	`deleted` TINYINT NOT NULL DEFAULT 0,
+	`deleted` BOOLEAN NOT NULL DEFAULT 0,
 	PRIMARY KEY (`hiddenid`),
 	UNIQUE KEY `app_pk` (`id`),
 	UNIQUE KEY `url_key` (`url`),
@@ -60,7 +60,7 @@ CREATE TABLE `graphs` (
 	`dashboard_id` BINARY(16) NOT NULL,
 	`sort` INT NOT NULL,
 	`type` TINYINT UNSIGNED NOT NULL,
-	`deleted` TINYINT NOT NULL DEFAULT 0,
+	`deleted` BOOLEAN NOT NULL DEFAULT 0,
 	PRIMARY KEY (`hiddenid`),
 	UNIQUE KEY `app_pk` (`id`),
 	KEY `dashboard_key` (`dashboard_id`, `sort`)
@@ -71,7 +71,7 @@ CREATE TABLE `graph_targets` (
 	`id` BINARY(16) NOT NULL,
 	`graph_id` BINARY(16) NOT NULL,
 	`target` VARCHAR(500) NOT NULL,
-	`deleted` TINYINT NOT NULL DEFAULT 0,
+	`deleted` BOOLEAN NOT NULL DEFAULT 0,
 	PRIMARY KEY (`hiddenid`),
 	UNIQUE KEY `app_pk` (`id`),
 	KEY `graph_key` (`graph_id`)
