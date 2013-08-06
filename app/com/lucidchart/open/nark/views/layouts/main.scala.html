@@ -100,11 +100,23 @@
 		<div class="container">
 			<div class="flash-container">
 				@if(!request.flash.isEmpty) {
-					<div class="alert alert-@request.flash("level")">
+					<div id="flash-page" class="alert alert-@request.flash("level")">
 						<button type="button" class="close" data-dismiss="alert">&times;</button>
 						<strong>@request.flash("title")</strong>
 						@request.flash("message")
 					</div>
+					<script type="text/javascript">
+						$(document).ready(function() {
+							setTimeout(function() {
+								var element = $('#flash-page');
+								element.fadeTo(2000, 0, function() {
+									element.slideUp(400, function() {
+										element.remove();
+									});
+								});
+							}, 3000);
+						});
+					</script>
 				}
 			</div>
 
