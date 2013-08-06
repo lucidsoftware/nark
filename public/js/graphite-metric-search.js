@@ -2,7 +2,7 @@
 $(document).ready(function() {
 	$('#target-input').autocomplete({
 		autoFocus: true,
-		delay: 50,
+		delay: 500,
 		minLength: 0,
 		select: function(event, selected) {
 			$(event.target).focus();
