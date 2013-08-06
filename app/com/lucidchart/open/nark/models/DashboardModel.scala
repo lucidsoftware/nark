@@ -22,7 +22,7 @@ class DashboardModel extends AppModel {
 		get[UUID]("user_id") ~
 		get[Boolean]("deleted") map {
 			case id ~ name ~ url ~ created ~ user_id ~ deleted =>
-				new Dashboard(id, name, url, created, user_id, (deleted == 1))
+				new Dashboard(id, name, url, created, user_id, deleted)
 		}
 	}
 	

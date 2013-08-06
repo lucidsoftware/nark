@@ -16,7 +16,7 @@ class TargetModel extends AppModel {
 		get[String]("target") ~
 		get[Boolean]("deleted") map {
 			case id ~ graph_id ~ target ~ deleted =>
-				new Target(id, graph_id, target, (deleted == 1))
+				new Target(id, graph_id, target, deleted)
 		}
 	}
 
@@ -74,6 +74,7 @@ class TargetModel extends AppModel {
 	 * @param target
 	 */
 	def toggleActivation(target: Target) {
+		println(!target.deleted)
 		DB.withConnection("main") { connection =>
 			SQL("""
 				UPDATE `graph_targets` SET `deleted` = {deleted}

@@ -20,7 +20,7 @@ class GraphModel extends AppModel {
 		get[Int]("type") ~
 		get[Boolean]("deleted") map {
 			case id ~ name ~ dashboard_id ~ sort ~ type_graph ~ deleted =>
-				new Graph(id, name, dashboard_id, sort, GraphType(type_graph), (deleted == 1))
+				new Graph(id, name, dashboard_id, sort, GraphType(type_graph), deleted)
 		}
 	}
 	
