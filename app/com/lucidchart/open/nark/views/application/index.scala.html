@@ -25,7 +25,7 @@
 			</tr>
 			</thead>
 			<tbody>
-				@dashboards.filter(d => userOption.get.id == d.userId).sortBy(_.name).take(5).map { case dashboard =>
+				@dashboards.filter(d => userOption.get.id == d.userId).sortWith(_.name.toLowerCase < _.name.toLowerCase).take(5).map { case dashboard =>
 					<tr>
 						<td><a href="@narkRoutes.DashboardsController.dashboard(dashboard.url)">@dashboard.name</a></td>
 						@if(userOption.get.id == dashboard.userId) {
@@ -49,7 +49,7 @@
 			</tr>
 			</thead>
 			<tbody>
-			@dashboards.sortBy(_.name).take(5).map { case dashboard =>
+			@dashboards.sortWith(_.name.toLowerCase < _.name.toLowerCase).take(5).map { case dashboard =>
 				<tr>
 					<td><a href="@narkRoutes.DashboardsController.dashboard(dashboard.url)">@dashboard.name</a></td>
 					@if(userOption.isDefined && userOption.get.id == dashboard.userId) {
