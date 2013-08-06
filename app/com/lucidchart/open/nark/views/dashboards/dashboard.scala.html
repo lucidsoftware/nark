@@ -8,8 +8,64 @@
 @import com.lucidchart.open.nark.controllers.{routes=>narkRoutes}
 @import com.lucidchart.open.nark.views
 
-@com.lucidchart.open.nark.views.html.layouts.main(dashboard.name, List("d3/d3.v3.min.js", "nv.d3.min.js", "graph.js"), List("nv.d3.css"), userOption = userOption){
-	@if(dashboard.deleted) {
+@com.lucidchart.open.nark.views.html.layouts.main(dashboard.name, List("d3/d3.v3.min.js", "nv.d3.min.js", "dashboard.js", "daterangepicker.js", "moment.min.js"), List("nv.d3.css", "daterangepicker-bs2.css"), userOption = userOption){
+<script type="text/javascript">
+	$(document).ready(function() {
+		$('#graphrange').daterangepicker(
+			{
+				ranges: {
+					'30 Min': [moment().subtract('minutes', 30), moment()],
+					'1 Hour': [moment().subtract('hours', 1), moment()],
+					'2 Hour': [moment().subtract('hours', 2), moment()],
+					'3 Hour': [moment().subtract('hours', 3), moment()],
+					'6 Hour': [moment().subtract('hours', 6), moment()],
+					'12 Hour': [moment().subtract('hours', 12), moment()],
+					'24 Hour': [moment().subtract('hours', 24), moment()],
+					'Today': [moment(), moment()],
+					'Yesterday': [moment().subtract('days', 1), moment().subtract('days', 1)],
+					'Last 7 Days': [moment().subtract('days', 6), moment()],
+					'Last 30 Days': [moment().subtract('days', 29), moment()],
+					'This Month': [moment().startOf('month'), moment().endOf('month')],
+					'Last Month': [moment().subtract('month', 1).startOf('month'), moment().subtract('month', 1).endOf('month')]
+				},
+				timePicker: true,
+				timePickerIncrement: 30,
+				format: 'MM/DD/YYYY h:mm A'
+			},
+			function(start, end) {
+				$('#graphrange span').html(start.format('MMMM D, YYYY, h:mm A') + ' - ' + end.format('MMMM D, YYYY, h:mm A'));
+				var start_timestamp = start.format('X');
+				var end_timestamp = end.format('X');
+				updateGraphs(start_timestamp, end_timestamp)
+			}
+		);
+
+		$('#graphrange span').html(moment().subtract('hours', 1).format('MMMM D, YYYY, h:mm A') + ' - ' + moment().format('MMMM D, YYYY, h:mm A'));
+
+		function updateGraphs(start, end) {
+			@dashboard.graphs.map { case graph =>
+				@if(!graph.deleted && !graph.targets.isEmpty) {
+					if (!start) {
+						start = moment().subtract("hours", 1).format('X');
+					}
+					if (!end) {
+						end = moment().format('X');
+					}
+					var targets = "@graph.targets.filter(!_.deleted).map(_.target).mkString("&target[]=")";
+					var query = (targets == '') ? '' : "target[]=" + targets;
+					var url = "/graphite/datapoints?" + query
+					var isLinear = @{graph.typeGraph == com.lucidchart.open.nark.models.records.GraphType.normal}
+
+					updateGraphHelper(url, isLinear, "graph-@graph.id.toString svg", start, end)
+				}
+			}
+		}
+
+		updateGraphs();
+	});
+</script>
+
+@if(dashboard.deleted) {
 		@if(userOption.isDefined && userOption.get.id == dashboard.userId) {
 			<h3>@dashboard.name</h3>
 			<a href="@narkRoutes.DashboardsController.toggleActivation(dashboard.id)?return_url=@request.path">Activate</a>
@@ -32,9 +88,30 @@
 			<br>
 		}
 		<h4>Graphs</h4>
-		@dashboard.graphs.sortWith(_.sort < _.sort).map { case graph =>
+		<div id="graphrange">
+			<i class="icon-calendar icon-large"></i>
+			<span></span> <b class="caret"></b>
+		</div>
+		<br>
+		@dashboard.graphs.sortWith(_.sort > _.sort).map { case graph =>
 			<div>
-				@com.lucidchart.open.nark.views.html.helpers.graph(graph)
+				<b>@graph.name</b>
+				@if(userOption.isDefined && userOption.get.id == graph.userId) {
+					&nbsp;<a href="@narkRoutes.GraphsController.edit(graph.id)">edit</a>
+				}
+				<br>
+				<style>
+					#graph-@graph.id.toString svg {
+						height: 400px;
+					}
+				</style>
+
+				@if(!graph.deleted) {
+					<div id="graph-@graph.id.toString">
+						<svg></svg>
+					</div>
+					<br>
+				}
 				@if(userOption.isDefined && userOption.get.id == dashboard.userId) {
 					@if(!graph.deleted) {
 						<a href="@narkRoutes.TargetsController.add(graph.id)">Add a new target</a>&nbsp;&nbsp;&nbsp;

@@ -16,8 +16,8 @@ class GraphiteDataController extends AppController {
 	private case class DataPointsFormSubmission(
 		targets: List[String],
 		secondsOption: Option[Int],
-		fromOption: Option[Date],
-		toOption: Option[Date]
+		fromOption: Option[Int],
+		toOption: Option[Int]
 	)
 
 	private case class MetricsFormSubmission(
@@ -32,8 +32,8 @@ class GraphiteDataController extends AppController {
 		mapping(
 			"target" -> list(text).verifying { l => l.size > 0 },
 			"seconds" -> optional(number.verifying(Constraints.min(1))),
-			"from" -> optional(Forms.internetDate),
-			"to" -> optional(Forms.internetDate)
+			"from" -> optional(number),
+			"to" -> optional(number)
 		)(DataPointsFormSubmission.apply)(DataPointsFormSubmission.unapply).verifying { f =>
 			f.secondsOption.isDefined || (f.fromOption.isDefined && f.toOption.isDefined)
 		}
@@ -68,7 +68,7 @@ class GraphiteDataController extends AppController {
 					case None => {
 						val from = data.fromOption.get
 						val to = data.toOption.get
-						Graphite.data(data.targets, from, to)
+						Graphite.data(data.targets, new Date(from * 1000L), new Date(to * 1000L))
 					}
 				}
 

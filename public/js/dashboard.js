@@ -1,3 +1,25 @@
+function updateGraphHelper(url, isLinear, element, start, end) {
+	console.log(start);
+	console.log(end);
+	$.ajax({
+		type: 'GET',
+		url: url + "&from=" + start + "&to=" + end,
+		dataType: 'json',
+		timeout: 300000,
+		success: function(data) {
+			if(isLinear) {
+				plotLineGraph(element, data)
+			}
+			else {
+				plotStackedGraph(element, data)
+			}
+		},
+		failure: function(data) {
+			console.log("Call to graphite failed");
+		}
+	});
+}
+
 function d3_format_linear_data(data) {
 	return data.map(function(item) {
 		return {x: item["d"], y: item["v"]}
@@ -16,10 +38,10 @@ function plotLineGraph(element, data) {
 		var chart = nv.models.lineWithFocusChart();
 
 		chart.xAxis
-		.tickFormat(function(d) { return d3.time.format('%x')(new Date(d * 1000)) });
+		.tickFormat(function(d) { return d3.time.format('%b %e %H:%M')(new Date(d * 1000)) });
 
 		chart.x2Axis
-		.tickFormat(function(d) { return d3.time.format('%x')(new Date(d * 1000)) });
+		.tickFormat(function(d) { return d3.time.format('%b %e %H:%M')(new Date(d * 1000)) });
 
 		chart.yAxis
 		.tickFormat(d3.format(',.2f'));
@@ -52,7 +74,7 @@ function plotStackedGraph(element, data) {
 
 		chart.xAxis
 			.showMaxMin(false)
-			.tickFormat(function(d) { return d3.time.format('%x')(new Date(d * 1000)) });
+			.tickFormat(function(d) { return d3.time.format('%b %e %H:%M')(new Date(d * 1000)) });
 
 		chart.yAxis
 			.tickFormat(d3.format(',.2f'));
