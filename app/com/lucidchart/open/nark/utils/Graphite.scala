@@ -28,8 +28,6 @@ case class GraphiteMetricData(metrics: List[GraphiteMetricItem])
 case class GraphiteMetricItem(name: String, path: String, leaf: Boolean)
 
 class Graphite(protocol: String, host: String, port: Int) {
-	protected val dateFormatter = new SimpleDateFormat("kk:mm_yyyyMMdd")
-
 	protected def basicUriBuilder() = {
 		val builder = new URIBuilder()
 		builder.setScheme(protocol)
@@ -142,8 +140,8 @@ class Graphite(protocol: String, host: String, port: Int) {
 		val builder = basicUriBuilder()
 		builder.setPath("/render/")
 		builder.setParameter("format", "json")
-		builder.setParameter("from", dateFormatter.format(from))
-		builder.setParameter("until", dateFormatter.format(to))
+		builder.setParameter("from", from.getTime() / 1000)
+		builder.setParameter("until", to.getTime() / 1000)
 		addTargets(builder, targets)
 		jsonToGraphiteData(executeGet(builder.build()), false)
 	}
