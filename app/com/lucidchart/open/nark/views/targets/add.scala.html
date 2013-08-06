@@ -12,7 +12,7 @@
 @import helper.twitterBootstrap._
 @import helper._
 
-@com.lucidchart.open.nark.views.html.layouts.main("Create Target", userOption = Some(user), scripts = List("graphite-metric-search.js")) {
+@com.lucidchart.open.nark.views.html.layouts.main("Create Target", userOption = Some(user), scripts = List("graphite-metric-search.js", "d3/d3.v3.min.js", "nv.d3.min.js", "moment.min.js", "dashboard.js"), styles = List("nv.d3.css")) {
 	<style type="text/css">
 		#target-input { width: 100%; }
 	</style>
@@ -31,4 +31,15 @@
 			<button id="add" name="add" class="btn btn-primary">Add</button>
 		</fieldset>
 	}
+	<h4>Graph Preview Below (If Available)</h4>
+	<style>
+		#target-graph svg {
+		height: 400px;
+		}
+	</style>
+
+	<div id="target-graph">
+		<svg></svg>
+	</div>
+	<br>
 }

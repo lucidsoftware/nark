@@ -38,4 +38,12 @@ $(document).ready(function() {
 		$('#target-input').focus();
 		$('#target-input').autocomplete("search", "");
 	}, 1);
+
+	function graphPreview() {
+		var start = moment().subtract("hours", 1).format('X');
+		var end = moment().format('X');
+		var target = $('#target-input').val();
+		var query = (target == '') ? '' : "target[]=" + target;
+		updateGraphHelper("/graphite/datapoints?" + query, true, "target-graph svg", start, end);
+	}
 });
