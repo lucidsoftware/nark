@@ -65,7 +65,7 @@
 	});
 </script>
 
-@if(dashboard.deleted) {
+	@if(dashboard.deleted) {
 		@if(userOption.isDefined && userOption.get.id == dashboard.userId) {
 			<h3>@dashboard.name</h3>
 			<a href="@narkRoutes.DashboardsController.toggleActivation(dashboard.id)?return_url=@request.path">Activate</a>
