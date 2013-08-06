@@ -17,8 +17,8 @@ class DashboardsController extends AppController {
 
 	private val createForm = Form(
 		mapping(
-			"name" -> text.verifying(Constraints.pattern("^[a-zA-Z0-9]*$".r, error = "Only alpha-numberic text allowed")),
-			"url" -> text.verifying(Constraints.pattern("^[a-zA-Z0-9]*$".r, error = "Only alpha-numberic text allowed"))
+			"name" -> text.verifying(Constraints.minLength(1)),
+			"url" -> text.verifying(Constraints.pattern("^[a-zA-Z0-9\\.\\-_]*$".r, error = "Only alpha-numberic text and periods (.), dashes (-), and underscores (_) allowed"))
 		)(CreateDashboard.apply)(CreateDashboard.unapply)
 	)
 

@@ -10,15 +10,12 @@ import com.lucidchart.open.nark.models.records.Graph
 import play.api.data.validation.Constraints
 
 class GraphsController extends AppController {
-
-	private case class AddGraph(name: String, graphType: Int) {
-		val graphTypeVal = GraphTypes(graphType)
-	}
+	private case class AddGraph(name: String, graphType: GraphTypes.Value)
 
 	private val addForm = Form(
 		mapping(
-			"name" -> text.verifying(Constraints.pattern("^[a-zA-Z0-9]*$".r, error = "Only alpha-numberic text allowed")),
-			"type" -> number.verifying(Constraints.min(0), Constraints.max(GraphTypes.maxId))
+			"name" -> text.verifying(Constraints.minLength(1)),
+			"type" -> number.verifying("Invalid graph type", x => GraphTypes.values.map(_.id).contains(x)).transform[GraphTypes.Value](GraphTypes(_), _.id)
 		)(AddGraph.apply)(AddGraph.unapply)
 	)
 
@@ -32,7 +29,7 @@ class GraphsController extends AppController {
 				Redirect(routes.HomeController.index()).flashing(AppFlash.warning("Dashboard does not belong to the current user."))
 			}
 			else {
-				val form = addForm.fill(AddGraph("", 0))
+				val form = addForm.fill(AddGraph("", GraphTypes.NORMAL))
 				Ok(views.html.graphs.add(form, dashboard.get))
 			}
 		}
@@ -48,7 +45,7 @@ class GraphsController extends AppController {
 				Redirect(routes.HomeController.index()).flashing(AppFlash.warning("Graph does not belong to the current user."))
 			}
 			else {
-				val form = addForm.fill(AddGraph(graph.get.name, graph.get.typeGraph.id))
+				val form = addForm.fill(AddGraph(graph.get.name, graph.get.typeGraph))
 				Ok(views.html.graphs.edit(form, graph.get))
 			}
 		}
@@ -71,7 +68,7 @@ class GraphsController extends AppController {
 						}
 						else {
 							val name = data.name
-							val graphType = data.graphTypeVal
+							val graphType = data.graphType
 							val graphs = GraphModel.findGraphsByDashboardId(dashboard.get.id)
 							val sort = if (!graphs.isEmpty) graphs.map(_.sort).min - 1 else 1000000
 							GraphModel.createGraph(new Graph(name, dashboard.get.id, sort, graphType, false))
@@ -100,7 +97,7 @@ class GraphsController extends AppController {
 						}
 						else {
 							val name = data.name
-							val graphType = data.graphTypeVal
+							val graphType = data.graphType
 							val existingGraph = GraphModel.findGraphByID(graphId).get
 							GraphModel.createGraph(existingGraph.copy(name = name, typeGraph = graphType))
 							Redirect(routes.GraphsController.edit(existingGraph.id)).flashing(AppFlash.success(name + " graph has been updated successfully."))
