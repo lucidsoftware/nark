@@ -18,8 +18,8 @@
 	@helper.form(action=narkRoutes.DashboardsController.editSubmit(dashboard.id)) {
 		<fieldset>
 			@helpers.csrfHiddenInput()
-			@helper.inputText(formEdit("name"), 'class -> "input-xlarge", '_label -> "Name", 'required -> true, '_showConstraints -> false)
-			@helper.inputText(formEdit("url"), 'class -> "input-xlarge", '_label -> "URL", 'required -> true, '_showConstraints -> false)
+			@helper.inputText(formEdit("name"), 'class -> "input-xlarge", '_label -> "Name", 'placeholder -> "Vitals", 'required -> true, '_showConstraints -> false)
+			@helper.inputText(formEdit("url"), 'class -> "input-xlarge", '_label -> "URL", 'placeholder -> "vitals", 'required -> true, '_showConstraints -> false)
 			<button id="edit" name="edit" class="btn btn-primary">Edit</button>
 		</fieldset>
 	}

@@ -18,7 +18,7 @@
 	@helper.form(action=narkRoutes.GraphsController.editSubmit(graph.id)) {
 		<fieldset>
 			@helpers.csrfHiddenInput()
-			@helper.inputText(formEdit("name"), 'class -> "input-xlarge", '_label -> "Name", 'placeholder -> "Eg. CPU", 'required -> true, '_showConstraints -> false)
+			@helper.inputText(formEdit("name"), 'class -> "input-xlarge", '_label -> "Name", 'placeholder -> "CPU", 'required -> true, '_showConstraints -> false)
 			@helper.select(formEdit("type"), com.lucidchart.open.nark.models.records.GraphType.values.map(m => m.id.toString -> m.toString).toSeq, '_label -> "Type", '_showConstraints -> false)
 			<button id="edit" name="edit" class="btn btn-primary">Edit</button>
 		</fieldset>

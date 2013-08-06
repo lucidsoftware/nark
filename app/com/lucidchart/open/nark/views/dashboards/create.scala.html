@@ -17,8 +17,8 @@
 	@helper.form(action=narkRoutes.DashboardsController.createSubmit()) {
 		<fieldset>
 			@helpers.csrfHiddenInput()
-			@helper.inputText(formCreate("name"), 'class -> "input-xlarge", '_label -> "Name", 'placeholder -> "Eg. Vitals", 'required -> true, '_showConstraints -> false)
-			@helper.inputText(formCreate("url"), 'class -> "input-xlarge", '_label -> "URL", 'placeholder -> "Eg. vitals", 'required -> true, '_showConstraints -> false)
+			@helper.inputText(formCreate("name"), 'class -> "input-xlarge", '_label -> "Name", 'placeholder -> "Vitals", 'required -> true, '_showConstraints -> false)
+			@helper.inputText(formCreate("url"), 'class -> "input-xlarge", '_label -> "URL", 'placeholder -> "vitals", 'required -> true, '_showConstraints -> false)
 			<button id="create" name="create" class="btn btn-primary">Create</button>
 		</fieldset>
 	}
