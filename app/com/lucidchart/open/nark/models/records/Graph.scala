@@ -21,6 +21,6 @@ case class Graph(
 }
 
 object GraphType extends Enumeration {
-	val normal  = Value(0)
-	val stacked = Value(1)
+	val normal  = Value(0, "Normal")
+	val stacked = Value(1, "Stacked")
 }
