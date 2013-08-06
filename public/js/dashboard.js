@@ -50,7 +50,7 @@ function plotLineGraph(element, data) {
 		d3.select('#'+element)
 		.datum(data.map( function(item) {
 			return {
-				key: 'Target: ' + item["t"],
+				key: item["t"],
 				values: d3_format_linear_data(item["d"])
 			}
 		}))
@@ -80,7 +80,7 @@ function plotStackedGraph(element, data) {
 		d3.select('#' + element)
 			.datum(data.map( function(item) {
 				return {
-					key: 'Target: ' + item["t"],
+					key: item["t"],
 					values: d3_format_stacked_data(item["d"])
 				}
 			}))
