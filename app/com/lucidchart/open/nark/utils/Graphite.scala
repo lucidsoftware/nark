@@ -140,8 +140,8 @@ class Graphite(protocol: String, host: String, port: Int) {
 		val builder = basicUriBuilder()
 		builder.setPath("/render/")
 		builder.setParameter("format", "json")
-		builder.setParameter("from", from.getTime() / 1000)
-		builder.setParameter("until", to.getTime() / 1000)
+		builder.setParameter("from", (from.getTime() / 1000).toString)
+		builder.setParameter("until", (to.getTime() / 1000).toString)
 		addTargets(builder, targets)
 		jsonToGraphiteData(executeGet(builder.build()), false)
 	}
