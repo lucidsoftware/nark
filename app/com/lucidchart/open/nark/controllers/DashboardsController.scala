@@ -123,15 +123,12 @@ class DashboardsController extends AppController {
 		}
 	}
 
+	/**
+	 * Dashboard searching utility
+	 */
 	def search(term: String) = AuthAction.maybeAuthenticatedUser { implicit userOption =>
 		AppAction { implicit request =>
-			val matches = if (term.isEmpty) {
-				Nil
-			}
-			else {
-				DashboardModel.searchByName(term)
-			}
-
+			val matches = DashboardModel.searchByName(term).filter(!_.deleted)
 			Ok(views.html.dashboards.search(term, matches))
 		}
 	}
