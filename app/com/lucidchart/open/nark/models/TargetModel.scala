@@ -10,9 +10,6 @@ import play.api.Play.current
 import AnormImplicits._
 
 class TargetModel extends AppModel {
-	protected val tableName = "graph_targets"
-	protected val fields = "`id`, `graph_id`, `target`, `deleted`"
-
 	protected val targetsRowParser = {
 		get[UUID]("id") ~
 		get[UUID]("graph_id") ~
@@ -32,8 +29,8 @@ class TargetModel extends AppModel {
 	def findTargetByID(id: UUID): Option[Target] = {
 		DB.withConnection("main") { connection =>
 			SQL("""
-				SELECT """ + fields + """
-				FROM """ + tableName + """
+				SELECT *
+				FROM `graph_targets`
 				WHERE `id` = {id}
 				LIMIT 1
 			""").on(
@@ -51,8 +48,8 @@ class TargetModel extends AppModel {
 	def findTargetByGraphId(graphId: UUID): List[Target] = {
 		DB.withConnection("main") { connection =>
 			SQL("""
-				SELECT """ + fields + """
-				FROM """ + tableName + """
+				SELECT *
+				FROM `graph_targets`
 				WHERE `graph_id` = {graph_id}
 			""").on(
 				"graph_id" -> graphId
@@ -66,8 +63,8 @@ class TargetModel extends AppModel {
 	def findAll() : List[Target] = {
 		DB.withConnection("main") { connection =>
 			SQL("""
-				SELECT """ + fields + """
-				FROM """ + tableName + """
+				SELECT *
+				FROM `graph_targets`
 			""").as(targetsRowParser *)(connection)
 		}
 	}
@@ -79,7 +76,7 @@ class TargetModel extends AppModel {
 	def toggleActivation(target: Target) {
 		DB.withConnection("main") { connection =>
 			SQL("""
-				UPDATE """ + tableName + """ SET `deleted` = {deleted}
+				UPDATE `graph_targets` SET `deleted` = {deleted}
 				WHERE id = {id}
 			""").on(
 				"id"         -> target.id,
@@ -97,7 +94,7 @@ class TargetModel extends AppModel {
 	def createTarget(target: Target) {
 		DB.withConnection("main") { connection =>
 			SQL("""
-				INSERT INTO """ + tableName + """ (`id`, `graph_id`, `target`, `deleted`)
+				INSERT INTO `graph_targets` (`id`, `graph_id`, `target`, `deleted`)
 				VALUES ({id}, {graph_id}, {target}, {deleted})
 				ON DUPLICATE KEY UPDATE `target`= {target}""").on(
 				"id"         -> target.id,

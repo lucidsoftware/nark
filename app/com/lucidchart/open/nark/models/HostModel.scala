@@ -13,8 +13,6 @@ import play.api.Play.current
 import play.api.db.DB
 
 class HostModel extends AppModel {
-	protected val hostsSelectAllFields = "`name`, `state`, `last_confirmed`"
-	
 	protected val hostsRowParser = {
 		get[String]("name") ~
 		get[Int]("state") ~
@@ -60,7 +58,7 @@ class HostModel extends AppModel {
 	def findAllByName(name: String) = {
 		DB.withConnection("main") { connection =>
 			SQL("""
-				SELECT """ + hostsSelectAllFields + """ FROM `hosts` WHERE `name` LIKE {name}
+				SELECT * FROM `hosts` WHERE `name` LIKE {name}
 			""").on(
 				"name" -> ("%" + name + "%")
 			).as(hostsRowParser *)(connection)

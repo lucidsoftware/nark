@@ -14,8 +14,6 @@ import play.api.Play.current
 import play.api.db.DB
 
 class OpenIDModel extends AppModel {
-	protected val associationsSelectAllFields = "`provider`, `handle`, `created`, `expire`, `secret`, `type`"
-	
 	protected val associationsRowParser = {
 		get[String]("provider") ~
 		get[String]("handle") ~
@@ -100,7 +98,7 @@ class OpenIDModel extends AppModel {
 	def findAssociation(provider: String, handle: String) = {
 		DB.withConnection("main") { connection =>
 			SQL("""
-				SELECT """ + associationsSelectAllFields + """
+				SELECT *
 				FROM `openid_associations`
 				WHERE `provider` = {provider} AND `handle` = {handle}
 				LIMIT 1
@@ -117,7 +115,7 @@ class OpenIDModel extends AppModel {
 	def findLastAssociation(provider: String) = {
 		DB.withConnection("main") { connection =>
 			SQL("""
-				SELECT """ + associationsSelectAllFields + """
+				SELECT *
 				FROM `openid_associations`
 				WHERE `provider` = {provider}
 				ORDER BY `expire` DESC

@@ -14,9 +14,6 @@ import play.api.db.DB
 import com.lucidchart.open.nark.views.html.dashboards.dashboard
 
 class DashboardModel extends AppModel {
-	protected val tableName = "dashboards"
-	protected val fields = "`id`, `name`, `url`, `created`, `user_id`, `deleted`"
-
 	protected val dashboardsRowParser = {
 		get[UUID]("id") ~
 		get[String]("name") ~
@@ -38,8 +35,8 @@ class DashboardModel extends AppModel {
 	def findDashboardByID(id: UUID): Option[Dashboard] = {
 		DB.withConnection("main") { connection =>
 			SQL("""
-				SELECT """ + fields + """
-				FROM """ + tableName + """
+				SELECT *
+				FROM `dashboards`
 				WHERE `id` = {id}
 				LIMIT 1
 			""").on(
@@ -57,8 +54,8 @@ class DashboardModel extends AppModel {
 	def findDashboardByURL(url: String): Option[Dashboard] = {
 		DB.withConnection("main") { connection =>
 			SQL("""
-				SELECT """ + fields + """
-				FROM """ + tableName + """
+				SELECT *
+				FROM `dashboards`
 				WHERE `url` = {url}
 				LIMIT 1
 			""").on(
@@ -73,8 +70,8 @@ class DashboardModel extends AppModel {
 	def searchByName(name: String): List[Dashboard] = {
 		DB.withConnection("main") { connection =>
 			SQL("""
-				SELECT """ + fields + """
-				FROM """ + tableName + """
+				SELECT *
+				FROM `dashboards`
 				WHERE `name` LIKE {name}
 				LIMIT {limit}
 			""").on(
@@ -90,8 +87,8 @@ class DashboardModel extends AppModel {
 	def findAll() : List[Dashboard] = {
 		DB.withConnection("main") { connection =>
 			SQL("""
-				SELECT """ + fields + """
-				FROM """ + tableName + """
+				SELECT *
+				FROM `dashboards`
 			""").as(dashboardsRowParser *)(connection)
 		}
 	}
@@ -103,7 +100,7 @@ class DashboardModel extends AppModel {
 	def toggleActivation(dashboard: Dashboard) {
 		DB.withConnection("main") { connection =>
 			SQL("""
-				UPDATE """ + tableName + """ SET `deleted` = {deleted}
+				UPDATE `dashboards` SET `deleted` = {deleted}
 				WHERE id = {id}
 			""").on(
 				"id"         -> dashboard.id,
@@ -121,7 +118,7 @@ class DashboardModel extends AppModel {
 	def createDashboard(dashboard: Dashboard) {
 		DB.withConnection("main") { connection =>
 			SQL("""
-				INSERT INTO """ + tableName + """ (`id`, `name`, `url`, `created`, `user_id`, `deleted`)
+				INSERT INTO `dashboards` (`id`, `name`, `url`, `created`, `user_id`, `deleted`)
 				VALUES ({id}, {name}, {url}, {created}, {user_id}, {deleted})
 				ON DUPLICATE KEY UPDATE `name`= {name}, `url`={url}""").on(
 				"id"         -> dashboard.id,

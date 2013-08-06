@@ -12,8 +12,6 @@ import play.api.Play.current
 import play.api.db.DB
 
 class UserModel extends AppModel {
-	protected val usersSelectAllFields = "`id`, `email`, `created`, `name`"
-	
 	protected val usersRowParser = {
 		get[UUID]("id") ~
 		get[String]("email") ~
@@ -33,7 +31,7 @@ class UserModel extends AppModel {
 	def findUserByID(id: UUID): Option[User] = {
 		DB.withConnection("main") { connection =>
 			SQL("""
-				SELECT """ + usersSelectAllFields + """
+				SELECT *
 				FROM `users`
 				WHERE `id` = {id}
 				LIMIT 1
@@ -52,7 +50,7 @@ class UserModel extends AppModel {
 	def findUserByEmail(email: String): Option[User] = {
 		DB.withConnection("main") { connection =>
 			SQL("""
-				SELECT """ + usersSelectAllFields + """
+				SELECT *
 				FROM `users`
 				WHERE `email` = {email}
 				LIMIT 1

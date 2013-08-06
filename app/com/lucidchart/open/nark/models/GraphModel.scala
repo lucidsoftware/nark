@@ -16,9 +16,6 @@ object GraphTypes extends Enumeration {
 }
 
 class GraphModel extends AppModel {
-	protected val tableName = "graphs"
-	protected val fields = "`id`, `name`, `dashboard_id`, `sort`, `type`, `deleted`"
-
 	protected val graphsRowParser = {
 		get[UUID]("id") ~
 		get[String]("name") ~
@@ -40,8 +37,8 @@ class GraphModel extends AppModel {
 	def findGraphByID(id: UUID): Option[Graph] = {
 		DB.withConnection("main") { connection =>
 			SQL("""
-				SELECT """ + fields + """
-				FROM """ + tableName + """
+				SELECT *
+				FROM `graphs`
 				WHERE `id` = {id}
 				LIMIT 1
 			""").on(
@@ -59,8 +56,8 @@ class GraphModel extends AppModel {
 	def findGraphsByDashboardId(dashboardId: UUID): List[Graph] = {
 		DB.withConnection("main") { connection =>
 			SQL("""
-				SELECT """ + fields + """
-				FROM """ + tableName + """
+				SELECT *
+				FROM `graphs`
 				WHERE `dashboard_id` = {dashboard_id}
 			""").on(
 				"dashboard_id" -> dashboardId
@@ -74,8 +71,8 @@ class GraphModel extends AppModel {
 	def findAll() : List[Graph] = {
 		DB.withConnection("main") { connection =>
 			SQL("""
-				SELECT """ + fields + """
-				FROM """ + tableName + """
+				SELECT *
+				FROM `graphs`
 			""").as(graphsRowParser *)(connection)
 		}
 	}
@@ -87,7 +84,7 @@ class GraphModel extends AppModel {
 	def toggleActivation(graph: Graph) {
 		DB.withConnection("main") { connection =>
 			SQL("""
-				UPDATE """ + tableName + """ SET `deleted` = {deleted}
+				UPDATE `graphs` SET `deleted` = {deleted}
 				WHERE id = {id}
 			""").on(
 				"id"         -> graph.id,
@@ -105,7 +102,7 @@ class GraphModel extends AppModel {
 	def createGraph(graph: Graph) {
 		DB.withConnection("main") { connection =>
 			SQL("""
-				INSERT INTO """ + tableName + """ (`id`, `name`, `dashboard_id`, `sort`, `type`, `deleted`)
+				INSERT INTO `graphs` (`id`, `name`, `dashboard_id`, `sort`, `type`, `deleted`)
 				VALUES ({id}, {name}, {dashboard_id}, {sort}, {type}, {deleted})
 				ON DUPLICATE KEY UPDATE `name`= {name}, `type`={type}""").on(
 				"id"         -> graph.id,
