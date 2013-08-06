@@ -1,6 +1,4 @@
 function updateGraphHelper(url, isLinear, element, start, end) {
-	console.log(start);
-	console.log(end);
 	$.ajax({
 		type: 'GET',
 		url: url + "&from=" + start + "&to=" + end,
