@@ -12,7 +12,7 @@
 @import helper.twitterBootstrap._
 @import helper._
 
-@com.lucidchart.open.nark.views.html.layouts.main("Home", userOption = Some(user)) {
+@com.lucidchart.open.nark.views.html.layouts.main("Edit Dashboard", userOption = Some(user)) {
 	<h3>Edit dashboard <a href="@narkRoutes.DashboardsController.dashboard(dashboard.url)">@dashboard.name</a></h3>
 	<br>
 	@helper.form(action=narkRoutes.DashboardsController.editSubmit(dashboard.id)) {

@@ -12,7 +12,7 @@
 @import helper.twitterBootstrap._
 @import helper._
 
-@com.lucidchart.open.nark.views.html.layouts.main("Home", userOption = Some(user)) {
+@com.lucidchart.open.nark.views.html.layouts.main("Edit Graph", userOption = Some(user)) {
 	<h3>Edit graph</h3>
 	<br>
 	@helper.form(action=narkRoutes.GraphsController.editSubmit(graph.id)) {

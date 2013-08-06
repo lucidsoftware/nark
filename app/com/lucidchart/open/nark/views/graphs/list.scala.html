@@ -8,7 +8,7 @@
 @import com.lucidchart.open.nark.controllers.{routes=>narkRoutes}
 @import com.lucidchart.open.nark.views
 
-@com.lucidchart.open.nark.views.html.layouts.main("Home", userOption = Some(user)) {
+@com.lucidchart.open.nark.views.html.layouts.main("List Graphs", userOption = Some(user)) {
 	<h3>List of graphs for dashboard <a href="@narkRoutes.DashboardsController.dashboard(dashboard.url)">@dashboard.name</a></h3>
 	<br>
 
