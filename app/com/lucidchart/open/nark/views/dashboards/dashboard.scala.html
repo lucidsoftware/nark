@@ -16,6 +16,36 @@
 	.navbar-fixed-top .container,
 	.navbar-static-top .container,
 	.navbar-fixed-bottom .container { width: 95%; }
+
+	#allgraphs {
+		margin: 0 -10px 0 -12px;
+		position: relative;
+	}
+
+	#allgraphs.g1 .graph-wrapper { width: 100%; }
+	#allgraphs.g2 .graph-wrapper { width: 50%; }
+	#allgraphs.g3 .graph-wrapper { width: 33.33%; }
+	#allgraphs.g4 .graph-wrapper { width: 25%; }
+	#allgraphs.g5 .graph-wrapper { width: 20%; }
+	#allgraphs.g6 .graph-wrapper { width: 16.66%; }
+
+	.graph-wrapper {
+		overflow: hidden;
+		padding: 10px;
+		box-sizing: border-box;
+	}
+	.graph-wrapper .well {
+		margin: 0;
+	}
+	.graph-caption {
+		width: 100%;
+		height: 20px;
+		text-align: center;
+	}
+	svg {
+		width: 100%;
+		height: 100%;
+	}
 </style>
 <script type="text/javascript">
 	$(document).ready(function() {
@@ -107,12 +137,43 @@
 			updateTimeout()
 		}
 
-		updateTimeout();
-		updateGraphs();
+		function adjustGraphHeights() {
+			var width = $("#allgraphs .graph-wrapper").width();
+			$("#allgraphs .graph-container").css('height', Math.floor((width - 20) * 0.66) + "px");
+		}
 
-		$('#optiontoggler').click(function(event) {
-			$('#options-container').slideToggle();
+		function setColumnCount(count) {
+			$("#column-group button.active").removeClass("active");
+			$("#column-group button[data='" + count + "']").addClass("active");
+			$("#allgraphs").removeClass("g1 g2 g3 g4 g5 g6").addClass("g" + count);
+			adjustGraphHeights();
+		}
+
+		setColumnCount(3);
+		setTimeout(function() {
+			updateTimeout();
+			updateGraphs();
+		}, 1);
+
+		$("#optiontoggler").click(function(event) {
+			$("#options-container").slideToggle();
 		});
+
+		$("#column-group button").click(function(event) {
+			var count = parseInt($(event.target).attr("data"), 10);
+			setColumnCount(count);
+
+			setTimeout(function() {
+				updateGraphs();
+			}, 1);
+		});
+
+		$(document).resize(function() {
+			adjustGraphHeights();
+			setTimeout(function() {
+				updateGraphs();
+			}, 1);
+		})
 	});
 </script>
 
@@ -121,17 +182,26 @@
 		@if(userOption.isDefined && userOption.get.id == dashboard.userId) {
 			<a href="@narkRoutes.DashboardsController.manage(dashboard.id)" class="btn">Manage</a>
 		}
-		<a href="#" id="optiontoggler" class="btn">Toggle Options</a>
+		<a href="#" id="optiontoggler" class="btn">Options</a>
 	</h3>
 
 	<div class="clearfix">
 		<div id="options-container" class="well">
-			<h4>Options</h4>
+			<div class="form-inline">
+				<label><strong>Columns</strong></label>
+				<div id="column-group" class="btn-group">
+					<button class="btn" data="1">1</button>
+					<button class="btn" data="2">2</button>
+					<button class="btn" data="3">3</button>
+					<button class="btn" data="4">4</button>
+					<button class="btn" data="5">5</button>
+					<button class="btn" data="6">6</button>
+				</div>
+			</div>
 			<div id="graphrange">
 				<i class="icon-calendar icon-large"></i>
 				<span></span> <b class="caret"></b>
 			</div>
-			<br>
 			<style type="text/css">
 				#host-input { width: 100%; }
 			</style>
@@ -169,18 +239,19 @@
 				</label>
 			</div>
 		</div>
-		@graphs.filter(!_.deleted).sortWith(_.sort > _.sort).map { graph =>
-			<div>
-				<b>@graph.name</b>
-				<style>
-					#graph-@graph.id.toString svg {
-						height: 400px;
-					}
-				</style>
-				<div id="graph-@graph.id.toString">
-					<svg></svg>
+		<div id="allgraphs" class="clearfix">
+			@graphs.filter(!_.deleted).sortWith(_.sort > _.sort).map { graph =>
+				<div class="pull-left graph-wrapper">
+					<div class="well">
+						<div class="graph-container" id="graph-@graph.id.toString">
+							<svg></svg>
+						</div>
+						<div class="graph-caption">
+							<strong>@graph.name</strong>
+						</div>
+					</div>
 				</div>
-			</div>
-		}
+			}
+		</div>
 	</div>
 }
