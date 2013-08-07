@@ -45,7 +45,7 @@ class DashboardsController extends AppController {
 				data => {
 					val dashboard = new Dashboard(data.name, data.url, user.id, false)
 					DashboardModel.createDashboard(dashboard)
-					Redirect(routes.DashboardsController.manageGraphsAndTargets(dashboard.id)).flashing(AppFlash.success("Dashboard was created successfully."))
+					Redirect(routes.GraphsController.add(dashboard.id)).flashing(AppFlash.success("Dashboard was created successfully."))
 				}
 			)
 		}
