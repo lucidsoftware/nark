@@ -21,7 +21,7 @@
 	<p>
 		The graphs and targets can be managed from this page as well.
 		<a href="@narkRoutes.DashboardsController.manageGraphsAndTargets(dashboard.id)" class="btn btn-primary">Manage Graphs &amp; Targets</a>
-	</p
+	</p>
 	@helper.form(action=narkRoutes.DashboardsController.deactivate(dashboard.id)) {
 		@helpers.csrfHiddenInput()
 		<p>
