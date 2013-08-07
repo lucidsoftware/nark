@@ -73,6 +73,7 @@ class DashboardModel extends AppModel {
 				SELECT *
 				FROM `dashboards`
 				WHERE `name` LIKE {name}
+				AND `deleted` = false
 				LIMIT {limit}
 			""").on(
 				"name" -> ("%" + name + "%"),
