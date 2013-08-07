@@ -82,18 +82,6 @@ class DashboardModel extends AppModel {
 	}
 
 	/**
-	 * Find all the dashboards
-	 */
-	def findAll() : List[Dashboard] = {
-		DB.withConnection("main") { connection =>
-			SQL("""
-				SELECT *
-				FROM `dashboards`
-			""").as(dashboardsRowParser *)(connection)
-		}
-	}
-
-	/**
 	 * Create a new dashboard using all the details from the dashboard object.
 	 * Throws an exception on failure
 	 * 
