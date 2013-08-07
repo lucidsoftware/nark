@@ -144,7 +144,7 @@ class DashboardsController extends AppController {
 		DashboardAction.dashboardManagementAccess(dashboardId, user.id, allowDeleted = true) { dashboard =>
 			AppAction { implicit request =>
 				DashboardModel.editDashboard(dashboard.copy(deleted = false))
-				Redirect(routes.HomeController.index()).flashing(AppFlash.success("Dashboard was activated successfully."))
+				Redirect(routes.DashboardsController.manage(dashboardId)).flashing(AppFlash.success("Dashboard was activated successfully."))
 			}
 		}
 	}
@@ -168,6 +168,15 @@ class DashboardsController extends AppController {
 		AppAction { implicit request =>
 			val matches = DashboardModel.searchByName(term).filter(!_.deleted)
 			Ok(views.html.dashboards.search(term, matches))
+		}
+	}
+	/**
+	 * Deactivated dashboards
+	 */
+	def deleted(term: String) = AuthAction.authenticatedUser { implicit user =>
+		AppAction { implicit request =>
+			val matches = DashboardModel.searchDeletedByName(user.id, term)
+			Ok(views.html.dashboards.deleted(term, matches))
 		}
 	}
 }

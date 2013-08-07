@@ -50,7 +50,8 @@ CREATE TABLE `dashboards` (
 	PRIMARY KEY (`hiddenid`),
 	UNIQUE KEY `app_pk` (`id`),
 	UNIQUE KEY `url_key` (`url`),
-	KEY `name_key` (`name`)
+	KEY `name_key` (`name`),
+	KEY `deleted_key` (`deleted`, `name`, `user_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_general_ci;
 
 CREATE TABLE `graphs` (

@@ -1,0 +1,46 @@
+@(
+	term: String,
+	matches: List[com.lucidchart.open.nark.models.records.Dashboard]
+)(
+	implicit
+	request: com.lucidchart.open.nark.request.AppRequest[_],
+	user: com.lucidchart.open.nark.models.records.User
+)
+@import com.lucidchart.open.nark.controllers.{routes=>narkRoutes}
+@import com.lucidchart.open.nark.views
+@import com.lucidchart.open.nark.views.html.helpers
+@import helper.twitterBootstrap._
+@import helper._
+
+@com.lucidchart.open.nark.views.html.layouts.main("Trash") {
+	<h3>Trash</h3>
+	<br>
+	@helper.form(action=narkRoutes.DashboardsController.deleted()) {
+		<fieldset>
+			<div class="clearfix" id="search_field">
+				<label for="term">Search deactivated dashboards</label>
+				<div class="input">
+					<input id="term" type="text" name="term" class="input-xlarge" placeholder="Vitals" value="@term">
+					<span class="help-block">Dashboards can be searched by name.</span> 
+				</div>
+			</div>
+			<button id="search" class="btn btn-primary">Search</button>
+		</fieldset>
+	}
+
+	@if(matches.isEmpty) {
+		<div class="alert alert-info">No dashboards were found using your search term.</div>
+	} else {
+		<h3>Search Results</h3>
+		<div class="results">
+			@matches.sortWith(_.name.toLowerCase < _.name.toLowerCase).map { dashboard =>
+				
+				@helper.form(action=narkRoutes.DashboardsController.activate(dashboard.id)) {
+					@helpers.csrfHiddenInput()
+					<strong>@dashboard.name</strong> <button id="activate" class="btn">Activate</button>
+				}
+			}
+		</div>
+		<p>These graphs are currently <span class="label label-important">deactivated</span>. They will not show up on the dashboard page. </p>
+	}
+}

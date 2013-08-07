@@ -60,6 +60,7 @@
 								<ul class="dropdown-menu">
 									<li><a href="@narkRoutes.DashboardsController.create">Create a Dashboard</a></li>
 									<li><a href="@narkRoutes.DashboardsController.search()">Search by Name</a></li>
+									<li><a href="@narkRoutes.DashboardsController.deleted()">Trash</a></li>
 									@defining(DashboardHistory.getHistory()) { history =>
 										@if(!history.isEmpty) {
 											<li class="divider"></li>

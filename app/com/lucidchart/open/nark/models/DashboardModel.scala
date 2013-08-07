@@ -82,6 +82,29 @@ class DashboardModel extends AppModel {
 	}
 
 	/**
+	 * Get all deleted dashboards for a user
+	 * @param user_id
+	 * @return dashboards
+	 */
+	def searchDeletedByName(user_id: UUID, name: String): List[Dashboard] = {
+		DB.withConnection("main") { connection =>
+			SQL("""
+				SELECT *
+				FROM `dashboards`
+				WHERE `deleted` = true
+				AND `user_id` = {user_id}
+				AND `name` LIKE {name}
+				LIMIT {limit}
+			""").on(
+				"user_id" -> user_id,
+				"name" -> ("%" + name + "%"),
+				"limit" -> configuration.getInt("search.limit").get
+			).as(dashboardsRowParser *)(connection)
+		}
+	}
+
+
+	/**
 	 * Create a new dashboard using all the details from the dashboard object.
 	 * Throws an exception on failure
 	 * 

@@ -19,6 +19,7 @@ GET     /graphite/hosts             com.lucidchart.open.nark.controllers.Graphit
 GET     /dashboard/create           com.lucidchart.open.nark.controllers.DashboardsController.create
 POST    /dashboard/create           com.lucidchart.open.nark.controllers.DashboardsController.createSubmit
 GET     /dashboard/search           com.lucidchart.open.nark.controllers.DashboardsController.search(term: String ?= "")
+GET     /dashboard/deleted           com.lucidchart.open.nark.controllers.DashboardsController.deleted(term: String ?= "")
 GET     /dashboard/manage/:uuid     com.lucidchart.open.nark.controllers.DashboardsController.manage(uuid: java.util.UUID)
 GET     /dashboard/manage/sub/:uuid com.lucidchart.open.nark.controllers.DashboardsController.manageGraphsAndTargets(uuid: java.util.UUID)
 GET     /dashboard/edit/:uuid       com.lucidchart.open.nark.controllers.DashboardsController.edit(uuid: java.util.UUID)
