@@ -1,4 +1,4 @@
-function updateGraphHelper(url, isLinear, element, start, end) {
+function updateGraphHelper(url, isLinear, element, start, end, callback) {
 	$.ajax({
 		type: 'GET',
 		url: url + "&from=" + start + "&to=" + end,
@@ -10,6 +10,10 @@ function updateGraphHelper(url, isLinear, element, start, end) {
 			}
 			else {
 				plotStackedGraph(element, data)
+			}
+
+			if (callback) {
+				callback();
 			}
 		},
 		failure: function(data) {
