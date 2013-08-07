@@ -13,10 +13,11 @@ class TargetModel extends AppModel {
 	protected val targetsRowParser = {
 		get[UUID]("id") ~
 		get[UUID]("graph_id") ~
+		get[String]("name") ~
 		get[String]("target") ~
 		get[Boolean]("deleted") map {
-			case id ~ graph_id ~ target ~ deleted =>
-				new Target(id, graph_id, target, deleted)
+			case id ~ graph_id ~ name ~ target ~ deleted =>
+				new Target(id, graph_id, name, target, deleted)
 		}
 	}
 
@@ -79,11 +80,12 @@ class TargetModel extends AppModel {
 	def createTarget(target: Target) {
 		DB.withConnection("main") { connection =>
 			SQL("""
-				INSERT INTO `graph_targets` (`id`, `graph_id`, `target`, `deleted`)
-				VALUES ({id}, {graph_id}, {target}, {deleted})
+				INSERT INTO `graph_targets` (`id`, `graph_id`, `name`, `target`, `deleted`)
+				VALUES ({id}, {graph_id}, {name}, {target}, {deleted})
 			""").on(
 				"id"         -> target.id,
 				"graph_id"   -> target.graphId,
+				"name"       -> target.name,
 				"target"     -> target.target,
 				"deleted"    -> target.deleted
 			).executeUpdate()(connection)
@@ -99,9 +101,10 @@ class TargetModel extends AppModel {
 	def editTarget(target: Target) {
 		DB.withConnection("main") { connection =>
 			SQL("""
-				UPDATE `graph_targets` SET `target` = {target}, `deleted` = {deleted} WHERE `id` = {id}
+				UPDATE `graph_targets` SET `name` = {name}, `target` = {target}, `deleted` = {deleted} WHERE `id` = {id}
 			""").on(
 				"id"         -> target.id,
+				"name"       -> target.name,
 				"target"     -> target.target,
 				"deleted"    -> target.deleted
 			).executeUpdate()(connection)

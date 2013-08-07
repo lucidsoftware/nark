@@ -7,12 +7,14 @@ import java.util.UUID
 import play.api.data.Form
 import play.api.data.Forms._
 import com.lucidchart.open.nark.models.records.Target
+import play.api.data.validation.Constraints
 
 class TargetsController extends AppController {
-	private case class EditTargetSubmission(target: String)
+	private case class EditTargetSubmission(name: String, target: String)
 
 	private val editTargetForm = Form(
 		mapping(
+			"name" -> text.verifying(Constraints.minLength(1)),
 			"target" -> text
 		)(EditTargetSubmission.apply)(EditTargetSubmission.unapply)
 	)
@@ -23,7 +25,7 @@ class TargetsController extends AppController {
 	def add(graphId: UUID) = AuthAction.authenticatedUser { implicit user =>
 		DashboardAction.graphManagementAccess(graphId, user.id) { (dashboard, graph) =>
 			AppAction { implicit request =>
-				val form = editTargetForm.fill(EditTargetSubmission(""))
+				val form = editTargetForm.fill(EditTargetSubmission("", ""))
 				Ok(views.html.targets.add(form, graph))
 			}
 		}
@@ -40,7 +42,7 @@ class TargetsController extends AppController {
 						Ok(views.html.targets.add(formWithErrors, graph))
 					},
 					data => {
-						val target = new Target(graph.id, data.target, false)
+						val target = new Target(graph.id, data.name, data.target, false)
 						TargetModel.createTarget(target)
 						Redirect(routes.DashboardsController.manageGraphsAndTargets(dashboard.id)).flashing(AppFlash.success("Target was added successfully."))
 					}
@@ -55,7 +57,7 @@ class TargetsController extends AppController {
 	def edit(targetId: UUID) = AuthAction.authenticatedUser { implicit user =>
 		DashboardAction.targetManagementAccess(targetId, user.id) { (dashboard, graph, target) =>
 			AppAction { implicit request =>
-				val form = editTargetForm.fill(EditTargetSubmission(target.target))
+				val form = editTargetForm.fill(EditTargetSubmission(target.name, target.target))
 				Ok(views.html.targets.edit(form, target))
 			}
 		}
@@ -72,7 +74,7 @@ class TargetsController extends AppController {
 						Ok(views.html.targets.edit(formWithErrors, target))
 					},
 					data => {
-						TargetModel.editTarget(target.copy(target = data.target))
+						TargetModel.editTarget(target.copy(name = data.name, target = data.target))
 						Redirect(routes.DashboardsController.manageGraphsAndTargets(dashboard.id)).flashing(AppFlash.success("Target was updated successfully."))
 					}
 				)

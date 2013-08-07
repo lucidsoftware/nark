@@ -69,6 +69,7 @@ CREATE TABLE `graphs` (
 CREATE TABLE `graph_targets` (
 	`hiddenid` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
 	`id` BINARY(16) NOT NULL,
+	`name` VARCHAR(100) NOT NULL,
 	`graph_id` BINARY(16) NOT NULL,
 	`target` VARCHAR(500) NOT NULL,
 	`deleted` BOOLEAN NOT NULL DEFAULT 0,
