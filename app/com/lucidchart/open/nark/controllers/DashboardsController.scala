@@ -16,19 +16,32 @@ import validation.Constraints
 class DashboardsController extends AppController {
 	private case class DashboardFormSubmission(name: String, url: String)
 
-	private val editDashboardForm = Form(
+	private val createDashboardForm = Form(
 		mapping(
 			"name" -> text.verifying(Constraints.minLength(1)),
 			"url" -> text.verifying(Constraints.pattern("^[a-zA-Z0-9\\.\\-_]*$".r, error = "Only alpha-numberic text and periods (.), dashes (-), and underscores (_) allowed"))
+									 .verifying("A dashboard with that url already exists. Please choose another url.", !DashboardModel.findDashboardByURL(_).isDefined)
 		)(DashboardFormSubmission.apply)(DashboardFormSubmission.unapply)
 	)
+	private def editDashboardForm(id: UUID) = {
+		Form(
+			mapping(
+				"name" -> text.verifying(Constraints.minLength(1)),
+				"url" -> text.verifying(Constraints.pattern("^[a-zA-Z0-9\\.\\-_]*$".r, error = "Only alpha-numberic text and periods (.), dashes (-), and underscores (_) allowed"))
+								.verifying("A dashboard with that url already exists. Please choose another url.", url => {
+																															val dashboard = DashboardModel.findDashboardByURL(url)
+																															!dashboard.isDefined || dashboard.get.id == id
+																														})
+			)(DashboardFormSubmission.apply)(DashboardFormSubmission.unapply)
+		)
+	}
 
 	/**
 	 * Create a new dashboard
 	 */
 	def create = AuthAction.authenticatedUser { implicit user =>
 		AppAction { implicit request =>
-			val form = editDashboardForm.fill(DashboardFormSubmission("", ""))
+			val form = createDashboardForm.fill(DashboardFormSubmission("", ""))
 			Ok(views.html.dashboards.create(form))
 		}
 	}
@@ -38,7 +51,7 @@ class DashboardsController extends AppController {
 	 */
 	def createSubmit = AuthAction.authenticatedUser { implicit user =>
 		AppAction { implicit request =>
-			editDashboardForm.bindFromRequest().fold(
+			createDashboardForm.bindFromRequest().fold(
 				formWithErrors => {
 					Ok(views.html.dashboards.create(formWithErrors))
 				},
@@ -57,7 +70,7 @@ class DashboardsController extends AppController {
 	def edit(dashboardId: UUID) = AuthAction.authenticatedUser { implicit user =>
 		DashboardAction.dashboardManagementAccess(dashboardId, user.id) { dashboard =>
 			AppAction { implicit request =>
-				val form = editDashboardForm.fill(DashboardFormSubmission(dashboard.name, dashboard.url))
+				val form = editDashboardForm(dashboardId).fill(DashboardFormSubmission(dashboard.name, dashboard.url))
 				Ok(views.html.dashboards.edit(form, dashboard))
 			}
 		}
@@ -69,7 +82,7 @@ class DashboardsController extends AppController {
 	def editSubmit(dashboardId: UUID) = AuthAction.authenticatedUser { implicit user =>
 		DashboardAction.dashboardManagementAccess(dashboardId, user.id) { dashboard =>
 			AppAction { implicit request =>
-				editDashboardForm.bindFromRequest().fold(
+				editDashboardForm(dashboardId).bindFromRequest().fold(
 					formWithErrors => {
 						Ok(views.html.dashboards.edit(formWithErrors, dashboard))
 					},
