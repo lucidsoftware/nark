@@ -11,6 +11,12 @@
 @import com.lucidchart.open.nark.views
 
 @com.lucidchart.open.nark.views.html.layouts.main(dashboard.name, List("d3/d3.v3.min.js", "nv.d3.min.js", "dashboard.js", "daterangepicker.js", "moment.min.js", "graphite-host-search.js"), List("nv.d3.css", "daterangepicker-bs2.css"), userOption = userOption){
+<style type="text/css">
+	.container,
+	.navbar-fixed-top .container,
+	.navbar-static-top .container,
+	.navbar-fixed-bottom .container { width: 95%; }
+</style>
 <script type="text/javascript">
 	$(document).ready(function() {
 		var refreshInterval = parseFloat($("input:radio[name='radios']:checked").val(), 10) * 60;
@@ -103,6 +109,10 @@
 
 		updateTimeout();
 		updateGraphs();
+
+		$('#optiontoggler').click(function(event) {
+			$('#options-container').slideToggle();
+		});
 	});
 </script>
 
@@ -111,52 +121,54 @@
 		@if(userOption.isDefined && userOption.get.id == dashboard.userId) {
 			<a href="@narkRoutes.DashboardsController.manage(dashboard.id)" class="btn">Manage</a>
 		}
+		<a href="#" id="optiontoggler" class="btn">Toggle Options</a>
 	</h3>
 
-	<div class="clearfix well">
-		<h4>Options</h4>
-		<div id="graphrange">
-			<i class="icon-calendar icon-large"></i>
-			<span></span> <b class="caret"></b>
+	<div class="clearfix">
+		<div id="options-container" class="well">
+			<h4>Options</h4>
+			<div id="graphrange">
+				<i class="icon-calendar icon-large"></i>
+				<span></span> <b class="caret"></b>
+			</div>
+			<br>
+			<style type="text/css">
+				#host-input { width: 100%; }
+			</style>
+			<div class="controls">
+				<input id="host-input" name="host-input" type="text" placeholder="Host Name" class="input-xlarge">
+				<p class="help-block">Eg. example.company.com</p>
+				<button id="use" name="use" class="btn btn-primary">Use</button>
+			</div>
+			<br>
+			<label class="control-label" for="radios">Refresh Interval (In Mins)</label>
+			<div class="controls">
+				<label class="radio inline" for="radios-0">
+					<input type="radio" name="radios" id="radios-0" value="0.5">
+					0.5
+				</label>
+				<label class="radio inline" for="radios-1">
+					<input type="radio" name="radios" id="radios-1" value="1" checked="checked">
+					1
+				</label>
+				<label class="radio inline" for="radios-2">
+					<input type="radio" name="radios" id="radios-2" value="2">
+					2
+				</label>
+				<label class="radio inline" for="radios-3">
+					<input type="radio" name="radios" id="radios-3" value="5">
+					5
+				</label>
+				<label class="radio inline" for="radios-4">
+					<input type="radio" name="radios" id="radios-4" value="10">
+					10
+				</label>
+				<label class="radio inline" for="radios-5">
+					<input type="radio" name="radios" id="radios-5" value="-1">
+					Never
+				</label>
+			</div>
 		</div>
-		<br>
-		<style type="text/css">
-			#host-input { width: 100%; }
-		</style>
-		<div class="controls">
-			<input id="host-input" name="host-input" type="text" placeholder="Host Name" class="input-xlarge">
-			<p class="help-block">Eg. example.company.com</p>
-			<button id="use" name="use" class="btn btn-primary">Use</button>
-		</div>
-		<br>
-		<label class="control-label" for="radios">Refresh Interval (In Mins)</label>
-		<div class="controls">
-			<label class="radio inline" for="radios-0">
-				<input type="radio" name="radios" id="radios-0" value="0.5">
-				0.5
-			</label>
-			<label class="radio inline" for="radios-1">
-				<input type="radio" name="radios" id="radios-1" value="1" checked="checked">
-				1
-			</label>
-			<label class="radio inline" for="radios-2">
-				<input type="radio" name="radios" id="radios-2" value="2">
-				2
-			</label>
-			<label class="radio inline" for="radios-3">
-				<input type="radio" name="radios" id="radios-3" value="5">
-				5
-			</label>
-			<label class="radio inline" for="radios-4">
-				<input type="radio" name="radios" id="radios-4" value="10">
-				10
-			</label>
-			<label class="radio inline" for="radios-5">
-				<input type="radio" name="radios" id="radios-5" value="-1">
-				Never
-			</label>
-		</div>
-		<br>
 		@graphs.filter(!_.deleted).sortWith(_.sort > _.sort).map { graph =>
 			<div>
 				<b>@graph.name</b>
