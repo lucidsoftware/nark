@@ -20,7 +20,7 @@ $(document).ready(function() {
 				data: {
 					"target": request.term
 				},
-				timeout: 5000,
+				timeout: 30000,
 				success: function(data, status, xhr) {
 					var options = $.map(data, function(element) {
 						return {"label": element['p'], "value": element['p'], "leaf": element['l']};
