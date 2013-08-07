@@ -24,7 +24,7 @@
 		<a href="@narkRoutes.GraphsController.add(dashboard.id)" class="btn btn-primary">Create a Graph</a>
 	</p>
 
-	@graphs.map { graph =>
+	@graphs.sortBy(_.sort).map { graph =>
 		@defining(targetsByGraphId.get(graph.id).getOrElse(Nil)) { targets =>
 			<hr>
 			<h4>@graph.name</h4>
