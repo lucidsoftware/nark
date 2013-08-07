@@ -1,7 +1,6 @@
 package com.lucidchart.open.nark.models.records
 
 import java.util.UUID
-import com.lucidchart.open.nark.models.{TargetModel, DashboardModel}
 
 case class Graph(
 	id: UUID,
@@ -11,13 +10,10 @@ case class Graph(
 	typeGraph: GraphType.Value,
 	deleted: Boolean
 ) extends AppRecord {
-
-	def this(name: String, dashboardId: UUID, sort: Int, typeGraph: GraphType.Value, deleted: Boolean) =
-		this(UUID.randomUUID(), name, dashboardId, sort, typeGraph, deleted)
-
-	lazy val dashboard = DashboardModel.findDashboardByID(dashboardId).get
-	lazy val userId = dashboard.userId
-	lazy val targets = TargetModel.findTargetByGraphId(id)
+	/**
+	 * Create a new Dashboard record for inserting into the database
+	 */
+	def this(name: String, dashboardId: UUID, sort: Int, typeGraph: GraphType.Value, deleted: Boolean) = this(UUID.randomUUID(), name, dashboardId, sort, typeGraph, deleted)
 }
 
 object GraphType extends Enumeration {

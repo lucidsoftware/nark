@@ -90,7 +90,11 @@ class DashboardsController extends AppController {
 			AppAction { implicit request =>
 				val historyItem = new DashboardHistoryItem(dashboard)
 				val newHistoryCookie = DashboardHistory.addToHistory(request, historyItem)
-				Ok(views.html.dashboards.dashboard(dashboard)).withCookies(newHistoryCookie)
+
+				val graphs = GraphModel.findGraphsByDashboardId(dashboard.id)
+				val targets = TargetModel.findTargetByGraphId(graphs.map(_.id))
+				val targetsByGraphId = targets.groupBy(_.graphId)
+				Ok(views.html.dashboards.dashboard(dashboard, graphs, targetsByGraphId)).withCookies(newHistoryCookie)
 			}
 		}
 	}

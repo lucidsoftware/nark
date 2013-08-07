@@ -1,5 +1,7 @@
 @(
-	dashboard: com.lucidchart.open.nark.models.records.Dashboard
+	dashboard: com.lucidchart.open.nark.models.records.Dashboard,
+	graphs: List[com.lucidchart.open.nark.models.records.Graph],
+	targetsByGraphId: Map[java.util.UUID, List[com.lucidchart.open.nark.models.records.Target]]
 )(
 	implicit
 	request: com.lucidchart.open.nark.request.AppRequest[_],
@@ -54,21 +56,23 @@
 		function updateGraphs(start, end) {
 			var host = $('#host-input').val();
 			var reverseHost = host.split(".").reverse().join(".")
-			@dashboard.graphs.map { case graph =>
-				@if(!graph.deleted && !graph.targets.isEmpty) {
-					if (!start) {
-						start = moment().subtract("hours", 1).format('X');
-					}
-					if (!end) {
-						end = moment().format('X');
-					}
-					var targets = "@graph.targets.filter(!_.deleted).map(_.target).mkString("&target[]=")";
-					targets = targets.replace(/\{HOSTNAME}/g, host).replace(/\{REVERSE_HOSTNAME}/g, reverseHost);
-					var query = (targets == '') ? '' : "target[]=" + targets;
-					var url = "/graphite/datapoints?" + query
-					var isLinear = @{graph.typeGraph == com.lucidchart.open.nark.models.records.GraphType.normal}
+			@graphs.map { graph =>
+				@defining(targetsByGraphId.get(graph.id).getOrElse(Nil)) { targets =>
+					@if(!graph.deleted && !targets.isEmpty) {
+						if (!start) {
+							start = moment().subtract("hours", 1).format('X');
+						}
+						if (!end) {
+							end = moment().format('X');
+						}
+						var targets = "@targets.filter(!_.deleted).map(_.target).mkString("&target[]=")";
+						targets = targets.replace(/\{HOSTNAME}/g, host).replace(/\{REVERSE_HOSTNAME}/g, reverseHost);
+						var query = (targets == '') ? '' : "target[]=" + targets;
+						var url = "/graphite/datapoints?" + query
+						var isLinear = @{graph.typeGraph == com.lucidchart.open.nark.models.records.GraphType.normal}
 
-					updateGraphHelper(url, isLinear, "graph-@graph.id.toString svg", start, end)
+						updateGraphHelper(url, isLinear, "graph-@graph.id.toString svg", start, end)
+					}
 				}
 			}
 		}
@@ -153,7 +157,7 @@
 			</label>
 		</div>
 		<br>
-		@dashboard.graphs.filter(!_.deleted).sortWith(_.sort > _.sort).map { case graph =>
+		@graphs.filter(!_.deleted).sortWith(_.sort > _.sort).map { graph =>
 			<div>
 				<b>@graph.name</b>
 				<style>
