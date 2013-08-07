@@ -63,7 +63,7 @@ CREATE TABLE `graphs` (
 	`deleted` BOOLEAN NOT NULL DEFAULT 0,
 	PRIMARY KEY (`hiddenid`),
 	UNIQUE KEY `app_pk` (`id`),
-	KEY `dashboard_key` (`dashboard_id`, `sort`)
+	KEY `dashboard_key` (`dashboard_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_general_ci;
 
 CREATE TABLE `graph_targets` (
