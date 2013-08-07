@@ -26,6 +26,7 @@
 
 	@graphs.map { graph =>
 		@defining(targetsByGraphId.get(graph.id).getOrElse(Nil)) { targets =>
+			<hr>
 			<h4>@graph.name</h4>
 			<p>
 				This is a @graph.typeGraph.toString graph with @targets.size targets.
