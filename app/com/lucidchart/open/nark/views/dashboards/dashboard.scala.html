@@ -102,29 +102,15 @@
 	});
 </script>
 
-	@if(dashboard.deleted) {
+	<h3>
+		@dashboard.name
 		@if(userOption.isDefined && userOption.get.id == dashboard.userId) {
-			<h3>@dashboard.name</h3>
-			<a href="@narkRoutes.DashboardsController.toggleActivation(dashboard.id)?return_url=@request.path">Activate</a>
-		} else {
-			<h3>@dashboard.name</h3>
-			Deactivated
+			<a href="@narkRoutes.DashboardsController.manage(dashboard.id)" class="btn">Manage</a>
 		}
-	} else {
-		@if(userOption.isDefined && userOption.get.id == dashboard.userId) {
-			<h3>@dashboard.name</h3>
-			<a href="@narkRoutes.DashboardsController.edit(dashboard.id)">Edit</a>&nbsp;&nbsp;&nbsp;
-			<a href="@narkRoutes.GraphsController.add(dashboard.id)">Add a new graph</a>&nbsp;&nbsp;&nbsp;
-			<a href="@narkRoutes.DashboardsController.toggleActivation(dashboard.id)?return_url=@request.path">Deactivate</a>&nbsp;&nbsp;&nbsp;
-		} else {
-			<h3>@dashboard.name</h3>
-		}
-		@if(userOption.isDefined) {
-			<a href="@narkRoutes.GraphsController.list(dashboard.id)">List all the graphs</a>
-			<br>
-			<br>
-		}
-		<h4>Graphs</h4>
+	</h3>
+
+	<div class="clearfix well">
+		<h4>Options</h4>
 		<div id="graphrange">
 			<i class="icon-calendar icon-large"></i>
 			<span></span> <b class="caret"></b>
@@ -167,38 +153,18 @@
 			</label>
 		</div>
 		<br>
-		@dashboard.graphs.sortWith(_.sort > _.sort).map { case graph =>
+		@dashboard.graphs.filter(!_.deleted).sortWith(_.sort > _.sort).map { case graph =>
 			<div>
 				<b>@graph.name</b>
-				@if(userOption.isDefined && userOption.get.id == graph.userId) {
-					&nbsp;<a href="@narkRoutes.GraphsController.edit(graph.id)">edit</a>
-				}
-				<br>
 				<style>
 					#graph-@graph.id.toString svg {
 						height: 400px;
 					}
 				</style>
-
-				@if(!graph.deleted) {
-					<div id="graph-@graph.id.toString">
-						<svg></svg>
-					</div>
-					<br>
-				}
-				@if(userOption.isDefined && userOption.get.id == dashboard.userId) {
-					@if(!graph.deleted) {
-						<a href="@narkRoutes.TargetsController.add(graph.id)">Add a new target</a>&nbsp;&nbsp;&nbsp;
-						<a href="@narkRoutes.GraphsController.toggleActivation(graph.id)?return_url=@request.path">Deactivate</a>&nbsp;&nbsp;&nbsp;
-					} else {
-						<a href="@narkRoutes.GraphsController.toggleActivation(graph.id)?return_url=@request.path">Activate</a>&nbsp;&nbsp;&nbsp;
-					}
-				}
-				@if(userOption.isDefined) {
-					<a href="@narkRoutes.TargetsController.list(graph.id)">List of all targets</a>
-				}
+				<div id="graph-@graph.id.toString">
+					<svg></svg>
+				</div>
 			</div>
-			<br>
 		}
-	}
+	</div>
 }

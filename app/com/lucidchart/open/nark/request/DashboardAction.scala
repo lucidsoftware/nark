@@ -10,7 +10,11 @@ import play.api.mvc._
 import play.api.mvc.Results._
 
 import com.lucidchart.open.nark.models.records.Dashboard
+import com.lucidchart.open.nark.models.records.Graph
+import com.lucidchart.open.nark.models.records.Target
 import com.lucidchart.open.nark.models.DashboardModel
+import com.lucidchart.open.nark.models.GraphModel
+import com.lucidchart.open.nark.models.TargetModel
 import com.lucidchart.open.nark.controllers.routes
 
 /**
@@ -47,6 +51,34 @@ trait DashboardActionBuilder {
 			}
 			else {
 				Done(Redirect(routes.HomeController.index()).flashing(AppFlash.error("You do not have access to manage this dashboard.")))
+			}
+		}
+	}
+
+	/**
+	 * Verify the current user has access to the graph
+	 */
+	def graphManagementAccess(graphId: UUID, userId: UUID, allowDeletedDashboard: Boolean = false, allowDeletedGraph: Boolean = false)(block: (Dashboard, Graph) => EssentialAction): EssentialAction = EssentialAction { requestHeader =>
+		GraphModel.findGraphByID(graphId) match {
+			case Some(graph) if (!graph.deleted || allowDeletedGraph) => {
+				dashboardManagementAccess(graph.dashboardId, userId, allowDeletedDashboard) { dashboard => block(dashboard, graph) }(requestHeader)
+			}
+			case _ => {
+				Done(Redirect(routes.HomeController.index()).flashing(AppFlash.error("You do not have access to manage this graph.")))
+			}
+		}
+	}
+
+	/**
+	 * Verify the current user has access to the target
+	 */
+	def targetManagementAccess(targetId: UUID, userId: UUID, allowDeletedDashboard: Boolean = false, allowDeletedGraph: Boolean = false, allowDeletedTarget: Boolean = false)(block: (Dashboard, Graph, Target) => EssentialAction): EssentialAction = EssentialAction { requestHeader =>
+		TargetModel.findTargetByID(targetId) match {
+			case Some(target) if (!target.deleted || allowDeletedTarget) => {
+				graphManagementAccess(target.graphId, userId, allowDeletedDashboard, allowDeletedGraph) { (dashboard, graph) => block(dashboard, graph, target) }(requestHeader)
+			}
+			case _ => {
+				Done(Redirect(routes.HomeController.index()).flashing(AppFlash.error("You do not have access to manage this target.")))
 			}
 		}
 	}

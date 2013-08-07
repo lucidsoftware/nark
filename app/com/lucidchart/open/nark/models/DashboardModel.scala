@@ -94,22 +94,6 @@ class DashboardModel extends AppModel {
 	}
 
 	/**
-	 * toggle the activation status of the dashboard
-	 * @param dashboard
-	 */
-	def toggleActivation(dashboard: Dashboard) {
-		DB.withConnection("main") { connection =>
-			SQL("""
-				UPDATE `dashboards` SET `deleted` = {deleted}
-				WHERE id = {id}
-			""").on(
-				"id"         -> dashboard.id,
-				"deleted"    -> !dashboard.deleted
-			).executeUpdate()(connection)
-		}
-	}
-
-	/**
 	 * Create a new dashboard using all the details from the dashboard object.
 	 * Throws an exception on failure
 	 * 

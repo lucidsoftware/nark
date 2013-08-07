@@ -62,34 +62,6 @@ class GraphModel extends AppModel {
 	}
 
 	/**
-	 * Find all the graphs
-	 */
-	def findAll() : List[Graph] = {
-		DB.withConnection("main") { connection =>
-			SQL("""
-				SELECT *
-				FROM `graphs`
-			""").as(graphsRowParser *)(connection)
-		}
-	}
-
-	/**
-	 * toggle the activation status of the graph
-	 * @param graph
-	 */
-	def toggleActivation(graph: Graph) {
-		DB.withConnection("main") { connection =>
-			SQL("""
-				UPDATE `graphs` SET `deleted` = {deleted}
-				WHERE id = {id}
-			""").on(
-				"id"         -> graph.id,
-				"deleted"    -> !graph.deleted
-			).executeUpdate()(connection)
-		}
-	}
-
-	/**
 	 * Create a new graph using all the details from the graph object.
 	 * Throws an exception on failure
 	 * 
@@ -100,10 +72,30 @@ class GraphModel extends AppModel {
 			SQL("""
 				INSERT INTO `graphs` (`id`, `name`, `dashboard_id`, `sort`, `type`, `deleted`)
 				VALUES ({id}, {name}, {dashboard_id}, {sort}, {type}, {deleted})
-				ON DUPLICATE KEY UPDATE `name`= {name}, `type`={type}""").on(
+			""").on(
 				"id"         -> graph.id,
 				"name"       -> graph.name,
 				"dashboard_id" -> graph.dashboardId,
+				"sort"       -> graph.sort,
+				"type"       -> graph.typeGraph.id,
+				"deleted"    -> graph.deleted
+			).executeUpdate()(connection)
+		}
+	}
+
+	/**
+	 * Edit an existing graph. Not all fields may be updated.
+	 * Throws an exception on failure
+	 * 
+	 * @param graph
+	 */
+	def editGraph(graph: Graph) {
+		DB.withConnection("main") { connection =>
+			SQL("""
+				UPDATE `graphs` SET `name` = {name}, `sort` = {sort}, `type` = {type}, `deleted` = {deleted} WHERE `id` = {id}
+			""").on(
+				"id"         -> graph.id,
+				"name"       -> graph.name,
 				"sort"       -> graph.sort,
 				"type"       -> graph.typeGraph.id,
 				"deleted"    -> graph.deleted

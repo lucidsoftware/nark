@@ -1,0 +1,32 @@
+@(
+	dashboard: com.lucidchart.open.nark.models.records.Dashboard,
+	user: com.lucidchart.open.nark.models.records.User
+)(
+	implicit
+	request: com.lucidchart.open.nark.request.AppRequest[_]
+)
+@import com.lucidchart.open.nark.controllers.{routes=>narkRoutes}
+@import com.lucidchart.open.nark.views
+@import com.lucidchart.open.nark.views.html.helpers
+@import helper.twitterBootstrap._
+@import helper._
+
+@com.lucidchart.open.nark.views.html.layouts.main("Manage " + dashboard.name, userOption = Some(user)) {
+	<h3>@dashboard.name</h3>
+	<p>
+		This dashboard can be viewed at @narkRoutes.DashboardsController.dashboard(dashboard.url).
+		<a href="@narkRoutes.DashboardsController.dashboard(dashboard.url)" class="btn btn-primary">View</a>
+		<a href="@narkRoutes.DashboardsController.edit(dashboard.id)" class="btn btn-primary">Edit</a>
+	</p>
+	<p>
+		The graphs and targets can be managed from this page as well.
+		<a href="@narkRoutes.DashboardsController.manageGraphsAndTargets(dashboard.id)" class="btn btn-primary">Manage Graphs &amp; Targets</a>
+	</p
+	@helper.form(action=narkRoutes.DashboardsController.deactivate(dashboard.id)) {
+		@helpers.csrfHiddenInput()
+		<p>
+			If you don't want to see the dashboard anymore, you can deactivate it. This <strong>is</strong> a reversible operation.
+			<button id="deactivate" class="btn btn-danger">Deactivate</button>
+		</p>
+	}
+}

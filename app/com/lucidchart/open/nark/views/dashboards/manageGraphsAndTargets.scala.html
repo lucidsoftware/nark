@@ -1,0 +1,94 @@
+@(
+	dashboard: com.lucidchart.open.nark.models.records.Dashboard,
+	graphs: List[com.lucidchart.open.nark.models.records.Graph],
+	targetsByGraphId: Map[java.util.UUID, List[com.lucidchart.open.nark.models.records.Target]],
+	user: com.lucidchart.open.nark.models.records.User
+)(
+	implicit
+	request: com.lucidchart.open.nark.request.AppRequest[_]
+)
+@import com.lucidchart.open.nark.controllers.{routes=>narkRoutes}
+@import com.lucidchart.open.nark.views
+@import com.lucidchart.open.nark.views.html.helpers
+@import helper.twitterBootstrap._
+@import helper._
+
+@com.lucidchart.open.nark.views.html.layouts.main("Manage " + dashboard.name, userOption = Some(user)) {
+	<h3>
+		@dashboard.name
+		<a href="@narkRoutes.DashboardsController.manage(dashboard.id)" class="btn">Manage</a>
+	</h3>
+
+	<p>
+		There are @graphs.size graphs in this dashboard.
+		<a href="@narkRoutes.GraphsController.add(dashboard.id)" class="btn btn-primary">Create a Graph</a>
+	</p>
+
+	@graphs.map { graph =>
+		@defining(targetsByGraphId.get(graph.id).getOrElse(Nil)) { targets =>
+			<h4>@graph.name</h4>
+			<p>
+				This is a @graph.typeGraph.toString graph with @targets.size targets.
+				<a href="@narkRoutes.GraphsController.edit(graph.id)" class="btn btn-primary">Edit Graph</a>
+				<a href="@narkRoutes.TargetsController.add(graph.id)" class="btn btn-primary">Add a Target</a>
+			</p>
+			<p>
+				@if(graph.deleted) {
+					@helper.form(action=narkRoutes.GraphsController.activate(graph.id)) {
+						@helpers.csrfHiddenInput()
+						This graph is currently <span class="label label-important">Deactivated</span>.
+						It will not show up on the dashboard page.
+						<button class="btn">Activate</button>
+					}
+				} else {
+					@helper.form(action=narkRoutes.GraphsController.deactivate(graph.id)) {
+						@helpers.csrfHiddenInput()
+						This graph is currently <span class="label label-success">Activated</span>.
+						<button class="btn btn-danger">Deactivate</button>
+					}
+				}
+			</p>
+
+			@if(!targets.isEmpty) {
+				<table cellpadding="0" cellspacing="0" border="0" class="table table-striped table-bordered">
+					<thead>
+					<tr>
+						<th>Target</th>
+						<th>Active</th>
+						<th>Actions</th>
+					</tr>
+					</thead>
+					<tbody>
+						@targets.map { target =>
+							<tr>
+								<td>@target.target</td>
+								<td>
+									@if(target.deleted) {
+										No
+									} else {
+										Yes
+									}
+								</td>
+								<td>
+									@if(target.deleted) {
+										@helper.form(action=narkRoutes.TargetsController.activate(target.id)) {
+											@helpers.csrfHiddenInput()
+											<a href="@narkRoutes.TargetsController.edit(target.id)" class="btn btn-primary">Edit</a>
+											<button class="btn">Activate</button>
+										}
+									} else {
+										@helper.form(action=narkRoutes.TargetsController.deactivate(target.id)) {
+											@helpers.csrfHiddenInput()
+											<a href="@narkRoutes.TargetsController.edit(target.id)" class="btn btn-primary">Edit</a>
+											<button class="btn btn-danger">Deactivate</button>
+										}
+									}
+								</td>
+							</tr>
+						}
+					</tbody>
+				</table>
+			}
+		}
+	}
+}

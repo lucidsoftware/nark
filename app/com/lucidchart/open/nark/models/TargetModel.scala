@@ -40,49 +40,33 @@ class TargetModel extends AppModel {
 	}
 
 	/**
-	 * Find the Targets that has the matching graphId
+	 * Find the Targets that have the matching graphId
 	 *
 	 * @param graphId
 	 * @return Targets
 	 */
-	def findTargetByGraphId(graphId: UUID): List[Target] = {
-		DB.withConnection("main") { connection =>
-			SQL("""
-				SELECT *
-				FROM `graph_targets`
-				WHERE `graph_id` = {graph_id}
-			""").on(
-				"graph_id" -> graphId
-			).as(targetsRowParser *)(connection)
-		}
-	}
+	def findTargetByGraphId(graphId: UUID): List[Target] = findTargetByGraphId(List(graphId))
 
 	/**
-	 * Find all the targets
+	 * Find the Targets that have the matching graphId
+	 *
+	 * @param graphIds
+	 * @return Targets
 	 */
-	def findAll() : List[Target] = {
-		DB.withConnection("main") { connection =>
-			SQL("""
-				SELECT *
-				FROM `graph_targets`
-			""").as(targetsRowParser *)(connection)
+	def findTargetByGraphId(graphIds: List[UUID]): List[Target] = {
+		if (graphIds.isEmpty) {
+			Nil
 		}
-	}
-
-	/**
-	 * toggle the activation status of the target
-	 * @param target
-	 */
-	def toggleActivation(target: Target) {
-		println(!target.deleted)
-		DB.withConnection("main") { connection =>
-			SQL("""
-				UPDATE `graph_targets` SET `deleted` = {deleted}
-				WHERE id = {id}
-			""").on(
-				"id"         -> target.id,
-				"deleted"    -> !target.deleted
-			).executeUpdate()(connection)
+		else {
+			DB.withConnection("main") { connection =>
+				RichSQL("""
+					SELECT *
+					FROM `graph_targets`
+					WHERE `graph_id` IN ({graph_ids})
+				""").onList(
+					"graph_ids" -> graphIds
+				).toSQL.as(targetsRowParser *)(connection)
+			}
 		}
 	}
 
@@ -97,9 +81,27 @@ class TargetModel extends AppModel {
 			SQL("""
 				INSERT INTO `graph_targets` (`id`, `graph_id`, `target`, `deleted`)
 				VALUES ({id}, {graph_id}, {target}, {deleted})
-				ON DUPLICATE KEY UPDATE `target`= {target}""").on(
+			""").on(
 				"id"         -> target.id,
 				"graph_id"   -> target.graphId,
+				"target"     -> target.target,
+				"deleted"    -> target.deleted
+			).executeUpdate()(connection)
+		}
+	}
+
+	/**
+	 * Edit an existing target. Not all values may be edited.
+	 * Throws an exception on failure
+	 *
+	 * @param target
+	 */
+	def editTarget(target: Target) {
+		DB.withConnection("main") { connection =>
+			SQL("""
+				UPDATE `graph_targets` SET `target` = {target}, `deleted` = {deleted} WHERE `id` = {id}
+			""").on(
+				"id"         -> target.id,
 				"target"     -> target.target,
 				"deleted"    -> target.deleted
 			).executeUpdate()(connection)
