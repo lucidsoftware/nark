@@ -26,7 +26,7 @@
 			@helper.inputText(formAdd("target"), 'id -> "target-input", 'class -> "input-xlarge", 'placeholder -> "stats.gauges.my.stuff", '_label -> "Target", 'required -> true, '_showConstraints -> false, 'autocomplete -> "off")
 			<p class="help-block">
 				Eg. stats.counters.servers.com.lucidchart.mt.eiger.mongod.27018.insert.count<br />
-				OR stats.counters.servers.{REVERSE_HOSTNAME}.mongod.27018.insert.count<br />
+				OR stats.counters.servers.%REVERSE_HOSTNAME=com.lucidchart.server%.mongod.27018.insert.count<br />
 				OR stats.gauges.application.*.logins
 			</p>
 			<button id="add" class="btn btn-primary">Create</button>

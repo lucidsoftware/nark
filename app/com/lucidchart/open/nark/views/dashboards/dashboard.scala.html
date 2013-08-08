@@ -75,7 +75,16 @@
 	<script type="text/javascript">
 		var dashboard = @Html(views.models.dashboard(dashboard).toString);
 		var graphs = @Html(Json.toJson(graphs.filter(!_.deleted).map(views.models.graph(_))).toString);
-		var targets = @Html(Json.toJson(targets.filter(!_.deleted).map(views.models.target(_))).toString);
+		var targets = @Html(Json.toJson(targets.filter { target =>
+			!target.deleted && graphs.foldLeft(true) { (active, graph) => 
+				if (graph.id == target.graphId && graph.deleted) {
+					false
+				}
+				else {
+					active
+				}
+			}
+		}.map(views.models.target(_))).toString);
 
 		var dateFormat = "mm/dd/yy";
 		var timeFormat = "HH:mmz";
@@ -86,6 +95,11 @@
 		var localStorageRefreshRateKeys = ["dashboard-" + dashboard.id + "-refresh", "dashboard-default-refresh"];
 		var localStorageDateRangeKeys = ["dashboard-" + dashboard.id + "-daterange", "dashboard-default-daterange"];
 		var localStorageOptionsPanelKeys = ["dashboard-" + dashboard.id + "-optionspanel", "dashboard-default-optionspanel"];
+
+		var allGraphIds = [];
+		$.map(graphs, function(graph) {
+			allGraphIds.push(graph.id);
+		});
 
 		function redrawGraph(id) {
 			if (graphData[id]) {
@@ -127,8 +141,16 @@
 
 		var dataRequests = {};
 		var graphData = {};
-		function refreshData() {
+		function refreshData(graphIds) {
+			console.log("refreshdata");
+
+			var updatedTargets = getUpdatedTargets();
+
 			$.map(graphs, function(graph) {
+				if ($.inArray(graph['id'], graphIds) == -1) {
+					return;
+				}
+
 				var data = {};
 
 				if (dateRange["type"] == "custom") {
@@ -139,9 +161,10 @@
 					data["seconds"] = dateRange["seconds"];
 				}
 
-				$.map(targets, function(target) {
+				var count = 0;
+				$.map(updatedTargets, function(target) {
 					if (target["graphId"] == graph["id"]) {
-						data["target[]"] = target["target"];
+						data['target[' + (count++) + ']'] = target['target'];
 					}
 				});
 
@@ -169,13 +192,70 @@
 			});
 		}
 
+		function getUpdatedTargets() {
+			var variables = [];
+			$('#variables-group input').each(function() {
+				variables.push({'key': $(this).attr('key'), 'value': $(this).val()});
+			});
+			$('#variables-group select').each(function() {
+				variables.push({'key': $(this).attr('key'), 'value': $(this).val()});
+			});
+
+			var updatedTargets = [];
+			$.map(targets, function(target) {
+				var targetString = target['target'];
+				$.map(variables, function(variable) {
+					var replace = '%' + variable['key'] + '%';
+					if (targetString.indexOf('%' + variable['key']) != -1) {
+						var from = targetString.indexOf(variable['key']) + variable['key'].length;
+						var to = targetString.indexOf('%', from) + 1;
+						replace = '%' + variable['key'] + targetString.substring(from, to);
+					}
+					targetString = targetString.replace(replace, variable['value']);
+				});
+
+				updatedTargets.push(
+					{
+						'graphId': target['graphId'],
+						'target': targetString
+					}
+				);
+			});
+
+			return updatedTargets;
+		}
+
+		function getAffectedGraphs(changedVariable) {
+			var graphIds = [];
+			$.map(targets, function(target) {
+				if (target['target'].indexOf('%' + changedVariable) != -1) {
+					$.map(graphs, function(graph) {
+						if (graph['id'] == target['graphId']) {
+							graphIds.push(graph['id']);
+						}
+					});
+				}
+			});
+
+			return graphIds;
+		}
+
 		var needRefreshData = false;
-		function queueRefreshData() {
+		var graphsToRefresh = [];
+		function queueRefreshData(graphIds) {
+			graphIds = typeof graphIds !== 'undefined' ? graphIds : allGraphIds; 
+			
+			$.map(graphIds, function(graphId) {
+				if ($.inArray(graphId, graphsToRefresh) == -1) {
+					graphsToRefresh.push(graphId);
+				}
+			});
 			needRefreshData = true;
 			setTimeout(function() {
 				if (needRefreshData) {
 					needRefreshData = false;
-					refreshData();
+					refreshData(graphsToRefresh);
+					graphsToRefresh = [];
 				}
 			}, 1);
 		}
@@ -380,6 +460,46 @@
 			setRefreshRate(fromLocalStorage(localStorageRefreshRateKeys, 60));
 			setDateRange(fromLocalStorage(localStorageDateRangeKeys, 3600));
 			setOptionsPanel(fromLocalStorage(localStorageOptionsPanelKeys, "visible"));
+
+			var alreadyDisplayedVariables = [];
+			$.map(targets, function(target) {
+				if (target['target'].indexOf('%') != -1) {
+					var targetPieces = target['target'].split('%');
+					for (var i = 1; i < targetPieces.length; i = i + 2) {
+						if (targetPieces[i].indexOf('|') != -1) {
+							variablePieces = targetPieces[i].split('|');
+						
+							if ($('#' + variablePieces[0]).length == 0) {
+								$('#variables-group').append('<div class="row field-container"><label rel="tooltip" title="' + variablePieces[0] + '" for="' + variablePieces[0] + '"><strong>' + variablePieces[0] + '</strong></label><select id="' + variablePieces[0] + '" name="' + variablePieces[0] + '" key="' + variablePieces[0] + '"></select></div>');
+							}
+
+							for (var j = 1; j < variablePieces.length; j++) {
+								if ($('#' + variablePieces[0] + ' option[value="' + variablePieces[j] + '"]').length == 0) {
+
+									$('#' + variablePieces[0]).append('<option value="' + variablePieces[j] + '">' + variablePieces[j] + '</option>');
+								}
+							}
+							$('#' + variablePieces[0]).change(function(event) {
+								var graphIds = getAffectedGraphs($(this).attr('key'));
+								queueRefreshData(graphIds);
+							});
+						}
+						else {
+							var variablePieces = targetPieces[i].split('=');
+							if ($.inArray(variablePieces[0], alreadyDisplayedVariables) == -1) {
+								$('#variables-group').append('<div class="row field-container"><label rel="tooltip" title="' + variablePieces[0] + '" for="' + variablePieces[0] + '"><strong>' + variablePieces[0] +'</strong></label><input id="' + variablePieces[0] + '" name="' + variablePieces[0] + '" type="text" class="span9 input-large" key="' + variablePieces[0] + '" value="' + ((variablePieces.length == 2) ? variablePieces[1] : '') + '" /></div>');
+
+								$('#' + variablePieces[0]).focusout(function() {
+									var graphIds = getAffectedGraphs($(this).attr('key'));
+									queueRefreshData(graphIds);
+								});
+								
+								alreadyDisplayedVariables.push(variablePieces[0]);
+							}
+						}
+					}
+				}
+			});
 		});
 	</script>
 
@@ -393,56 +513,64 @@
 
 	<div class="clearfix">
 		<div id="options-container" class="well">
-			<div id="column-group" class="field-container">
-				<div class="form-inline">
-					<label><strong>Columns</strong></label>
-					<div class="btn-group">
-						<button class="btn" data="1">1</button>
-						<button class="btn" data="2">2</button>
-						<button class="btn" data="3">3</button>
-						<button class="btn" data="4">4</button>
-						<button class="btn" data="5">5</button>
-						<button class="btn" data="6">6</button>
+			<div class="row-fluid">
+				<div class="span6">
+					<div id="column-group" class="field-container">
+						<div class="form-inline">
+							<label><strong>Columns</strong></label>
+							<div class="btn-group">
+								<button class="btn" data="1">1</button>
+								<button class="btn" data="2">2</button>
+								<button class="btn" data="3">3</button>
+								<button class="btn" data="4">4</button>
+								<button class="btn" data="5">5</button>
+								<button class="btn" data="6">6</button>
+							</div>
+						</div>
+					</div>
+					<div id="refreshrate-group" class="field-container">
+						<div class="form-inline">
+							<label><strong>Refresh Rate</strong></label>
+							<div class="btn-group">
+								<button class="btn" data="disable">Disable</button>
+							</div>
+							<div class="btn-group">
+								<button class="btn" data="1">1s</button>
+								<button class="btn" data="30">30s</button>
+								<button class="btn" data="60">1m</button>
+								<button class="btn" data="12">2m</button>
+								<button class="btn" data="300">5m</button>
+								<button class="btn" data="600">10m</button>
+							</div>
+						</div>
+					</div>
+					<div id="daterange-group" class="field-container">
+						<div class="form-inline">
+							<label><strong>Time Range</strong></label>
+							<div class="btn-group">
+								<button class="btn" data="custom">Custom</button>
+							</div>
+							<div class="btn-group">
+								<button class="btn" data="3600">1h</button>
+								<button class="btn" data="21600">6h</button>
+								<button class="btn" data="43200">12h</button>
+								<button class="btn" data="86400">1d</button>
+								<button class="btn" data="604800">7d</button>
+								<button class="btn" data="2419200">28d</button>
+								<button class="btn" data="7776000">90d</button>
+							</div>
+						</div>
+					</div>
+					<div id="custom-daterange-group" class="field-container" style="display: none">
+						<div class="form-inline">
+							<label><strong>Custom Dates</strong></label>
+							<input type="text" id="custom-daterange-start-input" placeholder="Start Date">
+							<input type="text" id="custom-daterange-end-input" placeholder="End Date">
+						</div>
 					</div>
 				</div>
-			</div>
-			<div id="refreshrate-group" class="field-container">
-				<div class="form-inline">
-					<label><strong>Refresh Rate</strong></label>
-					<div class="btn-group">
-						<button class="btn" data="disable">Disable</button>
-					</div>
-					<div class="btn-group">
-						<button class="btn" data="30">30s</button>
-						<button class="btn" data="60">1m</button>
-						<button class="btn" data="120">2m</button>
-						<button class="btn" data="300">5m</button>
-						<button class="btn" data="600">10m</button>
-					</div>
-				</div>
-			</div>
-			<div id="daterange-group" class="field-container">
-				<div class="form-inline">
-					<label><strong>Time Range</strong></label>
-					<div class="btn-group">
-						<button class="btn" data="custom">Custom</button>
-					</div>
-					<div class="btn-group">
-						<button class="btn" data="3600">1h</button>
-						<button class="btn" data="21600">6h</button>
-						<button class="btn" data="43200">12h</button>
-						<button class="btn" data="86400">1d</button>
-						<button class="btn" data="604800">7d</button>
-						<button class="btn" data="2419200">28d</button>
-						<button class="btn" data="7776000">90d</button>
-					</div>
-				</div>
-			</div>
-			<div id="custom-daterange-group" class="field-container" style="display: none">
-				<div class="form-inline">
-					<label><strong>Custom Dates</strong></label>
-					<input type="text" id="custom-daterange-start-input" placeholder="Start Date">
-					<input type="text" id="custom-daterange-end-input" placeholder="End Date">
+				<div class="span6">
+					<div id="variables-group" class="controls form-inline"></div>
 				</div>
 			</div>
 		</div>
