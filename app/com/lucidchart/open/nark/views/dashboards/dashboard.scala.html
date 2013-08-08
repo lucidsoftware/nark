@@ -125,6 +125,7 @@
 			});
 		}
 
+		var dataRequests = {};
 		var graphData = {};
 		function refreshData() {
 			$.map(graphs, function(graph) {
@@ -144,12 +145,19 @@
 					}
 				});
 
-				$.ajax({
+				if (dataRequests[graph["id"]]) {
+					dataRequests[graph["id"]].abort();
+				}
+
+				dataRequests[graph["id"]] = $.ajax({
 					"type": "GET",
 					"url": "/graphite/datapoints",
 					"data": data,
 					"dataType": "json",
 					"timeout": 300000,
+					"complete": function(xhr, status) {
+						dataRequests[graph["id"]] = false;
+					},
 					"success": function(data) {
 						graphData[graph["id"]] = data;
 						queueRedrawGraph(graph["id"]);
