@@ -20,7 +20,7 @@ class DashboardsController extends AppController {
 		mapping(
 			"name" -> text.verifying(Constraints.minLength(1)),
 			"url" -> text.verifying(Constraints.pattern("^[a-zA-Z0-9\\.\\-_]*$".r, error = "Only alpha-numberic text and periods (.), dashes (-), and underscores (_) allowed"))
-									 .verifying("A dashboard with that url already exists. Please choose another url.", !DashboardModel.findDashboardByURL(_).isDefined)
+			             .verifying("A dashboard with that url already exists. Please choose another url.", !DashboardModel.findDashboardByURL(_).isDefined)
 		)(DashboardFormSubmission.apply)(DashboardFormSubmission.unapply)
 	)
 	private def editDashboardForm(id: UUID) = {
@@ -28,10 +28,10 @@ class DashboardsController extends AppController {
 			mapping(
 				"name" -> text.verifying(Constraints.minLength(1)),
 				"url" -> text.verifying(Constraints.pattern("^[a-zA-Z0-9\\.\\-_]*$".r, error = "Only alpha-numberic text and periods (.), dashes (-), and underscores (_) allowed"))
-								.verifying("A dashboard with that url already exists. Please choose another url.", url => {
-																															val dashboard = DashboardModel.findDashboardByURL(url)
-																															!dashboard.isDefined || dashboard.get.id == id
-																														})
+				             .verifying("A dashboard with that url already exists. Please choose another url.", url => {
+				                 val dashboard = DashboardModel.findDashboardByURL(url)
+				                 !dashboard.isDefined || dashboard.get.id == id
+				             })
 			)(DashboardFormSubmission.apply)(DashboardFormSubmission.unapply)
 		)
 	}
