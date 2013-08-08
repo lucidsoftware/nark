@@ -85,6 +85,7 @@
 		var localStorageColumnCountKeys = ["dashboard-" + dashboard.id + "-columns", "dashboard-default-columns"];
 		var localStorageRefreshRateKeys = ["dashboard-" + dashboard.id + "-refresh", "dashboard-default-refresh"];
 		var localStorageDateRangeKeys = ["dashboard-" + dashboard.id + "-daterange", "dashboard-default-daterange"];
+		var localStorageOptionsPanelKeys = ["dashboard-" + dashboard.id + "-optionspanel", "dashboard-default-optionspanel"];
 
 		function redrawGraph(id) {
 			if (graphData[id]) {
@@ -177,6 +178,14 @@
 			var width = $("#allgraphs .graph-wrapper").width();
 			$("#allgraphs .graph-container").css('height', Math.floor((width - 20) * 0.66) + "px");
 			queueRedrawAllGraphs();
+		}
+
+		function setOptionsPanel(visibility) {
+			if(visibility == "hidden") {
+				$("#options-container").slideUp();
+			} else {
+				$("#options-container").slideDown();
+			}
 		}
 
 		var currentColumnCount = null;
@@ -294,7 +303,16 @@
 
 		$(document).ready(function() {
 			$("#optiontoggler").click(function(event) {
-				$("#options-container").slideToggle();
+				var visibility = fromLocalStorage(localStorageOptionsPanelKeys, "visible");
+			
+				if(visibility == "visible") {
+					visibility = "hidden";
+				} else {
+					visibility = "visible";
+				}
+
+				setLocalStorage(localStorageOptionsPanelKeys, visibility);
+				setOptionsPanel(visibility);
 			});
 
 			$("#column-group button").click(function(event) {
@@ -353,8 +371,9 @@
 			updateCustomDates();
 
 			setColumnCount(fromLocalStorageInt(localStorageColumnCountKeys, 3));
-			setRefreshRate(fromLocalStorageInt(localStorageRefreshRateKeys, 60));
-			setDateRange(fromLocalStorageInt(localStorageDateRangeKeys, 3600));
+			setRefreshRate(fromLocalStorage(localStorageRefreshRateKeys, 60));
+			setDateRange(fromLocalStorage(localStorageDateRangeKeys, 3600));
+			setOptionsPanel(fromLocalStorage(localStorageOptionsPanelKeys, "visible"));
 		});
 	</script>
 
