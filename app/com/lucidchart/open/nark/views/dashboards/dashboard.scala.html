@@ -76,8 +76,15 @@
 		var dashboard = @Html(views.models.dashboard(dashboard).toString);
 		var graphs = @Html(Json.toJson(graphs.filter(!_.deleted).map(views.models.graph(_))).toString);
 		var targets = @Html(Json.toJson(targets.filter(!_.deleted).map(views.models.target(_))).toString);
-		var dateFormat = "mm/dd/yy"
-		var timeFormat = "HH:mmz"
+
+		var dateFormat = "mm/dd/yy";
+		var timeFormat = "HH:mmz";
+
+		var localStorageStartDateKeys = ["dashboard-" + dashboard.id + "-custom-start", "dashboard-default-custom-start"];
+		var localStorageEndDateKeys = ["dashboard-" + dashboard.id + "-custom-end", "dashboard-default-custom-end"];
+		var localStorageColumnCountKeys = ["dashboard-" + dashboard.id + "-columns", "dashboard-default-columns"];
+		var localStorageRefreshRateKeys = ["dashboard-" + dashboard.id + "-refresh", "dashboard-default-refresh"];
+		var localStorageDateRangeKeys = ["dashboard-" + dashboard.id + "-daterange", "dashboard-default-daterange"];
 
 		function redrawGraph(id) {
 			if (graphData[id]) {
@@ -119,7 +126,6 @@
 
 		var graphData = {};
 		function refreshData() {
-			console.log("refreshdata");
 			queueRedrawAllGraphs();
 
 			$.map(graphs, function(graph) {
@@ -256,6 +262,32 @@
 			}
 		}
 
+		function setLocalStorage(keys, value) {
+			if (window.localStorage) {
+				for (var i = 0; i < keys.length; i++) {
+					var key = keys[i];
+					window.localStorage[key] = value;
+				}
+			}
+		}
+
+		function fromLocalStorage(keys, defaultValue) {
+			if (window.localStorage) {
+				for (var i = 0; i < keys.length; i++) {
+					var key = keys[i];
+					if (window.localStorage.hasOwnProperty(key)) {
+						return window.localStorage[key];
+					}
+				}
+			}
+
+			return defaultValue;
+		}
+
+		function fromLocalStorageInt(keys, defaultValue) {
+			return parseInt(fromLocalStorage(keys, defaultValue), 10);
+		}
+
 		$(document).resize(function() {
 			adjustGraphHeights();
 		});
@@ -267,6 +299,7 @@
 
 			$("#column-group button").click(function(event) {
 				var count = parseInt($(event.target).attr("data"), 10);
+				setLocalStorage(localStorageColumnCountKeys, count);
 				setColumnCount(count);
 			});
 
@@ -275,6 +308,7 @@
 				if (seconds != "disable") {
 					seconds = parseInt(seconds, 10);
 				}
+				setLocalStorage(localStorageRefreshRateKeys, seconds);
 				setRefreshRate(seconds);
 			});
 
@@ -283,6 +317,7 @@
 				if (seconds != "custom") {
 					seconds = parseInt(seconds, 10);
 				}
+				setLocalStorage(localStorageDateRangeKeys, seconds);
 				setDateRange(seconds);
 			});
 
@@ -290,6 +325,8 @@
 				"dateFormat": dateFormat,
 				"timeFormat": timeFormat,
 				"onSelect": function(datetime, target) {
+					var date = $("#custom-daterange-start-input").datepicker("getDate");
+					setLocalStorage(localStorageStartDateKeys, date.getTime());
 					updateCustomDates();
 				}
 			});
@@ -298,6 +335,8 @@
 				"dateFormat": dateFormat,
 				"timeFormat": timeFormat,
 				"onSelect": function(datetime, target) {
+					var date = $("#custom-daterange-end-input").datepicker("getDate");
+					setLocalStorage(localStorageEndDateKeys, date.getTime());
 					updateCustomDates();
 				}
 			});
@@ -306,11 +345,16 @@
 			$("#ui-datepicker-div").css("z-index", 5);
 
 			// also toggle options slider
-			setColumnCount(3);
-			setRefreshRate(60);
-			setDateRange(3600);
-			$("#custom-daterange-start-input").datepicker("setDate", new Date(new Date().getTime() - 86400000));
-			$("#custom-daterange-end-input").datepicker("setDate", new Date());
+			var initialStart = fromLocalStorageInt(localStorageStartDateKeys, new Date().getTime() - 86400000);
+			$("#custom-daterange-start-input").datepicker("setDate", new Date(initialStart));
+			
+			var initialEnd = fromLocalStorageInt(localStorageEndDateKeys, new Date().getTime());
+			$("#custom-daterange-end-input").datepicker("setDate", new Date(initialEnd));
+			updateCustomDates();
+
+			setColumnCount(fromLocalStorageInt(localStorageColumnCountKeys, 3));
+			setRefreshRate(fromLocalStorageInt(localStorageRefreshRateKeys, 60));
+			setDateRange(fromLocalStorageInt(localStorageDateRangeKeys, 3600));
 		});
 	</script>
 
