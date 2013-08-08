@@ -1,181 +1,318 @@
 @(
 	dashboard: com.lucidchart.open.nark.models.records.Dashboard,
 	graphs: List[com.lucidchart.open.nark.models.records.Graph],
-	targetsByGraphId: Map[java.util.UUID, List[com.lucidchart.open.nark.models.records.Target]]
+	targets: List[com.lucidchart.open.nark.models.records.Target]
 )(
 	implicit
 	request: com.lucidchart.open.nark.request.AppRequest[_],
 	userOption: Option[com.lucidchart.open.nark.models.records.User]
 )
+@import play.api.libs.json.Json
 @import com.lucidchart.open.nark.controllers.{routes=>narkRoutes}
 @import com.lucidchart.open.nark.views
+@import com.lucidchart.open.nark.models.records.Target
+@import com.lucidchart.open.nark.models.records.Graph
+@import com.lucidchart.open.nark.models.records.Dashboard
 
-@com.lucidchart.open.nark.views.html.layouts.main(dashboard.name, List("d3/d3.v3.min.js", "nv.d3.min.js", "dashboard.js", "daterangepicker.js", "moment.min.js", "graphite-host-search.js"), List("nv.d3.css", "daterangepicker-bs2.css"), userOption = userOption){
-<style type="text/css">
-	.container,
-	.navbar-fixed-top .container,
-	.navbar-static-top .container,
-	.navbar-fixed-bottom .container { width: 95%; }
+@com.lucidchart.open.nark.views.html.layouts.main(dashboard.name, List("js/dashboard.js", "js/d3/d3.v3.min.js", "js/nv.d3.min.js", "jquery-timepicker-1.3.1/jquery-ui-timepicker-addon.js"), List("css/nv.d3.css", "jquery-timepicker-1.3.1/jquery-ui-timepicker-addon.css"), userOption = userOption){
+	<style type="text/css">
+		.container,
+		.navbar-fixed-top .container,
+		.navbar-static-top .container,
+		.navbar-fixed-bottom .container { width: 95%; }
 
-	#allgraphs {
-		margin: 0 -10px 0 -12px;
-		position: relative;
-	}
+		.ui_tpicker_timezone select {
+			width: 100px;
+		}
 
-	#allgraphs.g1 .graph-wrapper { width: 100%; }
-	#allgraphs.g2 .graph-wrapper { width: 50%; }
-	#allgraphs.g3 .graph-wrapper { width: 33.33%; }
-	#allgraphs.g4 .graph-wrapper { width: 25%; }
-	#allgraphs.g5 .graph-wrapper { width: 20%; }
-	#allgraphs.g6 .graph-wrapper { width: 16.66%; }
+		.ui-timepicker-div  {
+			font-family: "Helvetica Neue",Helvetica,Arial,sans-serif;
+			font-size: 14px;
+		}
 
-	.graph-wrapper {
-		overflow: hidden;
-		padding: 10px;
-		box-sizing: border-box;
-	}
-	.graph-wrapper .well {
-		margin: 0;
-	}
-	.graph-caption {
-		width: 100%;
-		height: 20px;
-		text-align: center;
-	}
-	svg {
-		width: 100%;
-		height: 100%;
-	}
-</style>
-<script type="text/javascript">
-	$(document).ready(function() {
-		var refreshInterval = parseFloat($("input:radio[name='radios']:checked").val(), 10) * 60;
-		var start_timestamp = parseInt(moment().subtract('hours', 1).format('X'), 10);
-		var end_timestamp = parseInt(moment().format('X'), 10);
-		var ctime = {};
-		$('#graphrange').daterangepicker(
-			{
-				ranges: {
-					'30 Min': [moment().subtract('minutes', 30), moment()],
-					'1 Hour': [moment().subtract('hours', 1), moment()],
-					'2 Hour': [moment().subtract('hours', 2), moment()],
-					'3 Hour': [moment().subtract('hours', 3), moment()],
-					'6 Hour': [moment().subtract('hours', 6), moment()],
-					'12 Hour': [moment().subtract('hours', 12), moment()],
-					'24 Hour': [moment().subtract('hours', 24), moment()],
-					'Today': [moment().startOf('day'), moment()],
-					'Yesterday': [moment().startOf('day').subtract('days', 1), moment().startOf('day')],
-					'Last 7 Days': [moment().subtract('days', 6), moment()],
-					'Last 30 Days': [moment().subtract('days', 29), moment()],
-					'This Month': [moment().startOf('month'), moment().endOf('month')],
-					'Last Month': [moment().subtract('month', 1).startOf('month'), moment().subtract('month', 1).endOf('month')]
-				},
-				timePicker: true,
-				timePickerIncrement: 30,
-				format: 'MM/DD/YYYY h:mm A'
-			},
-			function(start, end) {
-				$('#graphrange span').html(start.format('MMMM D, YYYY, h:mm A') + ' - ' + end.format('MMMM D, YYYY, h:mm A'));
-				start_timestamp = parseInt(start.format('X'), 10);
-				end_timestamp = parseInt(end.format('X'), 10);
-				if (parseInt(moment().format('X'), 10) - end_timestamp > 60) {
-					refreshInterval = -1 * 60; // never refresh since it ends in the past.
-					clearTimeout(ctime);
-					updateTimeout();
+		#options-container .form-inline label {
+			width: 100px;
+			overflow: hidden;
+			text-overflow: ellipsis;
+			white-space: nowrap;
+		}
+
+		#options-container .field-container {
+			margin: 12px 0;
+		}
+
+		#allgraphs {
+			margin: 0 -10px 0 -12px;
+			position: relative;
+		}
+
+		#allgraphs.g1 .graph-wrapper { width: 100%; }
+		#allgraphs.g2 .graph-wrapper { width: 50%; }
+		#allgraphs.g3 .graph-wrapper { width: 33.33%; }
+		#allgraphs.g4 .graph-wrapper { width: 25%; }
+		#allgraphs.g5 .graph-wrapper { width: 20%; }
+		#allgraphs.g6 .graph-wrapper { width: 16.66%; }
+
+		.graph-wrapper {
+			overflow: hidden;
+			padding: 10px;
+			box-sizing: border-box;
+		}
+		.graph-wrapper .well {
+			margin: 0;
+		}
+		.graph-caption {
+			width: 100%;
+			height: 20px;
+			text-align: center;
+		}
+		svg {
+			width: 100%;
+			height: 100%;
+		}
+	</style>
+
+	<script type="text/javascript">
+		var dashboard = @Html(views.models.dashboard(dashboard).toString);
+		var graphs = @Html(Json.toJson(graphs.filter(!_.deleted).map(views.models.graph(_))).toString);
+		var targets = @Html(Json.toJson(targets.filter(!_.deleted).map(views.models.target(_))).toString);
+		var dateFormat = "mm/dd/yy"
+		var timeFormat = "HH:mmz"
+
+		function redrawGraph(id) {
+			if (graphData[id]) {
+				var data = graphData[id];
+				var element = "graph-" + id + " svg";
+				var graph = $.grep(graphs, function(graph) {
+					return graph["id"] == id;
+				})[0];
+
+				switch (graph["type"]) {
+					case "Stacked":
+						plotStackedGraph(element, data);
+						break;
+					case "Normal":
+					default:
+						plotLineGraph(element, data);
+						break;
 				}
-				updateGraphs(start_timestamp, end_timestamp);
 			}
-		);
+		}
 
-		$('#graphrange span').html(moment().subtract('hours', 1).format('MMMM D, YYYY, h:mm A') + ' - ' + moment().format('MMMM D, YYYY, h:mm A'));
+		var redrawGraphs = {};
+		function queueRedrawGraph(id) {
+			redrawGraphs[id] = true;
 
-		function updateGraphs(start, end) {
-			var host = $('#host-input').val();
-			var reverseHost = host.split(".").reverse().join(".")
-			@graphs.map { graph =>
-				@defining(targetsByGraphId.get(graph.id).getOrElse(Nil)) { targets =>
-					@if(!graph.deleted && !targets.isEmpty) {
-						if (!start) {
-							start = moment().subtract("hours", 1).format('X');
-						}
-						if (!end) {
-							end = moment().format('X');
-						}
-						var targets = "@targets.filter(!_.deleted).map(_.target).mkString("&target[]=")";
-						targets = targets.replace(/\{HOSTNAME}/g, host).replace(/\{REVERSE_HOSTNAME}/g, reverseHost);
-						var query = (targets == '') ? '' : "target[]=" + targets;
-						var url = "/graphite/datapoints?" + query
-						var isLinear = @{graph.typeGraph == com.lucidchart.open.nark.models.records.GraphType.normal}
+			setTimeout(function() {
+				if (redrawGraphs[id]) {
+					redrawGraphs[id] = false;
+					redrawGraph(id);
+				}
+			}, 1);
+		}
 
-						updateGraphHelper(url, isLinear, "graph-@graph.id.toString svg", start, end)
+		function queueRedrawAllGraphs() {
+			$.map(graphs, function(graph) {
+				queueRedrawGraph(graph["id"]);
+			});
+		}
+
+		var graphData = {};
+		function refreshData() {
+			console.log("refreshdata");
+			queueRedrawAllGraphs();
+
+			$.map(graphs, function(graph) {
+				var data = {};
+
+				if (dateRange["type"] == "custom") {
+					data["start"] = Math.floor(dateRange["start"].getTime() / 1000);
+					data["end"] = Math.floor(dateRange["end"].getTime() / 1000);
+				}
+				else {
+					data["seconds"] = dateRange["seconds"];
+				}
+
+				$.map(targets, function(target) {
+					if (target["graphId"] == graph["id"]) {
+						data["target[]"] = target["target"];
 					}
+				});
+
+				$.ajax({
+					"type": "GET",
+					"url": "/graphite/datapoints",
+					"data": data,
+					"dataType": "json",
+					"timeout": 300000,
+					"success": function(data) {
+						graphData[graph["id"]] = data;
+						queueRedrawGraph(graph["id"]);
+					},
+					"failure": function(data) {
+						console.log("Failed to retrieve graphite data", data);
+					}
+				});
+			});
+		}
+
+		var needRefreshData = false;
+		function queueRefreshData() {
+			needRefreshData = true;
+			setTimeout(function() {
+				if (needRefreshData) {
+					needRefreshData = false;
+					refreshData();
 				}
-			}
-		}
-
-		$("*[name='radios']").change(function(){
-			refreshInterval = parseFloat($("input:radio[name='radios']:checked").val(), 10) * 60;
-			clearTimeout(ctime);
-			updateTimeout();
-		});
-
-		$('#use').click(function() {
-			refresh();
-		})
-
-		var updateTimeout = function() {
-			if (refreshInterval != -60) { // -1 * 60 is for never
-				ctime = setTimeout(refresh, refreshInterval * 1000)
-			}
-		}
-
-		var refresh = function() {
-			start_timestamp = start_timestamp + refreshInterval;
-			end_timestamp = end_timestamp + refreshInterval;
-			$('#graphrange span').html(moment(start_timestamp * 1000).format('MMMM D, YYYY, h:mm A') + ' - ' + moment(end_timestamp * 1000).format('MMMM D, YYYY, h:mm A'));
-			updateGraphs(start_timestamp, end_timestamp)
-			updateTimeout()
+			}, 1);
 		}
 
 		function adjustGraphHeights() {
 			var width = $("#allgraphs .graph-wrapper").width();
 			$("#allgraphs .graph-container").css('height', Math.floor((width - 20) * 0.66) + "px");
+			queueRedrawAllGraphs();
 		}
 
+		var currentColumnCount = null;
 		function setColumnCount(count) {
+			currentColumnCount = count;
 			$("#column-group button.active").removeClass("active");
 			$("#column-group button[data='" + count + "']").addClass("active");
 			$("#allgraphs").removeClass("g1 g2 g3 g4 g5 g6").addClass("g" + count);
 			adjustGraphHeights();
 		}
 
-		setColumnCount(3);
-		setTimeout(function() {
-			updateTimeout();
-			updateGraphs();
-		}, 1);
+		var refreshRateSeconds = null;
+		var refreshTimer = null;
+		function refreshTimerTick() {
+			if (refreshRateSeconds != "disable") {
+				queueRefreshData();
+				refreshTimer = setTimeout(refreshTimerTick, refreshRateSeconds * 1000);
+			}
+		}
 
-		$("#optiontoggler").click(function(event) {
-			$("#options-container").slideToggle();
-		});
+		function setRefreshRate(seconds) {
+			$("#refreshrate-group button.active").removeClass("active");
+			$("#refreshrate-group button[data='" + seconds + "']").addClass("active");
 
-		$("#column-group button").click(function(event) {
-			var count = parseInt($(event.target).attr("data"), 10);
-			setColumnCount(count);
+			if (refreshTimer) {
+				clearTimeout(refreshTimer);
+				refreshTimer = null;
+			}
 
-			setTimeout(function() {
-				updateGraphs();
-			}, 1);
-		});
+			// updating a graph for a static time period seems like a waste... change it to 1h
+			if (seconds != "disable" && dateRange["type"] == "custom") {
+				setDateRange(3600);
+			}
+
+			refreshRateSeconds = seconds;
+			refreshTimerTick();
+		}
+
+		var dateRange = { "type": null };
+		function setDateRange(seconds) {
+			$("#daterange-group button.active").removeClass("active");
+			$("#daterange-group button[data='" + seconds + "']").addClass("active");
+
+			if (seconds == "custom") {
+				$("#custom-daterange-group").slideDown();
+				if (dateRange["type"] != "custom") {
+					dateRange = {
+						"type": "custom",
+						"start": null,
+						"end": null
+					};
+
+					updateCustomDates();
+
+					// updating a graph for a static time period seems like a waste... disable it.
+					if (refreshRateSeconds != "disable") {
+						setRefreshRate("disable");
+					}
+				}
+			}
+			else {
+				$("#custom-daterange-group").slideUp();
+				dateRange = {
+					"type": "recent",
+					"seconds": seconds
+				};
+			}
+
+			queueRefreshData();
+		}
+
+		function updateCustomDates() {
+			var newStart = $("#custom-daterange-start-input").datepicker("getDate");
+			var newEnd   = $("#custom-daterange-end-input").datepicker("getDate");
+
+			if (newStart != dateRange["start"]) {
+				dateRange["start"] = newStart;
+				queueRefreshData();
+			}
+			if (newEnd != dateRange["end"]) {
+				dateRange["end"] = newEnd;
+				queueRefreshData();
+			}
+		}
 
 		$(document).resize(function() {
 			adjustGraphHeights();
-			setTimeout(function() {
-				updateGraphs();
-			}, 1);
-		})
-	});
-</script>
+		});
+
+		$(document).ready(function() {
+			$("#optiontoggler").click(function(event) {
+				$("#options-container").slideToggle();
+			});
+
+			$("#column-group button").click(function(event) {
+				var count = parseInt($(event.target).attr("data"), 10);
+				setColumnCount(count);
+			});
+
+			$("#refreshrate-group button").click(function(event) {
+				var seconds = $(event.target).attr("data");
+				if (seconds != "disable") {
+					seconds = parseInt(seconds, 10);
+				}
+				setRefreshRate(seconds);
+			});
+
+			$("#daterange-group button").click(function(event) {
+				var seconds = $(event.target).attr("data");
+				if (seconds != "custom") {
+					seconds = parseInt(seconds, 10);
+				}
+				setDateRange(seconds);
+			});
+
+			$("#custom-daterange-start-input").datetimepicker({
+				"dateFormat": dateFormat,
+				"timeFormat": timeFormat,
+				"onSelect": function(datetime, target) {
+					updateCustomDates();
+				}
+			});
+
+			$("#custom-daterange-end-input").datetimepicker({
+				"dateFormat": dateFormat,
+				"timeFormat": timeFormat,
+				"onSelect": function(datetime, target) {
+					updateCustomDates();
+				}
+			});
+
+			// date picker keeps showing up under the active option buttons
+			$("#ui-datepicker-div").css("z-index", 5);
+
+			// also toggle options slider
+			setColumnCount(3);
+			setRefreshRate(60);
+			setDateRange(3600);
+			$("#custom-daterange-start-input").datepicker("setDate", new Date(new Date().getTime() - 86400000));
+			$("#custom-daterange-end-input").datepicker("setDate", new Date());
+		});
+	</script>
 
 	<h3>
 		@dashboard.name
@@ -187,61 +324,63 @@
 
 	<div class="clearfix">
 		<div id="options-container" class="well">
-			<div class="form-inline">
-				<label><strong>Columns</strong></label>
-				<div id="column-group" class="btn-group">
-					<button class="btn" data="1">1</button>
-					<button class="btn" data="2">2</button>
-					<button class="btn" data="3">3</button>
-					<button class="btn" data="4">4</button>
-					<button class="btn" data="5">5</button>
-					<button class="btn" data="6">6</button>
+			<div id="column-group" class="field-container">
+				<div class="form-inline">
+					<label><strong>Columns</strong></label>
+					<div class="btn-group">
+						<button class="btn" data="1">1</button>
+						<button class="btn" data="2">2</button>
+						<button class="btn" data="3">3</button>
+						<button class="btn" data="4">4</button>
+						<button class="btn" data="5">5</button>
+						<button class="btn" data="6">6</button>
+					</div>
 				</div>
 			</div>
-			<div id="graphrange">
-				<i class="icon-calendar icon-large"></i>
-				<span></span> <b class="caret"></b>
+			<div id="refreshrate-group" class="field-container">
+				<div class="form-inline">
+					<label><strong>Refresh Rate</strong></label>
+					<div class="btn-group">
+						<button class="btn" data="disable">Disable</button>
+					</div>
+					<div class="btn-group">
+						<button class="btn" data="1">1s</button>
+						<button class="btn" data="30">30s</button>
+						<button class="btn" data="60">1m</button>
+						<button class="btn" data="12">2m</button>
+						<button class="btn" data="300">5m</button>
+						<button class="btn" data="600">10m</button>
+					</div>
+				</div>
 			</div>
-			<style type="text/css">
-				#host-input { width: 100%; }
-			</style>
-			<div class="controls">
-				<input id="host-input" name="host-input" type="text" placeholder="Host Name" class="input-xlarge">
-				<p class="help-block">Eg. example.company.com</p>
-				<button id="use" name="use" class="btn btn-primary">Use</button>
+			<div id="daterange-group" class="field-container">
+				<div class="form-inline">
+					<label><strong>Time Range</strong></label>
+					<div class="btn-group">
+						<button class="btn" data="custom">Custom</button>
+					</div>
+					<div class="btn-group">
+						<button class="btn" data="3600">1h</button>
+						<button class="btn" data="21600">6h</button>
+						<button class="btn" data="43200">12h</button>
+						<button class="btn" data="86400">1d</button>
+						<button class="btn" data="604800">7d</button>
+						<button class="btn" data="2419200">28d</button>
+						<button class="btn" data="7776000">90d</button>
+					</div>
+				</div>
 			</div>
-			<br>
-			<label class="control-label" for="radios">Refresh Interval (In Mins)</label>
-			<div class="controls">
-				<label class="radio inline" for="radios-0">
-					<input type="radio" name="radios" id="radios-0" value="0.5">
-					0.5
-				</label>
-				<label class="radio inline" for="radios-1">
-					<input type="radio" name="radios" id="radios-1" value="1" checked="checked">
-					1
-				</label>
-				<label class="radio inline" for="radios-2">
-					<input type="radio" name="radios" id="radios-2" value="2">
-					2
-				</label>
-				<label class="radio inline" for="radios-3">
-					<input type="radio" name="radios" id="radios-3" value="5">
-					5
-				</label>
-				<label class="radio inline" for="radios-4">
-					<input type="radio" name="radios" id="radios-4" value="10">
-					10
-				</label>
-				<label class="radio inline" for="radios-5">
-					<input type="radio" name="radios" id="radios-5" value="-1">
-					Never
-				</label>
+			<div id="custom-daterange-group" class="field-container" style="display: none">
+				<div class="form-inline">
+					<label><strong>Custom Dates</strong></label>
+					<input type="text" id="custom-daterange-start-input" placeholder="Start Date">
+					<input type="text" id="custom-daterange-end-input" placeholder="End Date">
+				</div>
 			</div>
 		</div>
 		<div id="allgraphs" class="clearfix">
 			@graphs.filter(!_.deleted).sortWith(_.sort > _.sort).map { graph =>
-				<div class="pull-left graph-wrapper">
+				<div id="graph-@graph.id-wrapper" class="pull-left graph-wrapper">
 					<div class="well">
 						<div class="graph-container" id="graph-@graph.id.toString">
 							<svg></svg>

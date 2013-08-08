@@ -106,8 +106,7 @@ class DashboardsController extends AppController {
 
 				val graphs = GraphModel.findGraphsByDashboardId(dashboard.id)
 				val targets = TargetModel.findTargetByGraphId(graphs.map(_.id))
-				val targetsByGraphId = targets.groupBy(_.graphId)
-				Ok(views.html.dashboards.dashboard(dashboard, graphs, targetsByGraphId)).withCookies(newHistoryCookie)
+				Ok(views.html.dashboards.dashboard(dashboard, graphs, targets)).withCookies(newHistoryCookie)
 			}
 		}
 	}

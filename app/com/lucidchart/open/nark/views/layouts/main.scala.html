@@ -32,7 +32,7 @@
 		<link rel="stylesheet" type="text/css" href="@routes.Assets.at("bootstrap-2.3.2/css/bootstrap-responsive.min.css")" />
 
 		@for(style <- styles) {
-			<link rel="stylesheet" type="text/css" href="@routes.Assets.at("css/" + style)" />
+			<link rel="stylesheet" type="text/css" href="@routes.Assets.at(style)" />
 		}
 
 		<script type="text/javascript" src="@routes.Assets.at("js/jquery-2.0.3.min.js")"></script>
@@ -135,7 +135,7 @@
 		<script type="text/javascript" src="@routes.Assets.at("jquery-ui-1.10.3/core/ui/minified/jquery-ui.min.js")"></script>
 		<script type="text/javascript" src="@routes.Assets.at("bootstrap-2.3.2/js/bootstrap.min.js")"></script>
 		@for(script <- scripts) {
-			<script type="text/javascript" src="@routes.Assets.at("js/" + script)"></script>
+			<script type="text/javascript" src="@routes.Assets.at(script)"></script>
 		}
 	</body>
 </html>
