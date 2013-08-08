@@ -9,6 +9,8 @@ import com.lucidchart.open.nark.models.GraphModel
 import com.lucidchart.open.nark.models.TargetModel
 import com.lucidchart.open.nark.models.records.Dashboard
 import java.util.UUID
+import play.api.mvc.Cookie
+import play.api.mvc.RequestHeader
 import play.api.data._
 import play.api.data.Forms._
 import validation.Constraints
@@ -36,6 +38,10 @@ class DashboardsController extends AppController {
 		)
 	}
 
+	private def addDashboardToHistoryCookie(dashboard: Dashboard)(implicit request: RequestHeader): Cookie = {
+		DashboardHistory.addToHistory(request, new DashboardHistoryItem(dashboard))
+	}
+
 	/**
 	 * Create a new dashboard
 	 */
@@ -58,7 +64,9 @@ class DashboardsController extends AppController {
 				data => {
 					val dashboard = new Dashboard(data.name, data.url, user.id, false)
 					DashboardModel.createDashboard(dashboard)
-					Redirect(routes.GraphsController.add(dashboard.id)).flashing(AppFlash.success("Dashboard was created successfully."))
+
+					val newHistoryCookie = addDashboardToHistoryCookie(dashboard)
+					Redirect(routes.GraphsController.add(dashboard.id)).flashing(AppFlash.success("Dashboard was created successfully.")).withCookies(newHistoryCookie)
 				}
 			)
 		}
@@ -101,9 +109,7 @@ class DashboardsController extends AppController {
 	def dashboard(url: String) = DashboardAction.existingDashboardByUrl(url) { dashboard =>
 		AuthAction.maybeAuthenticatedUser { implicit userOption =>
 			AppAction { implicit request =>
-				val historyItem = new DashboardHistoryItem(dashboard)
-				val newHistoryCookie = DashboardHistory.addToHistory(request, historyItem)
-
+				val newHistoryCookie = addDashboardToHistoryCookie(dashboard)
 				val graphs = GraphModel.findGraphsByDashboardId(dashboard.id)
 				val targets = TargetModel.findTargetByGraphId(graphs.map(_.id))
 				Ok(views.html.dashboards.dashboard(dashboard, graphs, targets)).withCookies(newHistoryCookie)
@@ -117,7 +123,8 @@ class DashboardsController extends AppController {
 	def manage(dashboardId: UUID) = AuthAction.authenticatedUser { implicit user =>
 		DashboardAction.dashboardManagementAccess(dashboardId, user.id) { dashboard =>
 			AppAction { implicit request =>
-				Ok(views.html.dashboards.manage(dashboard, user))
+				val newHistoryCookie = addDashboardToHistoryCookie(dashboard)
+				Ok(views.html.dashboards.manage(dashboard, user)).withCookies(newHistoryCookie)
 			}
 		}
 	}
@@ -131,7 +138,8 @@ class DashboardsController extends AppController {
 				val graphs = GraphModel.findGraphsByDashboardId(dashboardId)
 				val targets = TargetModel.findTargetByGraphId(graphs.map(_.id))
 				val targetsByGraph = targets.groupBy(_.graphId)
-				Ok(views.html.dashboards.manageGraphsAndTargets(dashboard, graphs, targetsByGraph, user))
+				val newHistoryCookie = addDashboardToHistoryCookie(dashboard)
+				Ok(views.html.dashboards.manageGraphsAndTargets(dashboard, graphs, targetsByGraph, user)).withCookies(newHistoryCookie)
 			}
 		}
 	}
