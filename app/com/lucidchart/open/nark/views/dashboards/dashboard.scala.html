@@ -379,7 +379,7 @@
 			</div>
 		</div>
 		<div id="allgraphs" class="clearfix">
-			@graphs.filter(!_.deleted).sortWith(_.sort > _.sort).map { graph =>
+			@graphs.filter(!_.deleted).sortWith(_.sort < _.sort).map { graph =>
 				<div id="graph-@graph.id-wrapper" class="pull-left graph-wrapper">
 					<div class="well">
 						<div class="graph-container" id="graph-@graph.id.toString">

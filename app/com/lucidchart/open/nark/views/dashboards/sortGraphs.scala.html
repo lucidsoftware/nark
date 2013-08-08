@@ -1,0 +1,53 @@
+@(
+	dashboard: com.lucidchart.open.nark.models.records.Dashboard,
+	graphs: List[com.lucidchart.open.nark.models.records.Graph],
+	user: com.lucidchart.open.nark.models.records.User
+)(
+	implicit request: com.lucidchart.open.nark.request.AppRequest[_]
+)
+@import com.lucidchart.open.nark.controllers.{routes=>narkRoutes}
+@import com.lucidchart.open.nark.views
+@import com.lucidchart.open.nark.views.html.helpers
+@import helper.twitterBootstrap._
+@import helper._
+
+@com.lucidchart.open.nark.views.html.layouts.main("Sort graphs in " + dashboard.name, userOption = Some(user)) {
+	<style>
+	  #sortable_graphs { list-style-type: none; margin: 0 0 50px 0; padding: 0; width: 30%; }
+	  #sortable_graphs li { border: 1px solid black; margin: 0 3px 3px 3px; padding: 0.4em; padding-left: 1.5em; font-size: 1.4em; height: 18px; cursor:pointer; }
+	  #sortable_graphs li span { position: absolute; margin-left: -1.3em; }
+	</style>
+	<script>
+		$(function() {
+			$("#sortable_graphs").sortable ({
+				stop: function(event, ui) {
+					var arr = $("#sortable_graphs").sortable("toArray");
+					var i=0;
+					
+					for(i; i<arr.length; i++) {
+						$("#order_" + i).val(arr[i]);
+					}
+				}
+			});
+			$("#sortable_graphs").disableSelection();
+
+		});
+	</script>
+	<h4>Sort Graphs</h4><br/>
+	<ul id="sortable_graphs">
+		@graphs.sortWith(_.sort < _.sort).map { graph =>
+			<li id=@graph.id><span class="ui-icon ui-icon-arrowthick-2-n-s"></span> @graph.name </li>
+		}
+	</ul>
+
+	@helper.form(action=narkRoutes.DashboardsController.sortGraphsSubmit(dashboard.id)) {
+		<fieldset>
+			@helpers.csrfHiddenInput()
+
+			@graphs.indices.map { i =>
+				<input type="hidden" name=@("order[" + i + "]") id=@("order_" + i) value=@graphs(i).id >
+			}
+			<button id="submit_order" class="btn btn-primary" type="submit">Save Graph Order</button>
+		</fieldset>
+	}
+}

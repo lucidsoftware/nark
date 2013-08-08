@@ -42,6 +42,9 @@ class DashboardsController extends AppController {
 		DashboardHistory.addToHistory(request, new DashboardHistoryItem(dashboard))
 	}
 
+	private case class SortFormSubmission(order:List[String])
+	private val sortForm = Form(mapping("order" -> list(text))(SortFormSubmission.apply)(SortFormSubmission.unapply))
+
 	/**
 	 * Create a new dashboard
 	 */
@@ -140,6 +143,41 @@ class DashboardsController extends AppController {
 				val targetsByGraph = targets.groupBy(_.graphId)
 				val newHistoryCookie = addDashboardToHistoryCookie(dashboard)
 				Ok(views.html.dashboards.manageGraphsAndTargets(dashboard, graphs, targetsByGraph, user)).withCookies(newHistoryCookie)
+			}
+		}
+	}
+
+	/**
+	 * Sort graphs for an existing dashboard
+	 */
+	def sortGraphs(dashboardId: UUID) = AuthAction.authenticatedUser { implicit user =>
+		DashboardAction.dashboardManagementAccess(dashboardId, user.id) { dashboard =>
+			AppAction { implicit request =>
+				val graphs = GraphModel.findGraphsByDashboardId(dashboardId)
+				Ok(views.html.dashboards.sortGraphs(dashboard, graphs, user))
+			}
+		}
+	}
+	/**
+	 *	Save sorted graph order to db
+	 */
+	def sortGraphsSubmit(dashboardId: UUID) = AuthAction.authenticatedUser {implicit user =>
+		DashboardAction.dashboardManagementAccess(dashboardId, user.id) { dashboard =>
+			AppAction { implicit request => 
+				sortForm.bindFromRequest().fold (
+					formWithErrors => {
+						Redirect(routes.DashboardsController.manage(dashboard.id)).flashing(AppFlash.error("Graph order could not be saved."))
+					},
+					data => {
+						val graphs = GraphModel.findGraphsByDashboardId(dashboard.id)
+						graphs.foreach{ graph =>
+							GraphModel.editGraph(graph.copy(sort=data.order.indexOf(graph.id.toString)))
+						}
+
+
+						Redirect(routes.DashboardsController.manage(dashboard.id)).flashing(AppFlash.success("Graph order was successfully saved."))
+					}
+				)
 			}
 		}
 	}
