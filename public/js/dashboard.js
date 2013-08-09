@@ -34,64 +34,59 @@ function d3_format_stacked_data(data) {
 	})
 }
 
-function plotLineGraph(element, data) {
+function convertToDygraph(data) {
+	var dygraph = {};
+	dygraph['datapoints'] = [];
+	if (data.length == 0) {
+		return[];
+	}
 
-	nv.addGraph(function() {
-		var chart = nv.models.lineWithFocusChart();
-
-		chart.xAxis
-		.tickFormat(function(d) { return d3.time.format('%b %e %H:%M')(new Date(d * 1000)) });
-
-		chart.x2Axis
-		.tickFormat(function(d) { return d3.time.format('%b %e %H:%M')(new Date(d * 1000)) });
-
-		chart.yAxis
-		.tickFormat(d3.format(',.2f'));
-
-		chart.y2Axis
-		.tickFormat(d3.format(',.2f'));
-
-		d3.select('#'+element)
-		.datum(data.map( function(item) {
-			return {
-				key: item["t"],
-				values: d3_format_linear_data(item["d"])
+	for (var i = 0; i < data[0]['d'].length; i++) {
+		var datapoint = [new Date(data[0]['d'][i]['d'] * 1000)];
+		for (var j = 0; j < data.length; j++) {
+			if (data[j]['d'][i] != undefined) {
+				datapoint.push(data[j]['d'][i]['v']);
 			}
-		}))
-		.transition().duration(500)
-		.call(chart);
+			else if (i > 0) {
+				datapoint.push(dygraph['datapoints'][i - 1][j]);
+			}
+			else {
+				datapoint.push(0);
+			}
+		}
+		dygraph['datapoints'].push(datapoint);
+	}
 
-		nv.utils.windowResize(chart.update);
+	dygraph['labels'] = ['Date'];
+	for (var i = 0; i < data.length; i++) {
+		dygraph['labels'].push(data[i]['t']);
+	}
 
-		return chart;
-	});
+	return dygraph;
+}
+
+function plotLineGraph(element, data) {
+	plotGraph(element, data, {});
 }
 
 function plotStackedGraph(element, data) {
-	nv.addGraph(function() {
-		var chart = nv.models.stackedAreaChart()
-			.x(function(d) { return d[0] })
-			.y(function(d) { return d[1] })
-			.clipEdge(true);
+	plotGraph(element, data, {'stackedGraph':true});
+}
 
-		chart.xAxis
-			.showMaxMin(false)
-			.tickFormat(function(d) { return d3.time.format('%b %e %H:%M')(new Date(d * 1000)) });
+function plotGraph(element, data, preferences) {
+	var dygraph = convertToDygraph(data);
+	if (dygraph.length == 0) {
+		return;
+	}
 
-		chart.yAxis
-			.tickFormat(d3.format(',.2f'));
+	preferences['labels'] = dygraph['labels'];
+	preferences['labelsSeparateLines'] = true;
+	preferences['labelsDiv'] = document.getElementById('legend');
 
-		d3.select('#' + element)
-			.datum(data.map( function(item) {
-				return {
-					key: item["t"],
-					values: d3_format_stacked_data(item["d"])
-				}
-			}))
-			.transition().duration(500).call(chart);
-
-		nv.utils.windowResize(chart.update);
-
-		return chart;
-	});
+	$(element.split(' ')[0]).html('');
+	new Dygraph(
+		document.getElementById(element.split(' ')[0]),
+		dygraph['datapoints'],
+		preferences
+	);
 }

@@ -28,6 +28,18 @@
 			.flash-container div {
 				margin-top: 10px;
 			}
+			#legend {
+				position: absolute;
+				z-index:100;
+				background-color: #ffffff;
+				opacity:1.0;
+				-webkit-box-shadow: 0px 0px 17px rgba(50, 50, 50, 1);
+				-moz-box-shadow:    0px 0px 17px rgba(50, 50, 50, 1);
+				box-shadow:         0px 0px 17px rgba(50, 50, 50, 1);
+				-webkit-border-radius: 5px;
+				-moz-border-radius: 5px;
+				border-radius: 5px;
+			}
 		</style>
 		<link rel="stylesheet" type="text/css" href="@routes.Assets.at("bootstrap-2.3.2/css/bootstrap-responsive.min.css")" />
 
@@ -47,8 +59,25 @@
 			document.createElement('footer');
 		</script>
 		<![endif]-->
+
+		<script type="text/javascript">
+			$(document).mousemove(function(event) {
+				var legend = $('#legend');
+				var xOffset = 20;
+				if (event.pageX + legend.width() + 40 > $(window).width()){
+					xOffset = -40 - legend.width();
+				}
+				var padding = legend.is(':empty') ? 0 : 10;
+				legend.css({
+					left: event.pageX + xOffset,
+					top: event.pageY - legend.height() / 2,
+					padding: padding
+				});
+			});
+		</script>
 	</head>
 	<body>
+		<div id="legend"></div>
 		<div class="navbar navbar-inverse navbar-fixed-top">
 			<div class="navbar-inner">
 				<div class="container">
