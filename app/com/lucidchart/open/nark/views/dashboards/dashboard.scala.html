@@ -74,6 +74,7 @@
 
 	<script type="text/javascript">
 		var dashboard = @Html(views.models.dashboard(dashboard).toString);
+		var dashKey = 'dashboard-' + dashboard['id'] + '-';
 		var graphs = @Html(Json.toJson(graphs.filter(!_.deleted).map(views.models.graph(_))).toString);
 		var targets = @Html(Json.toJson(targets.filter { target =>
 			!target.deleted && graphs.foldLeft(true) { (active, graph) => 
@@ -462,15 +463,17 @@
 			setOptionsPanel(fromLocalStorage(localStorageOptionsPanelKeys, "visible"));
 
 			var alreadyDisplayedVariables = [];
+			var selectVariables = [];
 			$.map(targets, function(target) {
 				if (target['target'].indexOf('%') != -1) {
 					var targetPieces = target['target'].split('%');
 					for (var i = 1; i < targetPieces.length; i = i + 2) {
 						if (targetPieces[i].indexOf('|') != -1) {
 							variablePieces = targetPieces[i].split('|');
-						
+							
 							if ($('#' + variablePieces[0]).length == 0) {
 								$('#variables-group').append('<div class="row field-container"><label rel="tooltip" title="' + variablePieces[0] + '" for="' + variablePieces[0] + '"><strong>' + variablePieces[0] + '</strong></label><select id="' + variablePieces[0] + '" name="' + variablePieces[0] + '" key="' + variablePieces[0] + '"></select></div>');
+								selectVariables.push(variablePieces[0]);
 							}
 
 							for (var j = 1; j < variablePieces.length; j++) {
@@ -480,16 +483,19 @@
 								}
 							}
 							$('#' + variablePieces[0]).change(function(event) {
+								setLocalStorage([dashKey + $(this).attr('key')], $(this).val());
 								var graphIds = getAffectedGraphs($(this).attr('key'));
 								queueRefreshData(graphIds);
 							});
 						}
 						else {
 							var variablePieces = targetPieces[i].split('=');
+							var defaultValue = fromLocalStorage([dashKey + variablePieces[0]], (variablePieces.length == 2) ? variablePieces[1] : '');
 							if ($.inArray(variablePieces[0], alreadyDisplayedVariables) == -1) {
-								$('#variables-group').append('<div class="row field-container"><label rel="tooltip" title="' + variablePieces[0] + '" for="' + variablePieces[0] + '"><strong>' + variablePieces[0] +'</strong></label><input id="' + variablePieces[0] + '" name="' + variablePieces[0] + '" type="text" class="span9 input-large" key="' + variablePieces[0] + '" value="' + ((variablePieces.length == 2) ? variablePieces[1] : '') + '" /></div>');
+								$('#variables-group').append('<div class="row field-container"><label rel="tooltip" title="' + variablePieces[0] + '" for="' + variablePieces[0] + '"><strong>' + variablePieces[0] +'</strong></label><input id="' + variablePieces[0] + '" name="' + variablePieces[0] + '" type="text" class="span9 input-large" key="' + variablePieces[0] + '" value="' + defaultValue + '" /></div>');
 
 								$('#' + variablePieces[0]).focusout(function() {
+									setLocalStorage([dashKey + $(this).attr('key')], $(this).val());
 									var graphIds = getAffectedGraphs($(this).attr('key'));
 									queueRefreshData(graphIds);
 								});
@@ -498,6 +504,13 @@
 							}
 						}
 					}
+				}
+			});
+
+			$.map(selectVariables, function(variable) {
+				var defaultValue = fromLocalStorage([dashKey + variable], '');
+				if (defaultValue != '') {
+					$('#' + variable + ' option[value="' + defaultValue + '"]').attr('selected', 'selected');
 				}
 			});
 		});
