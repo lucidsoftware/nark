@@ -5,6 +5,7 @@ import com.lucidchart.open.nark.views
 import com.lucidchart.open.nark.utils.Graphite
 import com.lucidchart.open.nark.models.HostModel
 import com.lucidchart.open.nark.forms.Forms
+import com.lucidchart.open.nark.utils.StatsD
 import java.util.Date
 import play.api.Logger
 import play.api.data.Form
@@ -55,6 +56,7 @@ class GraphiteDataController extends AppController {
 	 * Get data from graphite and return it
 	 */
 	def dataPoints = AppAction { implicit request =>
+		StatsD.increment("graphite.datapoints")
 		dataPointsForm.bindFromRequest().fold(
 			formWithErrors => {
 				Logger.error("Graphite data request failed with errors: " + formWithErrors.errors.toString)
@@ -82,6 +84,7 @@ class GraphiteDataController extends AppController {
 	 * Search for metrics in graphite
 	 */
 	def metrics = AppAction { implicit request =>
+		StatsD.increment("graphite.metrics")
 		metricsForm.bindFromRequest().fold(
 			formWithErrors => {
 				Logger.error("Graphite metric request failed with errors: " + formWithErrors.errors.toString)
@@ -98,6 +101,7 @@ class GraphiteDataController extends AppController {
 	 * Search for graphite hosts in the host cache
 	 */
 	def hosts = AppAction { implicit request =>
+		StatsD.increment("graphite.hosts")
 		hostForm.bindFromRequest().fold(
 			formWithErrors => {
 				BadRequest

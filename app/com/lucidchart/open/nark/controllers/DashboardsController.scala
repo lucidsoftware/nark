@@ -8,6 +8,7 @@ import com.lucidchart.open.nark.models.DashboardModel
 import com.lucidchart.open.nark.models.GraphModel
 import com.lucidchart.open.nark.models.TargetModel
 import com.lucidchart.open.nark.models.records.Dashboard
+import com.lucidchart.open.nark.utils.StatsD
 import java.util.UUID
 import play.api.mvc.Cookie
 import play.api.mvc.RequestHeader
@@ -112,6 +113,7 @@ class DashboardsController extends AppController {
 	def dashboard(url: String) = DashboardAction.existingDashboardByUrl(url) { dashboard =>
 		AuthAction.maybeAuthenticatedUser { implicit userOption =>
 			AppAction { implicit request =>
+				StatsD.increment("dashboard.view")
 				val newHistoryCookie = addDashboardToHistoryCookie(dashboard)
 				val graphs = GraphModel.findGraphsByDashboardId(dashboard.id)
 				val targets = TargetModel.findTargetByGraphId(graphs.map(_.id))
