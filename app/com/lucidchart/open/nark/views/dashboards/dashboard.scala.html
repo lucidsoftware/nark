@@ -400,6 +400,10 @@
 				setOptionsPanel(visibility);
 			});
 
+			$("#refreshnow").click(function(event) {
+				queueRefreshData();
+			});
+
 			$("#column-group button").click(function(event) {
 				var count = parseInt($(event.target).attr("data"), 10);
 				setLocalStorage(localStorageColumnCountKeys, count);
@@ -520,6 +524,7 @@
 			<a href="@narkRoutes.DashboardsController.manage(dashboard.id)" class="btn">Manage</a>
 		}
 		<a href="#" id="optiontoggler" class="btn">Options</a>
+		<a href="#" id="refreshnow" class="btn">Refresh</a>
 	</h3>
 
 	<div class="clearfix">
