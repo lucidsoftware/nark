@@ -1,27 +1,3 @@
-function updateGraphHelper(url, isLinear, element, start, end, callback) {
-	$.ajax({
-		type: 'GET',
-		url: url + "&from=" + start + "&to=" + end,
-		dataType: 'json',
-		timeout: 300000,
-		success: function(data) {
-			if(isLinear) {
-				plotLineGraph(element, data)
-			}
-			else {
-				plotStackedGraph(element, data)
-			}
-
-			if (callback) {
-				callback();
-			}
-		},
-		failure: function(data) {
-			console.log("Call to graphite failed");
-		}
-	});
-}
-
 function convertToDygraph(data) {
 	var dygraph = {};
 	dygraph['datapoints'] = [];

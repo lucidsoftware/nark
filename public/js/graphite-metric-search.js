@@ -1,5 +1,6 @@
 
 $(document).ready(function() {
+	var currentAutocompleteRequest = null;
 	$('#target-input').autocomplete({
 		autoFocus: true,
 		delay: 500,
@@ -7,23 +8,32 @@ $(document).ready(function() {
 		select: function(event, selected) {
 			$(event.target).focus();
 
-			if (!selected.item.leaf) {
-				setTimeout(function() {
+			setTimeout(function() {
+				if (!selected.item.leaf) {
 					$(event.target).autocomplete("search", selected.item.value);
-				}, 1);
-			}
-			else {
-				graphPreview([selected.item]);
-			}
+				}
+				else {
+					graphPreview();
+				}
+			}, 1);
 		},
 		source: function(request, response) {
-			$.ajax({
+			graphPreview();
+
+			if (currentAutocompleteRequest) {
+				currentAutocompleteRequest.abort();
+			}
+
+			currentAutocompleteRequest = $.ajax({
 				cache: false,
 				url: '/graphite/metrics',
 				data: {
 					"target": request.term
 				},
 				timeout: 30000,
+				complete: function(xhr, status) {
+					currentAutocompleteRequest = null;
+				},
 				success: function(data, status, xhr) {
 					var options = $.map(data, function(element) {
 						return {"label": element['p'], "value": element['p'], "leaf": element['l']};
@@ -44,52 +54,43 @@ $(document).ready(function() {
 
 	//try to render a preview if the user leaves the text box
 	$('#target-input').focusout(function() {
-		getPreview();
+		graphPreview();
 	});
 
-	//try to render a preview if the user stops typing
-	var typingTimer;
-	$('#target-input').keyup(function() {
-		clearTimeout(typingTimer);
-		typingTimer = setTimeout(getPreview, 500);
-	});
-
-	function getPreview() {
-		$.ajax({
-			cache: false,
-			url: '/graphite/metrics',
-			data: {
-				'target': $('#target-input').val()
-			},
-			timeout: 30000,
-			success: function(data, status, xhr) {
-				var leaves = [];
-				for (var i = 0; i < data.length; i++) {
-					if (data[i]['l'] == true) {
-						leaves.push({"value": data[i]['p']});
-					}
-				}
-				graphPreview(leaves);
-			}
-		});
-	}
-
-	function graphPreview(targets) {
-		if (targets.length == 0) {
-			$('#target-graph').hide();
+	var currentPreviewRequest = null;
+	function graphPreview() {
+		var target = $('#target-input').val();
+		if (target.length == 0 || target[target.length - 1] == ".") {
 			return;
 		}
 
-		var start = moment().subtract("hours", 1).format('X');
-		var end = moment().format('X');
-		var query = '';
-		for (var i = 0; i < targets.length; i++) {
-			query += (i == 0) ? '' : '&';
-			query += 'target[]=' + targets[i]['value'];
+		var data = {
+			"seconds": 3600,
+			"target[0]": target
+		};
+
+		if (currentPreviewRequest) {
+			currentPreviewRequest.abort();
 		}
 
-		updateGraphHelper("/graphite/datapoints?" + query, true, "target-graph svg", start, end, function() {
-			$('#target-graph').show();
+		currentPreviewRequest = $.ajax({
+			"type": "GET",
+			"url": "/graphite/datapoints",
+			"data": data,
+			"dataType": "json",
+			"timeout": 300000,
+			"complete": function(xhr, status) {
+				currentPreviewRequest = false;
+			},
+			"success": function(data) {
+				if (data.length > 0) {
+					$('#target-graph').show();
+					plotLineGraph('target-graph svg', data);
+				}
+			},
+			"failure": function(data) {
+				console.log("Failed to retrieve graphite data", data);
+			}
 		});
 	}
 });
