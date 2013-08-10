@@ -191,6 +191,11 @@
 			});
 		}
 
+		function regexIndexOf(string, regex, startpos) {
+			var indexOf = string.substring(startpos || 0).search(regex);
+			return (indexOf >= 0) ? (indexOf + (startpos || 0)) : indexOf;
+		}
+
 		function getUpdatedTargets() {
 			var variables = [];
 			$('#variables-group input').each(function() {
@@ -202,21 +207,23 @@
 
 			var updatedTargets = [];
 			$.map(targets, function(target) {
-				var targetString = target['target'];
+				var parts = target['target'].split("%");
+				for (var i = 1; i < parts.length; i += 2) {
+					parts[i] = parts[i].split(/=|\|/)[0];
+				}
+
 				$.map(variables, function(variable) {
-					var replace = '%' + variable['key'] + '%';
-					if (targetString.indexOf('%' + variable['key']) != -1) {
-						var from = targetString.indexOf(variable['key']) + variable['key'].length;
-						var to = targetString.indexOf('%', from) + 1;
-						replace = '%' + variable['key'] + targetString.substring(from, to);
+					for (var i = 1; i < parts.length; i += 2) {
+						if (parts[i] == variable['key']) {
+							parts[i] = variable['value'];
+						}
 					}
-					targetString = targetString.replace(replace, variable['value']);
 				});
 
 				updatedTargets.push(
 					{
 						'graphId': target['graphId'],
-						'target': targetString
+						'target': parts.join("")
 					}
 				);
 			});
