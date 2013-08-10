@@ -12,6 +12,8 @@ import play.api.data.Form
 import play.api.data.Forms._
 import play.api.libs.json.Json
 import play.api.data.validation.Constraints
+import scala.concurrent.Future
+import scala.concurrent.ExecutionContext.Implicits.global
 
 class GraphiteDataController extends AppController {
 	private case class DataPointsFormSubmission(
@@ -63,19 +65,23 @@ class GraphiteDataController extends AppController {
 				BadRequest
 			},
 			data => {
-				val returnedData = data.secondsOption match {
-					case Some(seconds) => {
-						Graphite.data(data.targets, seconds)
+				Async {
+					val returnedDataFuture = data.secondsOption match {
+						case Some(seconds) => {
+							Graphite.data(data.targets, seconds)
+						}
+						case None => {
+							val from = data.fromOption.get
+							val to = data.toOption.get
+							Graphite.data(data.targets, new Date(from * 1000L), new Date(to * 1000L))
+						}
 					}
-					case None => {
-						val from = data.fromOption.get
-						val to = data.toOption.get
-						Graphite.data(data.targets, new Date(from * 1000L), new Date(to * 1000L))
+
+					returnedDataFuture.map { returnedData =>
+						val filteredReturnedData = returnedData.filterEmptyTargets()
+						Ok(views.models.graphiteData(filteredReturnedData))
 					}
 				}
-
-				val filteredReturnedData = returnedData.filterEmptyTargets()
-				Ok(views.models.graphiteData(filteredReturnedData))
 			}
 		)
 	}
@@ -91,8 +97,11 @@ class GraphiteDataController extends AppController {
 				BadRequest
 			},
 			data => {
-				val metrics = Graphite.metrics(data.target)
-				Ok(views.models.graphiteMetricData(metrics))
+				Async {
+					Graphite.metrics(data.target).map { metrics =>
+						Ok(views.models.graphiteMetricData(metrics))
+					}
+				}
 			}
 		)
 	}

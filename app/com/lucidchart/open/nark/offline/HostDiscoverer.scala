@@ -14,6 +14,7 @@ import java.util.Date
 import scala.collection.JavaConversions
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration._
+import scala.concurrent.Await
 
 import play.api.libs.concurrent.Akka
 import play.api.Logger
@@ -48,7 +49,9 @@ class HostDiscoverer(stateChangeTime: Int, patterns: List[HostDiscovererPattern]
 	protected def discoverNew(start: Date) {
 		patterns.foreach { pattern =>
 			Logger.info("HostDiscovery pattern " + pattern.target)
-			Graphite.data(pattern.target, stateChangeTime).targets.foreach { target =>
+			val dataFuture = Graphite.data(pattern.target, stateChangeTime)
+			val data = Await.result(dataFuture, Duration.Inf)
+			data.targets.foreach { target =>
 				try {
 					val pattern.extractor(extractedName) = target.target
 					val name = if (pattern.reverseHostname) extractedName.split("\\.").reverse.mkString(".") else extractedName

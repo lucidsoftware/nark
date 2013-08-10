@@ -12,6 +12,8 @@ import org.apache.http.client.methods.HttpRequestBase
 import scala.io.Source
 import play.api.libs.json._
 import java.text.SimpleDateFormat
+import scala.concurrent.Future
+import scala.concurrent.ExecutionContext
 
 case class GraphiteData(targets: List[GraphiteTarget]) {
 	def filterEmptyTargets() = copy(
@@ -114,47 +116,53 @@ class Graphite(protocol: String, host: String, port: Int) {
 	/**
 	 * Get the graphite data for the target over the last x number of seconds.
 	 */
-	def data(target: String, seconds: Int): GraphiteData = data(List(target), seconds)
+	def data(target: String, seconds: Int)(implicit executionContext: ExecutionContext): Future[GraphiteData] = data(List(target), seconds)
 
 	/**
 	 * Get the graphite data for the targets over the last x number of seconds.
 	 */
-	def data(targets: List[String], seconds: Int): GraphiteData = {
+	def data(targets: List[String], seconds: Int)(implicit executionContext: ExecutionContext): Future[GraphiteData] = {
 		val builder = basicUriBuilder()
 		builder.setPath("/render/")
 		builder.setParameter("format", "json")
 		builder.setParameter("from", "-" + seconds.toString + "seconds")
 		addTargets(builder, targets)
-		jsonToGraphiteData(executeGet(builder.build()), true)
+		Future {
+			jsonToGraphiteData(executeGet(builder.build()), true)
+		}
 	}
 
 	/**
 	 * Get the graphite data for the target during a time period
 	 */
-	def data(target: String, from: Date, to: Date): GraphiteData = data(List(target), from, to)
+	def data(target: String, from: Date, to: Date)(implicit executionContext: ExecutionContext): Future[GraphiteData] = data(List(target), from, to)
 
 	/**
 	 * Get the graphite data for the targets during a time period
 	 */
-	def data(targets: List[String], from: Date, to: Date): GraphiteData = {
+	def data(targets: List[String], from: Date, to: Date)(implicit executionContext: ExecutionContext): Future[GraphiteData] = {
 		val builder = basicUriBuilder()
 		builder.setPath("/render/")
 		builder.setParameter("format", "json")
 		builder.setParameter("from", (from.getTime() / 1000).toString)
 		builder.setParameter("until", (to.getTime() / 1000).toString)
 		addTargets(builder, targets)
-		jsonToGraphiteData(executeGet(builder.build()), false)
+		Future {
+			jsonToGraphiteData(executeGet(builder.build()), false)
+		}
 	}
 
 	/**
 	 * Find metrics in graphite
 	 */
-	def metrics(target: String) = {
+	def metrics(target: String)(implicit executionContext: ExecutionContext) = {
 		val builder = basicUriBuilder()
 		builder.setPath("/metrics/find/")
 		builder.setParameter("format", "completer")
 		builder.setParameter("query", target + "*")
-		jsonToGraphiteMetricData(executeGet(builder.build))
+		Future {
+			jsonToGraphiteMetricData(executeGet(builder.build))
+		}
 	}
 }
 
