@@ -22,18 +22,6 @@ function updateGraphHelper(url, isLinear, element, start, end, callback) {
 	});
 }
 
-function d3_format_linear_data(data) {
-	return data.map(function(item) {
-		return {x: item["d"], y: item["v"]}
-	})
-}
-
-function d3_format_stacked_data(data) {
-	return data.map(function(item) {
-		return [item["d"], item["v"]]
-	})
-}
-
 function convertToDygraph(data) {
 	var dygraph = {};
 	dygraph['datapoints'] = [];
