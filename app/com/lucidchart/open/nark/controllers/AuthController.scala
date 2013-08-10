@@ -26,7 +26,6 @@ import com.lucidchart.open.nark.openid.DiscoveryInformationConverter
 import com.lucidchart.open.nark.request.AppAction
 import com.lucidchart.open.nark.request.AppFlash
 import com.lucidchart.open.nark.request.AuthAction
-import com.lucidchart.open.nark.request.TimedAction
 import com.lucidchart.open.nark.utils.Auth
 import com.lucidchart.open.nark.utils.StatsD
 import com.lucidchart.open.nark.views
