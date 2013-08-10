@@ -2,7 +2,7 @@ function convertToDygraph(data) {
 	var dygraph = {};
 	dygraph['datapoints'] = [];
 	if (data.length == 0) {
-		return[];
+		return [];
 	}
 
 	for (var i = 0; i < data[0]['d'].length; i++) {
@@ -29,28 +29,31 @@ function convertToDygraph(data) {
 	return dygraph;
 }
 
-function plotLineGraph(element, data) {
-	plotGraph(element, data, {});
+function plotLineGraph(element, data, graphOptions) {
+	if (!graphOptions) { graphOptions = {}; }
+	return plotGraph(element, data, graphOptions);
 }
 
-function plotStackedGraph(element, data) {
-	plotGraph(element, data, {'stackedGraph':true});
+function plotStackedGraph(element, data, graphOptions) {
+	if (!graphOptions) { graphOptions = {}; }
+	graphOptions['stackedGraph'] = true;
+	return plotGraph(element, data, graphOptions);
 }
 
-function plotGraph(element, data, preferences) {
+function plotGraph(element, data, graphOptions) {
 	var dygraph = convertToDygraph(data);
 	if (dygraph.length == 0) {
-		return;
+		return false;
 	}
 
-	preferences['labels'] = dygraph['labels'];
-	preferences['labelsSeparateLines'] = true;
-	preferences['labelsDiv'] = document.getElementById('legend');
+	graphOptions['labels'] = dygraph['labels'];
+	graphOptions['labelsSeparateLines'] = true;
+	graphOptions['labelsDiv'] = document.getElementById('legend');
 
 	$(element.split(' ')[0]).html('');
-	new Dygraph(
+	return new Dygraph(
 		document.getElementById(element.split(' ')[0]),
 		dygraph['datapoints'],
-		preferences
+		graphOptions
 	);
 }

@@ -102,6 +102,8 @@
 			allGraphIds.push(graph.id);
 		});
 
+		var zoomingToSelection = false;
+		var lineGraphs = {};
 		function redrawGraph(id) {
 			if (graphData[id]) {
 				var data = graphData[id];
@@ -110,13 +112,30 @@
 					return graph["id"] == id;
 				})[0];
 
+				var graphOptions = {
+					drawCallback: function(me, initial) {
+						if (zoomingToSelection || initial) { return; }
+						zoomingToSelection = true;
+						var range = me.xAxisRange();
+						$.map(graphs, function(g) {
+							if (g.id == graph.id) { return; }
+							if (lineGraphs.hasOwnProperty(g.id)) {
+								lineGraphs[g.id].updateOptions({
+									dateWindow: range
+								});
+							}
+						});
+						zoomingToSelection = false;
+					}
+				};
+
 				switch (graph["type"]) {
 					case "Stacked":
-						plotStackedGraph(element, data);
+						lineGraphs[graph["id"]] = plotStackedGraph(element, data, graphOptions);
 						break;
 					case "Normal":
 					default:
-						plotLineGraph(element, data);
+						lineGraphs[graph["id"]] = plotLineGraph(element, data, graphOptions);
 						break;
 				}
 			}
