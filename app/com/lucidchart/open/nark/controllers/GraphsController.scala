@@ -4,6 +4,7 @@ import com.lucidchart.open.nark.request.{AppFlash, AppAction, AuthAction, Dashbo
 import com.lucidchart.open.nark.views
 import com.lucidchart.open.nark.models.{GraphModel, DashboardModel}
 import com.lucidchart.open.nark.models.records.GraphType
+import com.lucidchart.open.nark.models.records.GraphAxisLabel
 import java.util.UUID
 import play.api.data.Form
 import play.api.data.Forms._
@@ -11,12 +12,13 @@ import com.lucidchart.open.nark.models.records.Graph
 import play.api.data.validation.Constraints
 
 class GraphsController extends AppController {
-	private case class EditGraphSubmission(name: String, graphType: GraphType.Value)
+	private case class EditGraphSubmission(name: String, graphType: GraphType.Value, axisLabel: GraphAxisLabel.Value)
 
 	private val editGraphForm = Form(
 		mapping(
 			"name" -> text.verifying(Constraints.minLength(1)),
-			"type" -> number.verifying("Invalid graph type", x => GraphType.values.map(_.id).contains(x)).transform[GraphType.Value](GraphType(_), _.id)
+			"type" -> number.verifying("Invalid graph type", x => GraphType.values.map(_.id).contains(x)).transform[GraphType.Value](GraphType(_), _.id),
+			"axis" -> number.verifying("Invalid axis label", x => GraphAxisLabel.values.map(_.id).contains(x)).transform[GraphAxisLabel.Value](GraphAxisLabel(_), _.id)
 		)(EditGraphSubmission.apply)(EditGraphSubmission.unapply)
 	)
 
@@ -26,7 +28,7 @@ class GraphsController extends AppController {
 	def add(dashboardId: UUID) = AuthAction.authenticatedUser { implicit user =>
 		DashboardAction.dashboardManagementAccess(dashboardId, user.id) { dashboard =>
 			AppAction { implicit request =>
-				val form = editGraphForm.fill(EditGraphSubmission("", GraphType.normal))
+				val form = editGraphForm.fill(EditGraphSubmission("", GraphType.normal, GraphAxisLabel.powerOf10))
 				Ok(views.html.graphs.add(form, dashboard))
 			}
 		}
@@ -43,7 +45,7 @@ class GraphsController extends AppController {
 						Ok(views.html.graphs.add(formWithErrors, dashboard))
 					},
 					data => {
-						val graph  = new Graph(data.name, dashboard.id, 0, data.graphType, false)
+						val graph = new Graph(data.name, dashboard.id, 0, data.graphType, data.axisLabel, false)
 						GraphModel.createGraph(graph)
 						Redirect(routes.TargetsController.add(graph.id)).flashing(AppFlash.success("Graph was added successfully."))
 					}
@@ -58,7 +60,7 @@ class GraphsController extends AppController {
 	def edit(graphId: UUID) = AuthAction.authenticatedUser { implicit user =>
 		DashboardAction.graphManagementAccess(graphId, user.id) { (dashboard, graph) =>
 			AppAction { implicit request =>
-				val form = editGraphForm.fill(EditGraphSubmission(graph.name, graph.typeGraph))
+				val form = editGraphForm.fill(EditGraphSubmission(graph.name, graph.typeGraph, graph.axisLabel))
 				Ok(views.html.graphs.edit(form, graph))
 			}
 		}
@@ -75,7 +77,7 @@ class GraphsController extends AppController {
 						Ok(views.html.graphs.edit(formWithErrors, graph))
 					},
 					data => {
-						GraphModel.editGraph(graph.copy(name = data.name, typeGraph = data.graphType))
+						GraphModel.editGraph(graph.copy(name = data.name, typeGraph = data.graphType, axisLabel = data.axisLabel))
 						Redirect(routes.DashboardsController.manageGraphsAndTargets(dashboard.id)).flashing(AppFlash.success("Graph was updated successfully."))
 					}
 				)

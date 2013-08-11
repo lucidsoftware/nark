@@ -61,6 +61,7 @@ CREATE TABLE `graphs` (
 	`dashboard_id` BINARY(16) NOT NULL,
 	`sort` INT NOT NULL,
 	`type` TINYINT UNSIGNED NOT NULL,
+	`axis_label` TINYINT UNSIGNED NOT NULL,
 	`deleted` BOOLEAN NOT NULL DEFAULT 0,
 	PRIMARY KEY (`hiddenid`),
 	UNIQUE KEY `app_pk` (`id`),

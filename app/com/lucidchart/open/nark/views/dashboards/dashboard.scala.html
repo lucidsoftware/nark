@@ -129,6 +129,21 @@
 					}
 				};
 
+				switch (graph["axisLabel"]) {
+					case 'Full':
+						graphOptions["maxNumberWidth"] = 999;
+						break;
+					case 'Power of 2':
+						graphOptions["labelsKMG2"] = true;
+						break;
+					case 'Power of 10':
+						graphOptions["labelsKMB"] = true;
+						break;
+					case 'Auto':
+					default:
+						break;
+				}
+
 				switch (graph["type"]) {
 					case "Stacked":
 						lineGraphs[graph["id"]] = plotStackedGraph(element, data, graphOptions);

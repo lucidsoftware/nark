@@ -11,6 +11,7 @@ object graph {
 		"dashboardId" -> obj.dashboardId.toString,
 		"sort" -> obj.sort,
 		"type" -> obj.typeGraph.toString,
+		"axisLabel" -> obj.axisLabel.toString,
 		"deleted" -> obj.deleted
 	)
 }

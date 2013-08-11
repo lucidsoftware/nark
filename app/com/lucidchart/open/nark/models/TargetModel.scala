@@ -16,8 +16,8 @@ class TargetModel extends AppModel {
 		get[String]("name") ~
 		get[String]("target") ~
 		get[Boolean]("deleted") map {
-			case id ~ graph_id ~ name ~ target ~ deleted =>
-				new Target(id, graph_id, name, target, deleted)
+			case id ~ graphId ~ name ~ target ~ deleted =>
+				new Target(id, graphId, name, target, deleted)
 		}
 	}
 

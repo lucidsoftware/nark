@@ -4,6 +4,7 @@ import java.util.UUID
 
 import records.Graph
 import records.GraphType
+import records.GraphAxisLabel
 
 import AnormImplicits._
 import anorm._
@@ -18,9 +19,10 @@ class GraphModel extends AppModel {
 		get[UUID]("dashboard_id") ~
 		get[Int]("sort") ~
 		get[Int]("type") ~
+		get[Int]("axis_label") ~
 		get[Boolean]("deleted") map {
-			case id ~ name ~ dashboard_id ~ sort ~ type_graph ~ deleted =>
-				new Graph(id, name, dashboard_id, sort, GraphType(type_graph), deleted)
+			case id ~ name ~ dashboardId ~ sort ~ typeGraph ~ axisLabel ~ deleted =>
+				new Graph(id, name, dashboardId, sort, GraphType(typeGraph), GraphAxisLabel(axisLabel), deleted)
 		}
 	}
 	
@@ -70,14 +72,15 @@ class GraphModel extends AppModel {
 	def createGraph(graph: Graph) {
 		DB.withConnection("main") { connection =>
 			SQL("""
-				INSERT INTO `graphs` (`id`, `name`, `dashboard_id`, `sort`, `type`, `deleted`)
-				VALUES ({id}, {name}, {dashboard_id}, {sort}, {type}, {deleted})
+				INSERT INTO `graphs` (`id`, `name`, `dashboard_id`, `sort`, `type`, `axis_label`, `deleted`)
+				VALUES ({id}, {name}, {dashboard_id}, {sort}, {type}, {axis_label}, {deleted})
 			""").on(
 				"id"         -> graph.id,
 				"name"       -> graph.name,
 				"dashboard_id" -> graph.dashboardId,
 				"sort"       -> graph.sort,
 				"type"       -> graph.typeGraph.id,
+				"axis_label" -> graph.axisLabel.id,
 				"deleted"    -> graph.deleted
 			).executeUpdate()(connection)
 		}
@@ -92,12 +95,19 @@ class GraphModel extends AppModel {
 	def editGraph(graph: Graph) {
 		DB.withConnection("main") { connection =>
 			SQL("""
-				UPDATE `graphs` SET `name` = {name}, `sort` = {sort}, `type` = {type}, `deleted` = {deleted} WHERE `id` = {id}
+				UPDATE `graphs` SET
+				`name` = {name},
+				`sort` = {sort},
+				`type` = {type},
+				`axis_label` = {axis_label},
+				`deleted` = {deleted}
+				WHERE `id` = {id}
 			""").on(
 				"id"         -> graph.id,
 				"name"       -> graph.name,
 				"sort"       -> graph.sort,
 				"type"       -> graph.typeGraph.id,
+				"axis_label" -> graph.axisLabel.id,
 				"deleted"    -> graph.deleted
 			).executeUpdate()(connection)
 		}
