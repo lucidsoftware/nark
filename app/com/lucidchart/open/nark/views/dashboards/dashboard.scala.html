@@ -250,12 +250,12 @@
 
 		function showGraphError(id, error) {
 			$("#graph-" + id + "-wrapper .graph-error").text(error);
-			$("#graph-" + id + "-wrapper .graph-error").addClass("alert-error");
+			// $("#graph-" + id + "-wrapper .graph-error").addClass("alert-error");
 		}
 
 		function removeGraphError(id) {
 			$("#graph-" + id + "-wrapper .graph-error").text("");
-			$("#graph-" + id + "-wrapper .graph-error").removeClass("alert-error");
+			// $("#graph-" + id + "-wrapper .graph-error").removeClass("alert-error");
 		}
 
 		function regexIndexOf(string, regex, startpos) {
@@ -671,7 +671,7 @@
 				<div id="graph-@graph.id-wrapper" class="pull-left graph-wrapper">
 					<div class="well">
 						<div class="graph-container" id="graph-@graph.id.toString">
-							<div class="graph-error"></div>
+							<div class="graph-error alert-error"></div>
 							<svg></svg>
 						</div>
 						<div class="graph-caption">
