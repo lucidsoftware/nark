@@ -37,6 +37,10 @@ class Graphite(protocol: String, host: String, port: Int) {
 		builder.setPort(port)
 	}
 
+	def baseUrl() = {
+		basicUriBuilder.build()
+	}
+
 	protected def addTargets(builder: URIBuilder, targets: List[String]) {
 		targets.foreach { target =>
 			builder.addParameter("target", target)
