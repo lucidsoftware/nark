@@ -161,6 +161,9 @@
 						lineGraphs[graph["id"]] = plotLineGraph(element, data, graphOptions);
 						break;
 				}
+
+				//show that the graph is done loading
+				$('#loading-' + id).hide(250);
 			}
 		}
 
@@ -221,6 +224,9 @@
 				}
 
 				$('#graph-link-' + graph['id']).attr('href', graphUrl);
+
+				//show that the graph is reloading
+				$('#loading-' + graph['id']).show(250);
 
 				dataRequests[graph["id"]] = $.ajax({
 					"type": "GET",
@@ -675,7 +681,7 @@
 							<svg></svg>
 						</div>
 						<div class="graph-caption">
-							<strong>@graph.name</strong><br />
+							<strong><span id='loading-@graph.id' style='display:none'><i class='icon-refresh' ></i> Loading  </span>@graph.name</strong><br />
 							<a id='graph-link-@graph.id.toString' class='small-text' href='' target=_blank>(Graphite)</a>
 						</div>
 					</div>
