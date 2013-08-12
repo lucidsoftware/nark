@@ -28,7 +28,7 @@ class GraphsController extends AppController {
 	def add(dashboardId: UUID) = AuthAction.authenticatedUser { implicit user =>
 		DashboardAction.dashboardManagementAccess(dashboardId, user.id) { dashboard =>
 			AppAction { implicit request =>
-				val form = editGraphForm.fill(EditGraphSubmission("", GraphType.normal, GraphAxisLabel.powerOf10))
+				val form = editGraphForm.fill(EditGraphSubmission("", GraphType.normal, GraphAxisLabel.auto))
 				Ok(views.html.graphs.add(form, dashboard))
 			}
 		}
