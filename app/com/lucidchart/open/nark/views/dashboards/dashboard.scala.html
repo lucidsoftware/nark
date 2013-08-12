@@ -325,9 +325,11 @@
 
 		var refreshRateSeconds = null;
 		var refreshTimer = null;
-		function refreshTimerTick() {
+		function refreshTimerTick(graphIds) {
+			graphIds = typeof graphIds !== 'undefined' ? graphIds : allGraphIds; 
 			if (refreshRateSeconds != "disable") {
-				queueRefreshData();
+				clearTimeout(refreshTimer);
+				queueRefreshData(graphIds);
 				refreshTimer = setTimeout(refreshTimerTick, refreshRateSeconds * 1000);
 			}
 		}
@@ -380,7 +382,7 @@
 				};
 			}
 
-			queueRefreshData();
+			refreshTimerTick();
 		}
 
 		function updateCustomDates() {
@@ -528,7 +530,7 @@
 							$('#' + variablePieces[0]).change(function(event) {
 								setLocalStorage([dashKey + $(this).attr('key')], $(this).val());
 								var graphIds = getAffectedGraphs($(this).attr('key'));
-								queueRefreshData(graphIds);
+								refreshTimerTick(graphIds);
 							});
 						}
 						else {
@@ -540,7 +542,7 @@
 								$('#' + variablePieces[0]).focusout(function() {
 									setLocalStorage([dashKey + $(this).attr('key')], $(this).val());
 									var graphIds = getAffectedGraphs($(this).attr('key'));
-									queueRefreshData(graphIds);
+									refreshTimerTick(graphIds);
 								});
 								
 								alreadyDisplayedVariables.push(variablePieces[0]);
