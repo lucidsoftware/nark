@@ -67,6 +67,10 @@
 			height: 20px;
 			text-align: center;
 		}
+		.graph-error {
+			width: 100%;
+			text-align: center;
+		}
 		svg {
 			width: 100%;
 			height: 100%;
@@ -228,14 +232,30 @@
 						dataRequests[graph["id"]] = false;
 					},
 					"success": function(data) {
-						graphData[graph["id"]] = data;
-						queueRedrawGraph(graph["id"]);
+						if(!data || data.length == 0) {
+							showGraphError(graph["id"], "No data available for this graph over the selected time period.");
+						} else {
+							graphData[graph["id"]] = data;
+							queueRedrawGraph(graph["id"]);
+							removeGraphError(graph["id"]);
+						}
 					},
 					"failure": function(data) {
+						showGraphError(graph["id"], "Failed to retrieve graphite data: " + data);
 						console.log("Failed to retrieve graphite data", data);
 					}
 				});
 			});
+		}
+
+		function showGraphError(id, error) {
+			$("#graph-" + id + "-wrapper .graph-error").text(error);
+			$("#graph-" + id + "-wrapper .graph-error").addClass("alert-error");
+		}
+
+		function removeGraphError(id) {
+			$("#graph-" + id + "-wrapper .graph-error").text("");
+			$("#graph-" + id + "-wrapper .graph-error").removeClass("alert-error");
 		}
 
 		function regexIndexOf(string, regex, startpos) {
@@ -651,6 +671,7 @@
 				<div id="graph-@graph.id-wrapper" class="pull-left graph-wrapper">
 					<div class="well">
 						<div class="graph-container" id="graph-@graph.id.toString">
+							<div class="graph-error"></div>
 							<svg></svg>
 						</div>
 						<div class="graph-caption">
