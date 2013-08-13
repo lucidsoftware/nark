@@ -49,6 +49,7 @@ POST    /target/deactivate/:uuid             com.lucidchart.open.nark.controller
 #Alerts
 GET     /alert/create           com.lucidchart.open.nark.controllers.AlertsController.create
 POST		/alert/createSubmit		com.lucidchart.open.nark.controllers.AlertsController.createSubmit
+GET 		/alert/search		com.lucidchart.open.nark.controllers.AlertsController.search(term: String ?= "")
 
 # Map static resources from the /public folder to the /assets URL path
 GET     /favicon.ico                controllers.Assets.at(path="/public", file = "img/favicon.png")

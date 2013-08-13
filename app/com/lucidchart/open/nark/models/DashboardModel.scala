@@ -74,6 +74,7 @@ class DashboardModel extends AppModel {
 				FROM `dashboards`
 				WHERE `name` LIKE {name}
 				AND `deleted` = false
+				ORDER BY `name`
 				LIMIT {limit}
 			""").on(
 				"name" -> ("%" + name + "%"),
@@ -95,6 +96,7 @@ class DashboardModel extends AppModel {
 				WHERE `deleted` = true
 				AND `user_id` = {user_id}
 				AND `name` LIKE {name}
+				ORDER BY `name`
 				LIMIT {limit}
 			""").on(
 				"user_id" -> user_id,

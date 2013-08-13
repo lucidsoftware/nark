@@ -7,14 +7,15 @@ import com.lucidchart.open.nark.views
 import play.api.data._
 import play.api.data.Forms._
 import play.api.data.format.Formats._
+import scala.math.BigDecimal
 import validation.Constraints
 
 object AlertsController extends AppController {
 	private case class AlertFormSubmission(
 		name: String,
 		target: String,
-		errorThreshold: Double,
-		warnThreshold: Double,
+		errorThreshold: BigDecimal,
+		warnThreshold: BigDecimal,
 		comparison: Comparisons.Value,
 		frequency: Int
 	)
@@ -22,8 +23,8 @@ object AlertsController extends AppController {
 		mapping(
 			"name" -> text.verifying(Constraints.minLength(1)),
 			"target" -> text,
-			"error_threshold" -> of[Double],
-			"warn_threshold" -> of[Double],
+			"error_threshold" -> bigDecimal,
+			"warn_threshold" -> bigDecimal,
 			"comparison" -> number.verifying("Invalid comparison type", x => Comparisons.values.map(_.id).contains(x)).transform[Comparisons.Value](Comparisons(_), _.id),
 			"frequency" -> number
 		)(AlertFormSubmission.apply)(AlertFormSubmission.unapply)
@@ -63,7 +64,17 @@ object AlertsController extends AppController {
 					Redirect(routes.HomeController.index()).flashing(AppFlash.success("Alert was created successfully."))
 				}
 			)
+		}
+	}
 
+	/**
+	 * Search for a particular alert
+	 * @param term the search term to use when looking for alerts
+	 */
+	def search(term: String) = AuthAction.maybeAuthenticatedUser { implicit user =>
+		AppAction { implicit request =>
+			val matches = AlertModel.searchByName(term).filter(_.active)
+			Ok(views.html.alerts.search(term, matches))
 		}
 	}
 }
