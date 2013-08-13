@@ -1,0 +1,30 @@
+@(
+	formCreate:Form[_]
+)(
+	implicit
+	request: com.lucidchart.open.nark.request.AppRequest[_],
+	user: com.lucidchart.open.nark.models.records.User
+)
+
+@import com.lucidchart.open.nark.controllers.{routes=>narkRoutes}
+@import com.lucidchart.open.nark.views.html.helpers
+@import helper.twitterBootstrap._
+@import helper._
+
+@com.lucidchart.open.nark.views.html.layouts.main("Create Alert", userOption = Some(user)) {
+	<h3>Create a new alert</h3>
+
+	<br />
+	@helper.form(action=narkRoutes.AlertsController.createSubmit()) {
+		<fieldset>
+			@helpers.csrfHiddenInput()
+			@helper.inputText(formCreate("name"), 'class -> "input-xlarge", '_label -> "Name", 'placeholder -> "CPU High", 'required -> true, '_showConstraints -> false)
+			@helper.inputText(formCreate("target"), 'class -> "input-xlarge", '_label -> "Target", 'placeholder -> "stats.gauges.servers.*.*.*.cpu.count", 'required -> true, '_showConstraints -> false)
+			@helper.inputText(formCreate("error_threshold"), 'class -> "input-xlarge", '_label -> "Error Threshold", 'placeholder -> "0.0", 'required -> true, '_showConstraints -> false)
+			@helper.inputText(formCreate("warn_threshold"), 'class -> "input-xlarge", '_label -> "Warn Threshold", 'placeholder -> "0.0", 'required -> true, '_showConstraints -> false)
+			@helper.select(formCreate("comparison"), com.lucidchart.open.nark.models.records.Comparisons.values.map(m => m.id.toString -> m.toString).toSeq, '_label -> "Comparison Type", '_showConstraints -> false)
+			@helper.inputText(formCreate("frequency"), 'class -> "input-xlarge", '_label -> "Frequency in Seconds", 'placeholder -> "0", 'required -> true, '_showConstraints -> false)
+			<button id="create" name="create" class="btn btn-primary">Create</button>
+		</fieldset>
+	}
+}

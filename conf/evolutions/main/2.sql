@@ -26,7 +26,7 @@ CREATE TABLE `dynamic_alerts` (
 	`created` DATETIME NOT NULL,
 	`search_target` VARCHAR(1000) NOT NULL COMMENT 'list of graphite targets to get',
 	`match` VARCHAR(500) NOT NULL COMMENT 'the regex to break the targets up with',
-	`build_target` VARCHAR(500) NOT NULL 'use the pieces from the regex to build targets',
+	`build_target` VARCHAR(500) NOT NULL COMMENT 'use the pieces from the regex to build targets',
 	`error_threshold` DECIMAL(20, 3),
 	`warn_threshold` DECIMAL(20, 3),
 	`comparison` TINYINT UNSIGNED NOT NULL,
@@ -91,6 +91,7 @@ CREATE TABLE `alert_history` (
 DROP TABLE `alert_history`;
 DROP TABLE `alert_subscriptions`;
 DROP TABLE `alerts`;
+DROP TABLE `dynamic_alerts`;
 DROP TABLE `alert_tags`;
 ALTER TABLE `users`
 	DROP COLUMN `warn_address`,

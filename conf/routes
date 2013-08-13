@@ -46,6 +46,10 @@ POST    /target/edit/:uuid                   com.lucidchart.open.nark.controller
 POST    /target/activate/:uuid               com.lucidchart.open.nark.controllers.TargetsController.activate(uuid: java.util.UUID)
 POST    /target/deactivate/:uuid             com.lucidchart.open.nark.controllers.TargetsController.deactivate(uuid: java.util.UUID)
 
+#Alerts
+GET     /alert/create           com.lucidchart.open.nark.controllers.AlertsController.create
+POST		/alert/createSubmit		com.lucidchart.open.nark.controllers.AlertsController.createSubmit
+
 # Map static resources from the /public folder to the /assets URL path
 GET     /favicon.ico                controllers.Assets.at(path="/public", file = "img/favicon.png")
 GET     /assets/*file               controllers.Assets.at(path="/public", file)
