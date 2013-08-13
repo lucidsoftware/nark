@@ -57,3 +57,17 @@ function plotGraph(element, data, graphOptions) {
 		graphOptions
 	);
 }
+
+$(document).mousemove(function(event) {
+	var legend = $('#legend');
+	var xOffset = 20;
+	if (event.pageX + legend.width() + 40 > $(window).width()){
+		xOffset = -40 - legend.width();
+	}
+	var padding = legend.is(':empty') ? 0 : 10;
+	legend.css({
+		left: event.pageX + xOffset,
+		top: event.pageY - legend.height() / 2,
+		padding: padding
+	});
+});
