@@ -555,18 +555,18 @@
 						if (targetPieces[i].indexOf('|') != -1) {
 							variablePieces = targetPieces[i].split('|');
 							
-							if ($('#' + variablePieces[0]).length == 0) {
-								$('#variables-group').append('<div class="row field-container"><label rel="tooltip" title="' + variablePieces[0] + '" for="' + variablePieces[0] + '"><strong>' + variablePieces[0] + '</strong></label><select id="' + variablePieces[0] + '" name="' + variablePieces[0] + '" key="' + variablePieces[0] + '"></select></div>');
+							if ($('#input-' + variablePieces[0]).length == 0) {
+								$('#variables-group').append('<div class="row field-container"><label rel="tooltip" title="' + variablePieces[0] + '" for="' + variablePieces[0] + '"><strong>' + variablePieces[0] + '</strong></label><select id="input-' + variablePieces[0] + '" name="' + variablePieces[0] + '" key="' + variablePieces[0] + '"></select></div>');
 								selectVariables.push(variablePieces[0]);
 							}
 
 							for (var j = 1; j < variablePieces.length; j++) {
-								if ($('#' + variablePieces[0] + ' option[value="' + variablePieces[j] + '"]').length == 0) {
+								if ($('#input-' + variablePieces[0] + ' option[value="' + variablePieces[j] + '"]').length == 0) {
 
-									$('#' + variablePieces[0]).append('<option value="' + variablePieces[j] + '">' + variablePieces[j] + '</option>');
+									$('#input-' + variablePieces[0]).append('<option value="' + variablePieces[j] + '">' + variablePieces[j] + '</option>');
 								}
 							}
-							$('#' + variablePieces[0]).change(function(event) {
+							$('#input-' + variablePieces[0]).change(function(event) {
 								setLocalStorage([dashKey + $(this).attr('key')], $(this).val());
 								var graphIds = getAffectedGraphs($(this).attr('key'));
 								queueRefreshData(graphIds);
@@ -576,9 +576,9 @@
 							var variablePieces = targetPieces[i].split('=');
 							var defaultValue = fromLocalStorage([dashKey + variablePieces[0]], (variablePieces.length == 2) ? variablePieces[1] : '');
 							if ($.inArray(variablePieces[0], alreadyDisplayedVariables) == -1) {
-								$('#variables-group').append('<div class="row field-container"><label rel="tooltip" title="' + variablePieces[0] + '" for="' + variablePieces[0] + '"><strong>' + variablePieces[0] +'</strong></label><input id="' + variablePieces[0] + '" name="' + variablePieces[0] + '" type="text" class="span9 input-large" key="' + variablePieces[0] + '" value="' + defaultValue + '" /></div>');
+								$('#variables-group').append('<div class="row field-container"><label rel="tooltip" title="' + variablePieces[0] + '" for="' + variablePieces[0] + '"><strong>' + variablePieces[0] +'</strong></label><input id="input-' + variablePieces[0] + '" name="' + variablePieces[0] + '" type="text" class="span9 input-large" key="' + variablePieces[0] + '" value="' + defaultValue + '" /></div>');
 
-								$('#' + variablePieces[0]).focusout(function() {
+								$('#input-' + variablePieces[0]).focusout(function() {
 									setLocalStorage([dashKey + $(this).attr('key')], $(this).val());
 									var graphIds = getAffectedGraphs($(this).attr('key'));
 									queueRefreshData(graphIds);
@@ -594,7 +594,7 @@
 			$.map(selectVariables, function(variable) {
 				var defaultValue = fromLocalStorage([dashKey + variable], '');
 				if (defaultValue != '') {
-					$('#' + variable + ' option[value="' + defaultValue + '"]').attr('selected', 'selected');
+					$('#input-' + variable + ' option[value="' + defaultValue + '"]').attr('selected', 'selected');
 				}
 			});
 		});
