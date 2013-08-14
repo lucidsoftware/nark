@@ -47,7 +47,7 @@
 				<tbody>
 					@matches.sortWith(_.name.toLowerCase < _.name.toLowerCase).map { alert =>
 						<tr>
-							<td>@alert.name</td>
+							<td><a href="@narkRoutes.AlertsController.view(alert.id)">@alert.name</a></td>
 							<td>@alert.target</td>
 							<td>@alert.errorThreshold</td>
 							<td>@alert.warnThreshold</td>

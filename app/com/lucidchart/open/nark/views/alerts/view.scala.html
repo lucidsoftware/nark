@@ -1,0 +1,55 @@
+@(
+	alert: com.lucidchart.open.nark.models.records.Alert
+)(
+	implicit
+	request: com.lucidchart.open.nark.request.AppRequest[_],
+	userOption: Option[com.lucidchart.open.nark.models.records.User]
+)
+@import com.lucidchart.open.nark.controllers.{routes=>narkRoutes}
+@import com.lucidchart.open.nark.views.html.helpers
+@import helper._
+
+@com.lucidchart.open.nark.views.html.layouts.main(alert.name, userOption = userOption) {
+	<h3>@alert.name</h3>
+	<br />
+	<h4>Alert Info</h4>
+	<div>
+		<div class="row">
+			<div class="span1" />
+			<div class="span11">
+				<table class="table table-bordered">
+					<thead>
+						<tr>
+							<th>Alert Name</th>
+							<th>Target</th>
+							<th>Error</th>
+							<th>Warn</th>
+							<th>Comparison</th>
+							<th>State</th>
+							<th>Active</th>
+						</tr>
+					</thead>
+					<tbody>
+						<tr>
+							<td>@alert.name</td>
+							<td>@alert.target</td>
+							<td>@alert.errorThreshold</td>
+							<td>@alert.warnThreshold</td>
+							<td>@alert.comparison</td>
+							<td>@alert.state.toString</td>
+							<td>@alert.active</td>
+						</tr>
+					</tbody>
+				</table>
+			</div>
+		</div>
+	</div>
+	<div class="row">
+		<div class="span11">
+			@helper.form(action=narkRoutes.SubscriptionsController.subscribe(alert.id)) {
+				@helpers.csrfHiddenInput()
+				<input name="ignored" class="btn button-large pull-right" type="submit" value="Subscribe to this Alert" />
+			}
+		</div>
+	</div>
+}

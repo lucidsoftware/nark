@@ -66,6 +66,23 @@ class AlertModel extends AppModel {
 	}
 
 	/**
+	 * Get the alert specified by the uuid
+	 * @param id the uuid of the alert to get
+	 * @return the requested alert
+	 */
+	def getAlert(id: UUID): Option[Alert] = {
+		DB.withConnection("main") { connection =>
+			SQL("""
+				SELECT *
+				FROM `alerts`
+				WHERE `id`={id}
+			""").on(
+				"id" -> id
+			).as(alertsRowParser singleOpt)(connection)
+		}
+	}
+
+	/**
 	 * Search for alert records by a search term
 	 * @param name the search term to search by
 	 * @return a List of Alert records

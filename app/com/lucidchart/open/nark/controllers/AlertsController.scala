@@ -4,6 +4,7 @@ import com.lucidchart.open.nark.models.AlertModel
 import com.lucidchart.open.nark.models.records.{Alert, Comparisons, AlertState}
 import com.lucidchart.open.nark.request.{AppFlash, AppAction, AuthAction}
 import com.lucidchart.open.nark.views
+import java.util.UUID
 import play.api.data._
 import play.api.data.Forms._
 import play.api.data.format.Formats._
@@ -75,6 +76,23 @@ object AlertsController extends AppController {
 		AppAction { implicit request =>
 			val matches = AlertModel.searchByName(term).filter(_.active)
 			Ok(views.html.alerts.search(term, matches))
+		}
+	}
+
+	/**
+	 * View a particular alert
+	 * @id the id of the alert to view
+	 */
+	def view(id: UUID) = AuthAction.maybeAuthenticatedUser { implicit user =>
+		AppAction { implicit request =>
+			val alert = AlertModel.getAlert(id)
+
+			if (alert.isDefined) {
+				Ok(views.html.alerts.view(alert.get))
+			}
+			else {
+				Redirect(routes.HomeController.index()).flashing(AppFlash.error("Alert not found"))
+			}
 		}
 	}
 }
