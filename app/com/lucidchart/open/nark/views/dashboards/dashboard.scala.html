@@ -578,10 +578,25 @@
 							if ($.inArray(variablePieces[0], alreadyDisplayedVariables) == -1) {
 								$('#variables-group').append('<div class="row field-container"><label rel="tooltip" title="' + variablePieces[0] + '" for="' + variablePieces[0] + '"><strong>' + variablePieces[0] +'</strong></label><input id="input-' + variablePieces[0] + '" name="' + variablePieces[0] + '" type="text" class="span9 input-large" key="' + variablePieces[0] + '" value="' + defaultValue + '" /></div>');
 
-								$('#input-' + variablePieces[0]).focusout(function() {
-									setLocalStorage([dashKey + $(this).attr('key')], $(this).val());
-									var graphIds = getAffectedGraphs($(this).attr('key'));
-									queueRefreshData(graphIds);
+								var inputElement = $('#input-' + variablePieces[0]);
+								var lastValue = defaultValue;
+								function updateInput() {
+									var newValue = inputElement.val();
+									if (newValue != lastValue) {
+										lastValue = newValue;
+										setLocalStorage([dashKey + inputElement.attr('key')], newValue);
+										var graphIds = getAffectedGraphs(inputElement.attr('key'));
+										queueRefreshData(graphIds);
+									}
+								}
+
+								inputElement.keypress(function(e) {
+									if(e.which == 13) {
+										updateInput();
+									}
+								});
+								inputElement.focusout(function(e) {
+									updateInput();
 								});
 								
 								alreadyDisplayedVariables.push(variablePieces[0]);
