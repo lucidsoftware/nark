@@ -69,10 +69,10 @@ CREATE TABLE `alert_subscriptions` (
 	`hiddenid` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
 	`user_id` BINARY(16) NOT NULL,
 	`alert_id` BINARY(16) NOT NULL COMMENT "Can be alert id, alert tag id, or dynamic alert id",
-	`type` TINYINT UNSIGNED NOT NULL,
+	`alert_type` TINYINT UNSIGNED NOT NULL,
 	`active` BOOLEAN NOT NULL,
 	PRIMARY KEY (`hiddenid`),
-	UNIQUE KEY `users_alerts_lookup` (`user_id`, `type`, `alert_id`),
+	UNIQUE KEY `users_alerts_lookup` (`user_id`, `alert_type`, `alert_id`),
 	KEY `alert_lookup` (`alert_id`)
 ) ENGINE=InnoDB CHARSET=utf8 COLLATE=utf8_general_ci;
 

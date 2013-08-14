@@ -17,6 +17,12 @@ object AlertState extends Enumeration {
 	val warn = Value(2, "warn")
 }
 
+object AlertType extends Enumeration {
+	val alert = Value(0, "alert")
+	val dynamicAlert = Value(1, "dynamic alert")
+	val alertTag = Value(2, "alert tag")
+}
+
 case class Alert (
 	id: UUID,
 	name: String,

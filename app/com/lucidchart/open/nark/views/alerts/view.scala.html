@@ -6,6 +6,7 @@
 	userOption: Option[com.lucidchart.open.nark.models.records.User]
 )
 @import com.lucidchart.open.nark.controllers.{routes=>narkRoutes}
+@import com.lucidchart.open.nark.models.records.AlertType
 @import com.lucidchart.open.nark.views.html.helpers
 @import helper._
 
@@ -48,6 +49,7 @@
 		<div class="span11">
 			@helper.form(action=narkRoutes.SubscriptionsController.subscribe(alert.id)) {
 				@helpers.csrfHiddenInput()
+				<input name="alert_type" type="hidden" value="@AlertType.alert.id" />
 				<input name="ignored" class="btn button-large pull-right" type="submit" value="Subscribe to this Alert" />
 			}
 		</div>
