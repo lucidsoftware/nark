@@ -1,5 +1,6 @@
 @(
-	alert: com.lucidchart.open.nark.models.records.Alert
+	alert: com.lucidchart.open.nark.models.records.Alert,
+	subscriptions: List[com.lucidchart.open.nark.models.records.SubscriptionRecord]
 )(
 	implicit
 	request: com.lucidchart.open.nark.request.AppRequest[_],
@@ -45,12 +46,46 @@
 			</div>
 		</div>
 	</div>
+	<h4>Alert Subscriptions</h4>
+	<div>
+		<div class="row">
+			<div class="span1" />
+			<div class="span11">
+				@if(subscriptions.size == 0){
+					<p class="lead text-info">There are no subscriptions for this alert.</p>
+				} else {
+					<table class="table table-bordered">
+						<thead>
+							<tr>
+								<th>User</th>
+								<th>Email</th>
+								<th>Active</th>
+							</tr>
+						</thead>
+						<tbody>
+							@subscriptions.map { subscription =>
+								<tr>
+									<td>@if(subscription.userOption.isDefined){@subscription.userOption.get.name} else {""}</td>
+									<td>@if(subscription.userOption.isDefined){@subscription.userOption.get.email} else {""}</td>
+									<td>@subscription.subscription.active</td>
+								</tr>
+							}
+						</tbody>
+					</table>
+				}
+			</div>
+		</div>
+	</div>
 	<div class="row">
 		<div class="span11">
-			@helper.form(action=narkRoutes.SubscriptionsController.subscribe(alert.id)) {
-				@helpers.csrfHiddenInput()
-				<input name="alert_type" type="hidden" value="@AlertType.alert.id" />
-				<input name="ignored" class="btn button-large pull-right" type="submit" value="Subscribe to this Alert" />
+			@if(userOption.isDefined && subscriptions.find { subscription => if (subscription.userOption.isDefined) {subscription.userOption.get.id == userOption.get.id} else {false}}.isDefined) {
+				<span class="pull-right text-info">You are subscribed to this alert</span>
+			} else {
+				@helper.form(action=narkRoutes.SubscriptionsController.subscribe(alert.id)) {
+					@helpers.csrfHiddenInput()
+					<input name="alert_type" type="hidden" value="@AlertType.alert.id" />
+					<input name="ignored" class="btn button-large pull-right" type="submit" value="Subscribe to this Alert" />
+				}
 			}
 		</div>
 	</div>

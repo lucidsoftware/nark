@@ -28,16 +28,21 @@ class UserModel extends AppModel {
 	 * @param id
 	 * @return user
 	 */
-	def findUserByID(id: UUID): Option[User] = {
+	def findUserByID(id: UUID): Option[User] = findUsersByID(List(id)).headOption
+
+	/**
+	 * Find all users within the set of user ids
+	 * @param userIds the ids of the users to find
+	 */
+	def findUsersByID(userIds: List[UUID]): List[User] = {
 		DB.withConnection("main") { connection =>
-			SQL("""
+			RichSQL("""
 				SELECT *
 				FROM `users`
-				WHERE `id` = {id}
-				LIMIT 1
-			""").on(
-				"id" -> id
-			).as(usersRowParser.singleOpt)(connection)
+				WHERE `id` IN ({user_ids})
+			""").onList(
+				"user_ids" -> userIds
+			).toSQL.as(usersRowParser *)(connection)
 		}
 	}
 	

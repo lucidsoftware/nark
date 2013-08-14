@@ -3,7 +3,7 @@ package com.lucidchart.open.nark.models
 import anorm._
 import anorm.SqlParser._
 import AnormImplicits._
-import com.lucidchart.open.nark.models.records.{Subscription, AlertType}
+import com.lucidchart.open.nark.models.records.{Subscription, SubscriptionRecord, AlertType, User}
 import java.util.UUID
 import play.api.Play.current
 import play.api.Play.configuration
@@ -46,31 +46,59 @@ class SubscriptionModel extends AppModel {
 	 * Get all subscriptions for a certain alert
 	 * @param id the id of the Alert for which to find subscriptions
 	 */
-	 def getSubscriptionsByAlert(id: UUID): List[Subscription] = {
-	 	DB.withConnection("main") { connection =>
-	 		SQL("""
-	 			SELECT *
-	 			FROM `alert_subscriptions` 
-	 			WHERE `alert_id` = {alert_id}
-	 		""").on(
-	 			"alert_id" -> id
-	 		).as(subscriptionsRowParser *)(connection)
-	 	}
-	 }
+	def getSubscriptionsByAlert(id: UUID): List[SubscriptionRecord] = {
+		val subscriptions: List[Subscription] = DB.withConnection("main") { connection =>
+			SQL("""
+				SELECT *
+				FROM `alert_subscriptions`
+				WHERE `alert_id` = {alert_id}
+			""").on(
+				"alert_id" -> id
+			).as(subscriptionsRowParser *)(connection)
+		}
+
+		if (subscriptions.size == 0) {
+			Nil
+		}
+		else {
+			val userIds = subscriptions.map { subscription =>
+				subscription.userId
+			}
+			val users = UserModel.findUsersByID(userIds).map { user =>
+				(user.id, user)
+			}.toMap
+
+			subscriptions.map { subscription =>
+				SubscriptionRecord(subscription, users.get(subscription.userId))
+			}
+		}
+	}
 
 	 /**
 	 * Get all subscriptions for a certain user
 	 * @param id the id of the User for which to find subscriptions
 	 */
-	 def getSubscriptionsByUser(id: UUID): List[Subscription] = {
-	 	DB.withConnection("main") { connection =>
-	 		SQL("""
-	 			SELECT *
-	 			FROM `alert_subscriptions` 
-	 			WHERE `user_id` = {user_id}
-	 		""").on(
-	 			"user_id" -> id
-	 		).as(subscriptionsRowParser *)(connection)
-	 	}
-	 }
+	def getSubscriptionsByUser(id: UUID): List[SubscriptionRecord] = {
+		val subscriptions = DB.withConnection("main") { connection =>
+			SQL("""
+				SELECT *
+				FROM `alert_subscriptions`
+				WHERE `user_id` = {user_id}
+			""").on(
+				"user_id" -> id
+			).as(subscriptionsRowParser *)(connection)
+		}
+
+		if (subscriptions.size == 0) {
+			Nil
+		}
+		else {
+			val user = UserModel.findUserByID(id).get
+
+			subscriptions.map { subscription =>
+				SubscriptionRecord(subscription, Some(user))
+			}
+		}
+
+	}
 }

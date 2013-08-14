@@ -13,3 +13,8 @@ case class Subscription (
 	 */
 	def this(userId: UUID, alertId: UUID, alertType: AlertType.Value) = this(userId, alertId, alertType, true)
 }
+
+case class SubscriptionRecord (
+	subscription: Subscription,
+	userOption: Option[User]
+) extends AppRecord
