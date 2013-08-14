@@ -24,7 +24,7 @@
 		<a href="@narkRoutes.GraphsController.add(dashboard.id)" class="btn btn-primary">Create a Graph</a>
 	</p>
 
-	@graphs.sortBy(_.sort).map { graph =>
+	@graphs.filter(!_.deleted).sortBy(_.sort).map { graph =>
 		@defining(targetsByGraphId.get(graph.id).getOrElse(Nil)) { targets =>
 			<hr>
 			<h4>@graph.name</h4>
@@ -34,19 +34,10 @@
 				<a href="@narkRoutes.TargetsController.add(graph.id)" class="btn btn-primary">Add a Target</a>
 			</p>
 			<p>
-				@if(graph.deleted) {
-					@helper.form(action=narkRoutes.GraphsController.activate(graph.id)) {
-						@helpers.csrfHiddenInput()
-						This graph is currently <span class="label label-important">Deactivated</span>.
-						It will not show up on the dashboard page.
-						<button class="btn">Activate</button>
-					}
-				} else {
-					@helper.form(action=narkRoutes.GraphsController.deactivate(graph.id)) {
-						@helpers.csrfHiddenInput()
-						This graph is currently <span class="label label-success">Activated</span>.
-						<button class="btn btn-danger">Deactivate</button>
-					}
+				@helper.form(action=narkRoutes.GraphsController.deactivate(graph.id)) {
+					@helpers.csrfHiddenInput()
+					This graph is currently <span class="label label-success">Activated</span>.
+					<button class="btn btn-danger">Deactivate</button>
 				}
 			</p>
 
@@ -60,7 +51,7 @@
 					</tr>
 					</thead>
 					<tbody>
-						@targets.map { target =>
+						@targets.sortBy(_.deleted).map { target =>
 							<tr>
 								<td><a href="#" rel="tooltip" title="@target.target">@target.name</a></td>
 								<td>
@@ -74,7 +65,6 @@
 									@if(target.deleted) {
 										@helper.form(action=narkRoutes.TargetsController.activate(target.id)) {
 											@helpers.csrfHiddenInput()
-											<a href="@narkRoutes.TargetsController.edit(target.id)" class="btn btn-primary">Edit</a>
 											<button class="btn">Activate</button>
 										}
 									} else {
@@ -90,6 +80,24 @@
 					</tbody>
 				</table>
 			}
+		}
+	}
+
+	@graphs.filter(_.deleted).sortBy(_.sort).map { graph =>
+		@defining(targetsByGraphId.get(graph.id).getOrElse(Nil)) { targets =>
+			<hr>
+			<h4>@graph.name</h4>
+			<p>
+				This is a @graph.typeGraph.toString graph with @targets.size targets.
+			</p>
+			<p>
+				@helper.form(action=narkRoutes.GraphsController.activate(graph.id)) {
+					@helpers.csrfHiddenInput()
+					This graph is currently <span class="label label-important">Deactivated</span>.
+					It will not show up on the dashboard page.
+					<button class="btn">Activate</button>
+				}
+			</p>
 		}
 	}
 }
