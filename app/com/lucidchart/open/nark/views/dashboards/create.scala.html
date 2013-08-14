@@ -14,11 +14,31 @@
 @com.lucidchart.open.nark.views.html.layouts.main("Create Dashboard", userOption = Some(user)) {
 	<h3>Create a new dashboard</h3>
 	<br>
+
+	<script type="text/javascript">
+		$(document).ready(function() {
+			var urlInput = $("#urlinput");
+			var urlExample = $("#urlexample");
+
+			function updateUrlExample() {
+				urlExample.text("/d/" + encodeURIComponent(urlInput.val()));
+			}
+
+			urlInput.keypress(function(e) {
+				setTimeout(updateUrlExample, 1);
+			});
+			updateUrlExample();
+		});
+	</script>
+
 	@helper.form(action=narkRoutes.DashboardsController.createSubmit()) {
 		<fieldset>
 			@helpers.csrfHiddenInput()
 			@helper.inputText(formCreate("name"), 'class -> "input-xlarge", '_label -> "Name", 'placeholder -> "Vitals", 'required -> true, '_showConstraints -> false)
-			@helper.inputText(formCreate("url"), 'class -> "input-xlarge", '_label -> "URL", 'placeholder -> "vitals", 'required -> true, '_showConstraints -> false)
+			@helper.inputText(formCreate("url"), 'id -> "urlinput", 'class -> "input-xlarge", '_label -> "URL", 'placeholder -> "vitals", 'required -> true, '_showConstraints -> false, 'helpInline -> "abc")
+			<p class="help-block">
+				The dashboard may be accessed at <span id="urlexample"></span>.
+			</p>
 			<button id="create" name="create" class="btn btn-primary">Create</button>
 		</fieldset>
 	}
