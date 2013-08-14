@@ -31,6 +31,10 @@
 			font-size: 14px;
 		}
 
+		.loading-text {
+			font-size: 10px;
+		}
+
 		#options-container .form-inline label {
 			width: 100px;
 			overflow: hidden;
@@ -696,7 +700,7 @@
 							<svg></svg>
 						</div>
 						<div class="graph-caption">
-							<strong><span id='loading-@graph.id' style='display:none'><i class='icon-refresh' ></i> Loading  </span>@graph.name</strong><br />
+							<strong><span id='loading-@graph.id' class="loading-text" style='display:none'>(<i class='icon-refresh' ></i> Loading...)</span> @graph.name</strong><br />
 							<a id='graph-link-@graph.id.toString' class='small-text' href='' target=_blank>(Graphite)</a>
 						</div>
 					</div>
