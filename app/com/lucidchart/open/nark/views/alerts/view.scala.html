@@ -76,17 +76,36 @@
 			</div>
 		</div>
 	</div>
-	<div class="row">
-		<div class="span11">
-			@if(userOption.isDefined && subscriptions.find { subscription => if (subscription.userOption.isDefined) {subscription.userOption.get.id == userOption.get.id} else {false}}.isDefined) {
-				<span class="pull-right text-info">You are subscribed to this alert</span>
-			} else {
-				@helper.form(action=narkRoutes.SubscriptionsController.subscribe(alert.id)) {
-					@helpers.csrfHiddenInput()
-					<input name="alert_type" type="hidden" value="@AlertType.alert.id" />
-					<input name="ignored" class="btn button-large pull-right" type="submit" value="Subscribe to this Alert" />
+	<div>
+		@if(userOption.isDefined) {
+			@defining(subscriptions.find { subscription => subscription.userOption.get.id == userOption.get.id }) { subscription =>
+				@if(subscription.isDefined) {
+					<div class="row pull-right">
+						<div class="span2">
+						@helper.form(action=narkRoutes.SubscriptionsController.edit(alert.id)) {
+							@helpers.csrfHiddenInput()
+							<input name="alert_type" type="hidden" value="@AlertType.alert.id" />
+							<input name="active" type="hidden" value="@(subscription.get.subscription.active == false)" />
+							<input class="btn button-large" type="submit" value='@if(subscription.get.subscription.active) {Deactivate Subscription} else {Reactivate Subscription}' />
+						}
+						</div>
+						<div class="span2 pull-right">
+						@helper.form(action=narkRoutes.SubscriptionsController.delete(alert.id)) {
+							@helpers.csrfHiddenInput()
+							<input class="btn btn-danger button-large" name="ignored" type="submit" value="Delete Subscription" />
+						}
+						</div>
+					</div>
+				} else {
+					@helper.form(action=narkRoutes.SubscriptionsController.subscribe(alert.id)) {
+						@helpers.csrfHiddenInput()
+						<input name="alert_type" type="hidden" value="@AlertType.alert.id" />
+						<input class="btn button-large pull-right" type="submit" value="Subscribe to this Alert" />
+					}
 				}
 			}
-		</div>
+		} else {
+			<p class="lead text-info pull-right">Login to subscribe to alerts</p>
+		}
 	</div>
 }

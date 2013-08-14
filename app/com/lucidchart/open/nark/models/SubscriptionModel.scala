@@ -43,6 +43,43 @@ class SubscriptionModel extends AppModel {
 	}
 
 	/**
+	 * Edit a user's subscription to an alert
+	 * @param alertId the id of the alert to edit
+	 * @param userId the id of the user for whom to edit it
+	 * @param subscription the new subscription values
+	 */
+	def editSubscription(alertId: UUID, userId: UUID, subscription: Subscription) {
+		DB.withConnection("main") { connection =>
+			SQL("""
+				UPDATE `alert_subscriptions`
+				SET `active`= {active}
+				WHERE `alert_id`={alert_id} AND `user_id`={user_id}
+			""").on(
+				"alert_id" -> alertId,
+				"user_id" -> userId,
+				"active" -> subscription.active
+			).executeUpdate()(connection)
+		}
+	}
+
+	/**
+	 * Delete a user's subscription to an alert
+	 * @param alertId the id of the alert to delete
+	 * @param userId the id of the user for whom to delete it
+	 */
+	def deleteSubscription(alertId: UUID, userId: UUID) {
+		DB.withConnection("main") { connection =>
+			SQL("""
+				DELETE FROM `alert_subscriptions`
+				WHERE `alert_id`={alert_id} AND `user_id`={user_id}
+			""").on(
+				"alert_id" -> alertId,
+				"user_id" -> userId
+			).executeUpdate()(connection)
+		}
+	}
+
+	/**
 	 * Get all subscriptions for a certain alert
 	 * @param id the id of the Alert for which to find subscriptions
 	 */
