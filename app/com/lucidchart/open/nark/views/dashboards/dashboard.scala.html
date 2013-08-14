@@ -364,23 +364,23 @@
 
 		var refreshRateSeconds = null;
 		var refreshTimer = null;
-		function refreshTimerTick(graphIds) {
-			graphIds = typeof graphIds !== 'undefined' ? graphIds : allGraphIds; 
-			if (refreshRateSeconds != "disable") {
+		function refreshTimerTick() {
+			if (refreshTimer) {
 				clearTimeout(refreshTimer);
-				queueRefreshData(graphIds);
-				refreshTimer = setTimeout(refreshTimerTick, refreshRateSeconds * 1000);
+			}
+
+			if (refreshRateSeconds != "disable") {
+				queueRefreshData();
+				refreshTimer = setTimeout(function(event) {
+					refreshTimer = null;
+					refreshTimerTick();
+				}, refreshRateSeconds * 1000);
 			}
 		}
 
 		function setRefreshRate(seconds) {
 			$("#refreshrate-group button.active").removeClass("active");
 			$("#refreshrate-group button[data='" + seconds + "']").addClass("active");
-
-			if (refreshTimer) {
-				clearTimeout(refreshTimer);
-				refreshTimer = null;
-			}
 
 			// updating a graph for a static time period seems like a waste... change it to 1h
 			if (seconds != "disable" && dateRange["type"] == "custom") {
@@ -569,7 +569,7 @@
 							$('#' + variablePieces[0]).change(function(event) {
 								setLocalStorage([dashKey + $(this).attr('key')], $(this).val());
 								var graphIds = getAffectedGraphs($(this).attr('key'));
-								refreshTimerTick(graphIds);
+								queueRefreshData(graphIds);
 							});
 						}
 						else {
@@ -581,7 +581,7 @@
 								$('#' + variablePieces[0]).focusout(function() {
 									setLocalStorage([dashKey + $(this).attr('key')], $(this).val());
 									var graphIds = getAffectedGraphs($(this).attr('key'));
-									refreshTimerTick(graphIds);
+									queueRefreshData(graphIds);
 								});
 								
 								alreadyDisplayedVariables.push(variablePieces[0]);
