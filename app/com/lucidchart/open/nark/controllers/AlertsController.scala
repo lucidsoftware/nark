@@ -1,6 +1,6 @@
 package com.lucidchart.open.nark.controllers
 
-import com.lucidchart.open.nark.models.{AlertModel, SubscriptionModel}
+import com.lucidchart.open.nark.models.{AlertModel, SubscriptionModel, UserModel}
 import com.lucidchart.open.nark.models.records.{Alert, Comparisons, AlertState}
 import com.lucidchart.open.nark.request.{AppFlash, AppAction, AuthAction}
 import com.lucidchart.open.nark.views
@@ -86,10 +86,11 @@ object AlertsController extends AppController {
 	def view(id: UUID) = AuthAction.maybeAuthenticatedUser { implicit user =>
 		AppAction { implicit request =>
 			val alert = AlertModel.getAlert(id)
+			val creator = UserModel.findUserByID(alert.get.userId)
 			val subscriptions = SubscriptionModel.getSubscriptionsByAlert(id)
 
 			if (alert.isDefined) {
-				Ok(views.html.alerts.view(alert.get, subscriptions))
+				Ok(views.html.alerts.view(alert.get, creator.get, subscriptions))
 			}
 			else {
 				Redirect(routes.HomeController.index()).flashing(AppFlash.error("Alert not found"))
