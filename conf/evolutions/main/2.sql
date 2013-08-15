@@ -1,4 +1,5 @@
 # patch 2
+
 # alerting
 
 # --- !Ups
@@ -87,8 +88,20 @@ CREATE TABLE `alert_history` (
 	KEY `date_lookup` (`date`)
 ) ENGINE=InnoDB CHARSET=utf8 COLLATE=utf8_general_ci;
 
-# --- !Downs
 
+# --- !Ups
+CREATE TABLE `dashboard_tags` (
+	`hiddenid` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+	`dashboard_id` BINARY(16) NOT NULL,
+	`tag` VARCHAR(25) NOT NULL,
+	PRIMARY KEY (`hiddenid`),
+	UNIQUE KEY `dashboard_tag_key` (`dashboard_id`,`tag`),
+	KEY `tag_key` (`tag`)
+) ENGINE=InnoDB CHARSET=utf8 COLLATE=utf8_general_ci;
+
+
+
+# --- !Downs
 DROP TABLE `alert_history`;
 DROP TABLE `alert_subscriptions`;
 DROP TABLE `alerts`;
@@ -99,3 +112,4 @@ ALTER TABLE `users`
 	DROP COLUMN `warn_enable`,
 	DROP COLUMN `error_address`,
 	DROP COLUMN `error_enable`;
+DROP TABLE `dashboard_tags`;

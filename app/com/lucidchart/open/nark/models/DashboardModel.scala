@@ -33,17 +33,28 @@ class DashboardModel extends AppModel {
 	 * @return dashboard
 	 */
 	def findDashboardByID(id: UUID): Option[Dashboard] = {
+		findDashboardByID(List(id)).headOption
+	}
+	
+	/**
+	 * Find the dashboards that have matching ids
+	 * 
+	 * @param ids
+	 * @return dashboards
+	 */
+	def findDashboardByID(ids: List[UUID]): List[Dashboard] = {
+		if(ids.isEmpty)
+			return Nil
 		DB.withConnection("main") { connection =>
-			SQL("""
+			RichSQL("""
 				SELECT *
 				FROM `dashboards`
-				WHERE `id` = {id}
-				LIMIT 1
-			""").on(
-				"id" -> id
-			).as(dashboardsRowParser.singleOpt)(connection)
+				WHERE `id` in ({ids})
+			""").onList(
+				"ids" -> ids
+			).toSQL.as(dashboardsRowParser *)(connection)
 		}
-	}
+	}	
 
 	/**
 	 * Find the dashboard that has the matching url

@@ -1,7 +1,9 @@
 @(
 	dashboard: com.lucidchart.open.nark.models.records.Dashboard,
 	graphs: List[com.lucidchart.open.nark.models.records.Graph],
-	targets: List[com.lucidchart.open.nark.models.records.Target]
+	targets: List[com.lucidchart.open.nark.models.records.Target],
+	tags: List[com.lucidchart.open.nark.models.records.DashboardTag],
+	owner: Option[com.lucidchart.open.nark.models.records.User]
 )(
 	implicit
 	request: com.lucidchart.open.nark.request.AppRequest[_],
@@ -35,15 +37,27 @@
 			font-size: 10px;
 		}
 
-		#options-container .form-inline label {
+		.container .form-inline label {
 			width: 100px;
 			overflow: hidden;
 			text-overflow: ellipsis;
 			white-space: nowrap;
 		}
 
-		#options-container .field-container {
+		.container .field-container {
 			margin: 12px 0;
+		}
+		
+		.container .field-container {
+			margin: 12px 0;
+		}
+
+		#info-container {
+			display: none;
+		}
+
+		#info-container .form-inline .info-group {
+			display: inline-block;
 		}
 
 		#allgraphs {
@@ -260,12 +274,10 @@
 
 		function showGraphError(id, error) {
 			$("#graph-" + id + "-wrapper .graph-error").text(error);
-			// $("#graph-" + id + "-wrapper .graph-error").addClass("alert-error");
 		}
 
 		function removeGraphError(id) {
 			$("#graph-" + id + "-wrapper .graph-error").text("");
-			// $("#graph-" + id + "-wrapper .graph-error").removeClass("alert-error");
 		}
 
 		function regexIndexOf(string, regex, startpos) {
@@ -486,6 +498,10 @@
 				setOptionsPanel(visibility);
 			});
 
+			$("#infotoggler").click(function(event) {
+				$("#info-container").slideToggle();
+			});
+
 			$("#refreshnow").click(function(event) {
 				queueRefreshData();
 			});
@@ -626,10 +642,37 @@
 		}
 		<a href="#" id="optiontoggler" class="btn">Options</a>
 		<a href="#" id="refreshnow" class="btn">Refresh</a>
+		<a href="#" id="infotoggler" class="btn">Info</a>
 	</h3>
-
 	<div class="clearfix">
-		<div id="options-container" class="well">
+		<div id="info-container" class="well container">
+			<div class="row-fluid">
+				<div class="span6">
+					<div id="tags-group" class="field-container">
+						<div class="form-inline">
+							<label><strong>Tags</strong></label>
+							<div class="info-group">
+							@tags.map{dashboardTag =>
+								<a href="@narkRoutes.DashboardTagsController.tag(dashboardTag.tag)">@dashboardTag.tag</a>
+							}
+							</div>
+						</div>
+					</div>
+					<div id="owner-group" class="field-container">
+						<div class="form-inline">
+							<label><strong>Owner</strong></label>
+							<div class="info-group">
+								@if(owner.isDefined) {
+									@owner.get.name
+									<a href="mailto:@owner.get.email">@owner.get.email</a>
+								}
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+		<div id="options-container" class="well container">
 			<div class="row-fluid">
 				<div class="span6">
 					<div id="column-group" class="field-container">

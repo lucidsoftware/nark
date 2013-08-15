@@ -113,6 +113,48 @@ object AnormImplicits {
 			
 			new RichSQL(newQuery, newValues: _*)
 		}
+
+
+		
+		/**
+		 * Helper for inserting multiple elements at the same time.
+		 *
+		 * Example:
+		 *
+		 * RichSQL("""
+		 *     insert into mytable (a,b,c) values ({fields})
+		 * """).multiInsert(2, Seq("a", "b", "c"), "fields")(
+		 *     "a" -> List(5, 6),
+		 *     "b" -> List(new Date(), new Date()),
+		 *     "c" -> records.map(_.toString)
+		 * )
+		 *
+		 * @param count # of records being inserted
+		 * @param fields Field names, in order, to insert
+		 * @param searchName name of the replacement variable
+		 * @param args
+		 */
+		def multiInsert(count: Int, fields: Seq[String], searchName: String = "fields")(args: (String, Seq[ParameterValue[_]])*) = {
+			require(count > 0)
+			require(!fields.isEmpty)
+			require(searchName.length() > 0)
+
+			val search = "{" + searchName + "}"
+			val expandedFields = (for (i <- 0 until count) yield {
+				"{" + fields.map(_ + i).mkString("}, {") + "}"
+			}).mkString("), (")
+			val newQuery = query.replace(search, expandedFields)
+
+			val newValues = parameterValues ++ args.map { case (argName, argValues) =>
+				require(argValues.size == count)
+
+				(for (i <- 0 until count) yield {
+					(argName + i, argValues(i).asInstanceOf[ParameterValue[Any]])
+				})
+			}.flatten
+
+			new RichSQL(newQuery, newValues: _*)
+		}
 	}
 	
 	object RichSQL {

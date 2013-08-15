@@ -11,8 +11,25 @@
 @import com.lucidchart.open.nark.views.html.helpers
 @import helper.twitterBootstrap._
 @import helper._
+@import play.api.libs.json.Json
 
-@com.lucidchart.open.nark.views.html.layouts.main("Edit Dashboard", userOption = Some(user)) {
+@com.lucidchart.open.nark.views.html.layouts.main("Edit Dashboard", List("js/jquery.tokeninput.js"), List("css/token-input-facebook.css"), userOption = Some(user)) {
+	<script type="text/javascript">
+		$(function() {
+			var prevTags = [];
+			if($("#tags").val().length > 0) {
+				prevTags = $.map($("#tags").val().split(","), function (e, i) {
+					return {"id": e, "name": e};
+				});
+			}
+			$("#tags").tokenInput("/dashboard/tags/searchjson", {theme:"facebook", 
+														prePopulate:prevTags});
+			$("form").submit(function() {
+				$("#tags").val($.map($(".token-input-token-facebook p"), function(e, i){return $(e).text()}).join(","));
+			});
+		});
+	</script>
+
 	<h3>Edit dashboard @dashboard.name</h3>
 	<br>
 	@helper.form(action=narkRoutes.DashboardsController.editSubmit(dashboard.id)) {
@@ -20,6 +37,7 @@
 			@helpers.csrfHiddenInput()
 			@helper.inputText(formEdit("name"), 'class -> "input-xlarge", '_label -> "Name", 'placeholder -> "Vitals", 'required -> true, '_showConstraints -> false)
 			@helper.inputText(formEdit("url"), 'class -> "input-xlarge", '_label -> "URL", 'placeholder -> "vitals", 'required -> true, '_showConstraints -> false)
+			@helper.inputText(formEdit("tags"), 'class -> "input-xlarge", 'id-> "tags", '_label -> "Tags (separate by comma)", 'placeholder -> "ops", '_showConstraints -> false)
 			<button id="edit" class="btn btn-primary">Save</button>
 		</fieldset>
 	}

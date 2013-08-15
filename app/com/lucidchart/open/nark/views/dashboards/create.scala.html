@@ -10,8 +10,26 @@
 @import com.lucidchart.open.nark.views.html.helpers
 @import helper.twitterBootstrap._
 @import helper._
+@import play.api.libs.json.Json
 
-@com.lucidchart.open.nark.views.html.layouts.main("Create Dashboard", userOption = Some(user)) {
+@com.lucidchart.open.nark.views.html.layouts.main("Create Dashboard", List("js/jquery.tokeninput.js"), List("css/token-input-facebook.css"), userOption = Some(user)) {
+	<script type="text/javascript">
+		$(function() {
+			var prevTags = [];
+			if($("#tags").val().length > 0) {
+				prevTags = $.map($("#tags").val().split(","), function (e, i) {
+					return {"id": e, "name": e};
+				});
+			}
+			$("#tags").tokenInput("/dashboard/tags/searchjson", {theme:"facebook", 
+														prePopulate:prevTags});
+			$("form").submit(function() {
+				//put comma-separated list of tags into input
+				$("#tags").val($.map($(".token-input-token-facebook p"), function(e, i){return $(e).text()}).join(","));
+			});
+		});
+
+	</script>
 	<h3>Create a new dashboard</h3>
 	<br>
 
@@ -39,6 +57,9 @@
 			<p class="help-block">
 				The dashboard may be accessed at <span id="urlexample"></span>.
 			</p>
+			<br/>
+			@helper.inputText(formCreate("tags"), 'id -> "tags", 'class -> "input-xlarge", '_label -> "Tags (separate by comma)", 'placeholder -> "ops", '_showConstraints -> false)
+
 			<button id="create" name="create" class="btn btn-primary">Create</button>
 		</fieldset>
 	}

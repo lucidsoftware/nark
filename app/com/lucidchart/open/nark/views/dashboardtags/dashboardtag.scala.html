@@ -1,0 +1,28 @@
+@(
+	tagName: String,
+	dashboards: List[com.lucidchart.open.nark.models.records.Dashboard]
+)(
+	implicit
+	request: com.lucidchart.open.nark.request.AppRequest[_],
+	userOption: Option[com.lucidchart.open.nark.models.records.User]
+)
+@import com.lucidchart.open.nark.controllers.{routes=>narkRoutes}
+@import com.lucidchart.open.nark.views
+@import com.lucidchart.open.nark.views.html.helpers
+@import helper.twitterBootstrap._
+@import helper._
+
+@com.lucidchart.open.nark.views.html.layouts.main("Tag", List("js/jquery.tokeninput.js"), List("css/token-input-facebook.css"), userOption = userOption) {
+	<h3>Dashboards With Tag @tagName</h3>
+
+	@if(dashboards.isEmpty) {
+		<div class="alert alert-info">There are no active dashboards with this tag.</div>
+	} else {
+		<table class="table table-bordered table-hover">
+			<tr><th>Dashboard Name</th></tr>
+			@dashboards.sortWith(_.name < _.name).map{ dashboard =>
+				<tr><td><a href="@narkRoutes.DashboardsController.dashboard(dashboard.url)">@dashboard.name</a></td></tr>
+			}
+		</table>
+	}
+}

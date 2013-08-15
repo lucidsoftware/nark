@@ -5,8 +5,11 @@ import com.lucidchart.open.nark.views
 import com.lucidchart.open.nark.utils.DashboardHistory
 import com.lucidchart.open.nark.utils.DashboardHistoryItem
 import com.lucidchart.open.nark.models.DashboardModel
+import com.lucidchart.open.nark.models.DashboardTagsModel
+import com.lucidchart.open.nark.models.DashboardTagsConverter._
 import com.lucidchart.open.nark.models.GraphModel
 import com.lucidchart.open.nark.models.TargetModel
+import com.lucidchart.open.nark.models.UserModel
 import com.lucidchart.open.nark.models.records.Dashboard
 import com.lucidchart.open.nark.utils.StatsD
 import java.util.UUID
@@ -17,13 +20,16 @@ import play.api.data.Forms._
 import validation.Constraints
 
 class DashboardsController extends AppController {
-	private case class DashboardFormSubmission(name: String, url: String)
+	private case class DashboardFormSubmission(name: String, url: String, tags: List[String])
 
 	private val createDashboardForm = Form(
 		mapping(
 			"name" -> text.verifying(Constraints.minLength(1)),
 			"url" -> text.verifying(Constraints.pattern("^[a-zA-Z0-9\\.\\-_]*$".r, error = "Only alpha-numberic text and periods (.), dashes (-), and underscores (_) allowed"))
-			             .verifying("A dashboard with that url already exists. Please choose another url.", !DashboardModel.findDashboardByURL(_).isDefined)
+			             .verifying("A dashboard with that url already exists. Please choose another url.", !DashboardModel.findDashboardByURL(_).isDefined),
+			"tags" -> text.verifying("Max 25 characters per tag.", tags => tags.length == 0 || tags.split(",").filter(_.length > 25).isEmpty)
+						  .verifying(Constraints.pattern("^[a-zA-Z0-9\\.\\-_,]*$".r, error = "Only alpha-numberic text and periods (.), dashes (-), and underscores (_) allowed"))
+						  .transform[List[String]](str => if(str.length == 0) List[String]() else str.split(",").map(_.trim.toLowerCase).toList, _.mkString(","))
 		)(DashboardFormSubmission.apply)(DashboardFormSubmission.unapply)
 	)
 	private def editDashboardForm(id: UUID) = {
@@ -34,7 +40,10 @@ class DashboardsController extends AppController {
 				             .verifying("A dashboard with that url already exists. Please choose another url.", url => {
 				                 val dashboard = DashboardModel.findDashboardByURL(url)
 				                 !dashboard.isDefined || dashboard.get.id == id
-				             })
+				             }),
+				"tags" -> text.verifying("Max 25 characters per tag.", tags => tags.length == 0 || tags.split(",").filter(_.length > 25).isEmpty)
+						  .verifying(Constraints.pattern("^[a-zA-Z0-9\\.\\-_,]*$".r, error = "Only alpha-numberic text and periods (.), dashes (-), and underscores (_) allowed"))
+						  .transform[List[String]](str => if(str.length == 0) List[String]() else str.split(",").map(_.trim.toLowerCase).toList, _.mkString(","))
 			)(DashboardFormSubmission.apply)(DashboardFormSubmission.unapply)
 		)
 	}
@@ -51,7 +60,7 @@ class DashboardsController extends AppController {
 	 */
 	def create = AuthAction.authenticatedUser { implicit user =>
 		AppAction { implicit request =>
-			val form = createDashboardForm.fill(DashboardFormSubmission("", ""))
+			val form = createDashboardForm.fill(DashboardFormSubmission("", "", List[String]()))
 			Ok(views.html.dashboards.create(form))
 		}
 	}
@@ -68,7 +77,7 @@ class DashboardsController extends AppController {
 				data => {
 					val dashboard = new Dashboard(data.name, data.url, user.id, false)
 					DashboardModel.createDashboard(dashboard)
-
+					DashboardTagsModel.addTagsForDashboard(dashboard.id, data.tags)
 					val newHistoryCookie = addDashboardToHistoryCookie(dashboard)
 					Redirect(routes.GraphsController.add(dashboard.id)).flashing(AppFlash.success("Dashboard was created successfully.")).withCookies(newHistoryCookie)
 				}
@@ -82,7 +91,10 @@ class DashboardsController extends AppController {
 	def edit(dashboardId: UUID) = AuthAction.authenticatedUser { implicit user =>
 		DashboardAction.dashboardManagementAccess(dashboardId, user.id) { dashboard =>
 			AppAction { implicit request =>
-				val form = editDashboardForm(dashboardId).fill(DashboardFormSubmission(dashboard.name, dashboard.url))
+				val form = editDashboardForm(dashboardId).fill(DashboardFormSubmission(dashboard.name, 
+																					   dashboard.url, 
+																					   DashboardTagsModel.findTagsForDashboard(dashboardId).map(_.tag)))
+
 				Ok(views.html.dashboards.edit(form, dashboard))
 			}
 		}
@@ -100,6 +112,7 @@ class DashboardsController extends AppController {
 					},
 					data => {
 						DashboardModel.editDashboard(dashboard.copy(name = data.name, url = data.url))
+						DashboardTagsModel.updateTagsForDashboard(dashboardId, data.tags)
 						Redirect(routes.DashboardsController.manage(dashboard.id)).flashing(AppFlash.success("Dashboard was updated successfully."))
 					}
 				)
@@ -117,7 +130,9 @@ class DashboardsController extends AppController {
 				val newHistoryCookie = addDashboardToHistoryCookie(dashboard)
 				val graphs = GraphModel.findGraphsByDashboardId(dashboard.id)
 				val targets = TargetModel.findTargetByGraphId(graphs.map(_.id))
-				Ok(views.html.dashboards.dashboard(dashboard, graphs, targets)).withCookies(newHistoryCookie)
+				val tags = DashboardTagsModel.findTagsForDashboard(dashboard.id)
+				val owner = UserModel.findUserByID(dashboard.userId)
+				Ok(views.html.dashboards.dashboard(dashboard, graphs, targets, tags, owner)).withCookies(newHistoryCookie)
 			}
 		}
 	}
@@ -214,7 +229,8 @@ class DashboardsController extends AppController {
 	def search(term: String) = AuthAction.maybeAuthenticatedUser { implicit userOption =>
 		AppAction { implicit request =>
 			val matches = DashboardModel.searchByName(term).filter(!_.deleted)
-			Ok(views.html.dashboards.search(term, matches))
+			val tags = convertToDashboardMap(DashboardTagsModel.findTagsForDashboard(matches.map(_.id)))
+			Ok(views.html.dashboards.search(term, matches, tags))
 		}
 	}
 	/**
@@ -223,7 +239,8 @@ class DashboardsController extends AppController {
 	def deleted(term: String) = AuthAction.authenticatedUser { implicit user =>
 		AppAction { implicit request =>
 			val matches = DashboardModel.searchDeletedByName(user.id, term)
-			Ok(views.html.dashboards.deleted(term, matches))
+			val tags = convertToDashboardMap(DashboardTagsModel.findTagsForDashboard(matches.map(_.id)))
+			Ok(views.html.dashboards.deleted(term, matches, tags))
 		}
 	}
 }

@@ -1,7 +1,6 @@
 @(
 	term: String,
-	matches: List[com.lucidchart.open.nark.models.records.Dashboard],
-	tags: Map[java.util.UUID, List[String]]
+	matches: Map[String, List[com.lucidchart.open.nark.models.records.Dashboard]]
 )(
 	implicit
 	request: com.lucidchart.open.nark.request.AppRequest[_],
@@ -10,22 +9,22 @@
 @import com.lucidchart.open.nark.controllers.{routes=>narkRoutes}
 @import com.lucidchart.open.nark.views
 @import com.lucidchart.open.nark.views.html.helpers
-@import com.lucidchart.open.nark.models.records.DashboardTag._
-@import play.api.libs.json.Json
 @import helper.twitterBootstrap._
 @import helper._
 @import java.util.UUID
 
 @com.lucidchart.open.nark.views.html.layouts.main("Dashboard Search", userOption = userOption) {
-	<h3>Dashboard Search</h3>
+	<style type="text/css">
+	</style>
+	<h3>Dashboard Tags Search</h3>
 	<br>
-	@helper.form(action=narkRoutes.DashboardsController.search()) {
+	@helper.form(action=narkRoutes.DashboardTagsController.search()) {
 		<fieldset>
 			<div class="clearfix" id="search_field">
 				<label for="term">Search</label>
 				<div class="input">
-					<input id="term" type="text" name="term" class="input-xlarge" placeholder="Vitals" value="@term">
-					<span class="help-block">Dashboards can be searched by name.</span> 
+					<input id="term" type="text" name="term" class="input-xlarge" placeholder="ops" value="@term">
+					<span class="help-block">Tags can be searched by name.</span> 
 				</div>
 			</div>
 			<button id="search" class="btn btn-primary">Search</button>
@@ -33,27 +32,25 @@
 	}
 
 	@if(matches.isEmpty) {
-		<div class="alert alert-info">No dashboards were found using your search term.</div>
+		<div class="alert alert-info">No tags were found using your search term.</div>
 	} else {
 		<h3>Search Results</h3>
 		<div class="results">
 		<table class="table table-bordered table-hover">
 				<thead>
 					<tr>
-						<th>Dashboard Name</th>
-						<th>Tags</th>
+						<th>Tag</th>
+						<th>Dashboard Names</th>
 					</tr>
 				</thead>
 				<tbody>
-					@matches.sortWith(_.name.toLowerCase < _.name.toLowerCase).map { dashboard =>
+					@matches.map { tag =>
 						<tr>
-							<td><a href="@narkRoutes.DashboardsController.dashboard(dashboard.url)">@dashboard.name</a></td>
+							<td><a href="@narkRoutes.DashboardTagsController.tag(tag._1)">@tag._1</a></td>
 							<td>
-								@if(tags contains dashboard.id) {
-									@tags.get(dashboard.id).get.map{ tag =>
-										<a href="@narkRoutes.DashboardTagsController.tag(tag)">@tag</a>
-									}
-								}
+							@tag._2.map{ dashboard =>
+								<a href="@narkRoutes.DashboardsController.dashboard(dashboard.url)">@dashboard.name</a>
+							}
 							</td>
 						</tr>
 					}
