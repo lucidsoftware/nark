@@ -2,6 +2,7 @@ package com.lucidchart.open.nark.controllers
 
 import com.lucidchart.open.nark.request.{AppAction, AuthAction}
 import com.lucidchart.open.nark.models.{AlertModel, AlertTagModel}
+import com.lucidchart.open.nark.models.AlertTagConverter._
 import com.lucidchart.open.nark.views
 
 
@@ -17,6 +18,18 @@ class AlertTagsController extends AppController {
 			val alertIds = AlertTagModel.findAlertsByTag(tag).map(_.alertId)
 			val alerts = AlertModel.getAlerts(alertIds)
 			Ok(views.html.alerttags.tag(tag, alerts))
+		}
+	}
+
+	/**
+	 * Search for a specific tag
+	 * @param term the search term to look for tags by
+	 */
+	def search(term: String) = AuthAction.maybeAuthenticatedUser { implicit user =>
+		AppAction { implicit request =>
+			val tags = AlertTagModel.search(term)
+			val alerts = AlertModel.getAlerts(tags.map(_.alertId).distinct).filter(!_.deleted)
+			Ok(views.html.alerttags.search(term, toTagMap(tags, alerts)))
 		}
 	}
 }

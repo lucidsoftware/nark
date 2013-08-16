@@ -61,6 +61,7 @@ POST 		/alert/:uuid/edit 	com.lucidchart.open.nark.controllers.AlertsController.
 POST 		/alert/:uuid/delete 	com.lucidchart.open.nark.controllers.AlertsController.delete(uuid: java.util.UUID)
 
 # Alert Tags
+GET 	/alert/tags/search 		com.lucidchart.open.nark.controllers.AlertTagsController.search(term: String ?= "")
 GET 	/alert/tags/:tag 			com.lucidchart.open.nark.controllers.AlertTagsController.tag(tag:String)
 
 # Subscription

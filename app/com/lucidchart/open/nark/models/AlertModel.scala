@@ -80,14 +80,19 @@ class AlertModel extends AppModel {
 	 * @return the requested alerts
 	 */
 	def getAlerts(ids: List[UUID]): List[Alert] = {
-		DB.withConnection("main") { connection =>
-			RichSQL("""
-				SELECT *
-				FROM `alerts`
-				WHERE `id` IN ({ids})
-			""").onList(
-				"ids" -> ids
-			).toSQL.as(alertsRowParser *)(connection)
+		if (ids.isEmpty) {
+			Nil
+		}
+		else {
+			DB.withConnection("main") { connection =>
+				RichSQL("""
+					SELECT *
+					FROM `alerts`
+					WHERE `id` IN ({ids})
+				""").onList(
+					"ids" -> ids
+				).toSQL.as(alertsRowParser *)(connection)
+			}
 		}
 	}
 

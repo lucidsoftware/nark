@@ -3,7 +3,7 @@ package com.lucidchart.open.nark.models
 import anorm._
 import anorm.SqlParser._
 import AnormImplicits._
-import com.lucidchart.open.nark.models.records.AlertTag
+import com.lucidchart.open.nark.models.records.{Alert, AlertTag}
 import java.util.UUID
 import play.api.db.DB
 import play.api.Play.current
@@ -39,6 +39,23 @@ class AlertTagModel extends AppModel {
 	}
 
 	/**
+	 * Find all tags similar to the search term
+	 * @param term the search term
+	 * @return the list of matched tags
+	 */
+	def search(term: String): List[AlertTag] = {
+		DB.withConnection("main") { connection =>
+			SQL("""
+				SELECT *
+				FROM `alert_tags`
+				WHERE `name` LIKE {tag}
+			""").on(
+				"tag" -> ("%" + term + "%")
+			).as(tagsRowParser *)(connection)
+		}
+	}
+
+	/**
 	 * Find all the tags associated with an alert
 	 * @param id the id of the alert to search for
 	 */
@@ -57,6 +74,7 @@ class AlertTagModel extends AppModel {
 	/**
 	 * Search for all alerts associated with a tag
 	 * @param tag the tag to search for
+	 * @return the AlertTags
 	 */
 	def findAlertsByTag(tag: String): List[AlertTag] = {
 		DB.withConnection("main") { connection =>
@@ -96,4 +114,27 @@ class AlertTagModel extends AppModel {
 			).executeUpdate()(connection)
 		}
 	}
+}
+
+object AlertTagConverter {
+	def toTagMap(tags: List[AlertTag], alerts: List[Alert]): Map[String, List[Alert]] = {
+		tags.foldLeft[Map[String, List[Alert]]](Map()) { (ret, tag) =>
+			val alert = alerts.find(_.id == tag.alertId)
+			if (alert.isDefined) {
+				ret + (tag.tag -> (
+					if (ret contains tag.tag) {
+						alert.get :: ret.get(tag.tag).get
+					}
+					else {
+						List(alert.get)
+					})
+
+				)
+			}
+			else {
+				ret
+			}
+		} 
+	}
+
 }
