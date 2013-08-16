@@ -125,4 +125,19 @@ class AlertModel extends AppModel {
 			).executeUpdate()(connection)
 		}
 	}
+
+	/**
+	 * Delete an alert from the database
+	 * @param id the id of the alert to delete
+	 */
+	def deleteAlert(id: UUID) = {
+		DB.withConnection("main") { connection =>
+			SQL("""
+				DELETE FROM `alerts`
+				WHERE id={id}
+			""").on(
+				"id" -> id
+			).executeUpdate()(connection)
+		}
+	}
 }

@@ -85,7 +85,7 @@ object AlertsController extends AppController {
 					)
 
 					AlertModel.createAlert(alert)
-					Redirect(routes.AlertsController.search("")).flashing(AppFlash.success("Alert was created successfully."))
+					Redirect(routes.AlertsController.search("")).flashing(AppFlash.success("Alert was successfully created."))
 				}
 			)
 		}
@@ -104,7 +104,7 @@ object AlertsController extends AppController {
 
 	/**
 	 * View a particular alert
-	 * @param the id of the alert to view
+	 * @param id the id of the alert to view
 	 */
 	def view(id: UUID) = AuthAction.maybeAuthenticatedUser { implicit user =>
 		AppAction { implicit request =>
@@ -123,7 +123,7 @@ object AlertsController extends AppController {
 
 	/**
 	 * Edit a particular alert
-	 * @param the id of the alert to edit
+	 * @param id the id of the alert to edit
 	 */
 	def edit(id: UUID) = AuthAction.authenticatedUser { implicit user =>
 		AlertAction.alertManagementAccess(id, user.id) { (alert, ignored) =>
@@ -136,7 +136,7 @@ object AlertsController extends AppController {
 
 	/**
 	 * Edit a particular alert
-	 * @param the id of the alert to edit
+	 * @param id the id of the alert to edit
 	 */
 	def editSubmit(id: UUID) = AuthAction.authenticatedUser { implicit user =>
 		AlertAction.alertManagementAccess(id, user.id) { (alert, ignored) =>
@@ -160,6 +160,19 @@ object AlertsController extends AppController {
 						Redirect(routes.AlertsController.view(id)).flashing(AppFlash.success("Changes saved."))
 					}
 				)
+			}
+		}
+	}
+
+	/**
+	 * Delete a specific alert from the database
+	 * @param id the id of the alert to delete
+	 */
+	def delete(id: UUID) =AuthAction.authenticatedUser { implicit user =>
+		AlertAction.alertManagementAccess(id, user.id) { (alert, ignored) =>
+			AppAction { implicit request =>
+				AlertModel.deleteAlert(id)
+				Redirect(routes.AlertsController.search("")).flashing(AppFlash.success("Alert was successfully deleted."))
 			}
 		}
 	}

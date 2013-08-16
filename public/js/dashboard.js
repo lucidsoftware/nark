@@ -50,7 +50,7 @@ function plotGraph(element, data, graphOptions) {
 	graphOptions['labelsSeparateLines'] = true;
 	graphOptions['labelsDiv'] = document.getElementById('legend');
 
-	$(element.split(' ')[0]).html('');
+	$('#' + element.split(' ')[0]).html('');
 	return new Dygraph(
 		document.getElementById(element.split(' ')[0]),
 		dygraph['datapoints'],
