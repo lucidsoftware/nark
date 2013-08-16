@@ -1,5 +1,6 @@
 @(
 	alert: com.lucidchart.open.nark.models.records.Alert,
+	tags: List[com.lucidchart.open.nark.models.records.AlertTag],
 	owner: com.lucidchart.open.nark.models.records.User,
 	subscriptions: List[com.lucidchart.open.nark.models.records.SubscriptionRecord]
 )(
@@ -39,6 +40,9 @@
 		}
 		#info-button {
 			margin-left: 10px;
+		}
+		.info-group {
+			margin-left: 20px;
 		}
 	</style>
 	<script type="text/javascript">
@@ -169,6 +173,11 @@
 									<div id="tags-group" class="field-container">
 										<div class="form-inline">
 											<label><strong>Tags</strong></label>
+											<div class="info-group">
+												@tags.map{alertTag =>
+													<span>@alertTag.tag</span>
+												}
+											</div>
 										</div>
 									</div>
 									<div id="owner-group" class="field-container">

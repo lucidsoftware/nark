@@ -1,6 +1,6 @@
 package com.lucidchart.open.nark.controllers
 
-import com.lucidchart.open.nark.models.{AlertModel, SubscriptionModel, UserModel}
+import com.lucidchart.open.nark.models.{AlertModel, AlertTagModel, SubscriptionModel, UserModel}
 import com.lucidchart.open.nark.models.records.{Alert, Comparisons, AlertState}
 import com.lucidchart.open.nark.request.{AlertAction, AppFlash, AppAction, AuthAction}
 import com.lucidchart.open.nark.views
@@ -14,6 +14,7 @@ import validation.Constraints
 object AlertsController extends AppController {
 	private case class AlertFormSubmission(
 		name: String,
+		tags: List[String],
 		target: String,
 		errorThreshold: BigDecimal,
 		warnThreshold: BigDecimal,
@@ -23,6 +24,7 @@ object AlertsController extends AppController {
 
 	private case class EditFormSubmission(
 		name: String,
+		tags: List[String],
 		target: String,
 		errorThreshold: BigDecimal,
 		warnThreshold: BigDecimal,
@@ -34,6 +36,9 @@ object AlertsController extends AppController {
 	private val createAlertForm = Form(
 		mapping(
 			"name" -> text.verifying(Constraints.minLength(1)),
+			"tags" -> text.verifying("Max 25 characters per tag.", tags => tags.length == 0 || tags.split(",").filter(_.length > 25).isEmpty)
+						  .verifying(Constraints.pattern("^[a-zA-Z0-9\\.\\-_,]*$".r, error = "Only alpha-numberic text and periods (.), dashes (-), and underscores (_) allowed"))
+						  .transform[List[String]](str => if(str.length == 0) List[String]() else str.split(",").map(_.trim.toLowerCase).toList, _.mkString(",")),
 			"target" -> text,
 			"error_threshold" -> bigDecimal,
 			"warn_threshold" -> bigDecimal,
@@ -45,6 +50,9 @@ object AlertsController extends AppController {
 	private val editAlertForm = Form(
 		mapping(
 			"name" -> text.verifying(Constraints.minLength(1)),
+			"tags" -> text.verifying("Max 25 characters per tag.", tags => tags.length == 0 || tags.split(",").filter(_.length > 25).isEmpty)
+						  .verifying(Constraints.pattern("^[a-zA-Z0-9\\.\\-_,]*$".r, error = "Only alpha-numberic text and periods (.), dashes (-), and underscores (_) allowed"))
+						  .transform[List[String]](str => if(str.length == 0) List[String]() else str.split(",").map(_.trim.toLowerCase).toList, _.mkString(",")),
 			"target" -> text,
 			"error_threshold" -> bigDecimal,
 			"warn_threshold" -> bigDecimal,
@@ -59,7 +67,7 @@ object AlertsController extends AppController {
 	 */
 	def create = AuthAction.authenticatedUser { implicit user =>
 		AppAction { implicit request =>
-			val form = createAlertForm.fill(AlertFormSubmission("", "", 0, 0, Comparisons.<, 0))
+			val form = createAlertForm.fill(AlertFormSubmission("", Nil, "", 0, 0, Comparisons.<, 0))
 			Ok(views.html.alerts.create(form))
 		}
 	}
@@ -85,6 +93,7 @@ object AlertsController extends AppController {
 					)
 
 					AlertModel.createAlert(alert)
+					AlertTagModel.addTagsToAlert(alert.id, data.tags)
 					Redirect(routes.AlertsController.search("")).flashing(AppFlash.success("Alert was successfully created."))
 				}
 			)
@@ -112,8 +121,9 @@ object AlertsController extends AppController {
 
 			if (alert.isDefined) {
 				val creator = UserModel.findUserByID(alert.get.userId)
+				val tags = AlertTagModel.findTagsForAlert(alert.get.id)
 				val subscriptions = SubscriptionModel.getSubscriptionsByAlert(id)
-				Ok(views.html.alerts.view(alert.get, creator.get, subscriptions))
+				Ok(views.html.alerts.view(alert.get, tags, creator.get, subscriptions))
 			}
 			else {
 				Redirect(routes.HomeController.index()).flashing(AppFlash.error("Alert not found"))
@@ -128,7 +138,16 @@ object AlertsController extends AppController {
 	def edit(id: UUID) = AuthAction.authenticatedUser { implicit user =>
 		AlertAction.alertManagementAccess(id, user.id) { (alert, ignored) =>
 			AppAction { implicit request =>
-				val form = editAlertForm.fill(EditFormSubmission(alert.name, alert.target, alert.errorThreshold, alert.warnThreshold, alert.comparison, alert.frequency, alert.active))
+				val form = editAlertForm.fill(EditFormSubmission(
+					alert.name,
+					AlertTagModel.findTagsForAlert(alert.id).map(_.tag),
+					alert.target,
+					alert.errorThreshold,
+					alert.warnThreshold,
+					alert.comparison,
+					alert.frequency,
+					alert.active)
+				)
 				Ok(views.html.alerts.edit(form, id))
 			}
 		}
@@ -155,8 +174,9 @@ object AlertsController extends AppController {
 							frequency = data.frequency,
 							active = data.active
 						)
-
+						
 						AlertModel.editAlert(editedAlert)
+						AlertTagModel.updateTagsForAlert(editedAlert.id, data.tags)
 						Redirect(routes.AlertsController.view(id)).flashing(AppFlash.success("Changes saved."))
 					}
 				)

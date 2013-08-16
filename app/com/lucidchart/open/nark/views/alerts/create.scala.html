@@ -11,10 +11,31 @@
 @import helper.twitterBootstrap._
 @import helper._
 
-@com.lucidchart.open.nark.views.html.layouts.main("Create Alert", userOption = Some(user), scripts = List("js/graphite-metric-search.js", "js/dygraph-combined.js", "js/dashboard.js")) {
+@com.lucidchart.open.nark.views.html.layouts.main("Create Alert", userOption = Some(user), scripts = List("js/jquery.tokeninput.js", "js/graphite-metric-search.js", "js/dygraph-combined.js", "js/dashboard.js"), styles = List("css/token-input-facebook.css")) {
 	<style type="text/css">
 		input[type=text] { width: 95%; }
+		ul.token-input-list-facebook {
+			width: 95%;
+		}
 	</style>
+	<script type="text/javascript">
+		$(function() {
+			var prevTags = [];
+			if($("#tags").val().length > 0) {
+				prevTags = $.map($("#tags").val().split(","), function (e, i) {
+					return {"id": e, "name": e};
+				});
+			}
+			$("#tags").tokenInput("/dashboard/tags/searchjson", {theme:"facebook", 
+														prePopulate:prevTags});
+			$("form").submit(function() {
+				//put comma-separated list of tags into input
+				$("#tags").val($.map($(".token-input-token-facebook p"), function(e, i){return $(e).text()}).join(","));
+			});
+		});
+
+	</script>
+
 	<h3>Create a new alert</h3>
 
 	<br />
@@ -24,6 +45,7 @@
 				<fieldset>
 					@helpers.csrfHiddenInput()
 					@helper.inputText(formCreate("name"), 'class -> "input-xlarge", '_label -> "Name", 'placeholder -> "CPU High", 'required -> true, '_showConstraints -> false)
+					@helper.inputText(formCreate("tags"), 'id -> "tags", 'class -> "input-xlarge", '_label -> "Tags (separate by comma)", 'placeholder -> "ops", '_showConstraints -> false)
 					@helper.inputText(formCreate("target"), 'id -> "target-input", 'class -> "input-xlarge", '_label -> "Target", 'placeholder -> "stats.gauges.servers.*.*.*.cpu.count", 'required -> true, '_showConstraints -> false)
 					@helper.inputText(formCreate("error_threshold"), 'class -> "input-xlarge", '_label -> "Error Threshold", 'placeholder -> "0.0", 'required -> true, '_showConstraints -> false)
 					@helper.inputText(formCreate("warn_threshold"), 'class -> "input-xlarge", '_label -> "Warn Threshold", 'placeholder -> "0.0", 'required -> true, '_showConstraints -> false)

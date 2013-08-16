@@ -135,7 +135,7 @@ class DashboardTagsModel extends AppModel {
 	}
 
 	/**
-	 * @param dashbaordID
+	 * @param dashboardId
 	 * @param tags
 	 * Adds these tags for a dashboard, ignoring duplicates.
 	 */
