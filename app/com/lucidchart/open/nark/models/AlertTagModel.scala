@@ -55,6 +55,22 @@ class AlertTagModel extends AppModel {
 	}
 
 	/**
+	 * Search for all alerts associated with a tag
+	 * @param tag the tag to search for
+	 */
+	def findAlertsByTag(tag: String): List[AlertTag] = {
+		DB.withConnection("main") { connection =>
+			SQL("""
+				SELECT *
+				FROM `alert_tags`
+				WHERE `name`={tag}
+			""").on(
+				"tag" -> tag
+			).as(tagsRowParser *)(connection)
+		}
+	}
+
+	/**
 	 * Update the tags associated with an alert
 	 * @param id the id of the alert to update
 	 * @param tags the new tags to associate with the alert

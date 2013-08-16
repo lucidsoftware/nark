@@ -60,6 +60,9 @@ GET 		/alert/:uuid/edit 	com.lucidchart.open.nark.controllers.AlertsController.e
 POST 		/alert/:uuid/edit 	com.lucidchart.open.nark.controllers.AlertsController.editSubmit(uuid: java.util.UUID)
 POST 		/alert/:uuid/delete 	com.lucidchart.open.nark.controllers.AlertsController.delete(uuid: java.util.UUID)
 
+# Alert Tags
+GET 	/alert/tags/:tag 			com.lucidchart.open.nark.controllers.AlertTagsController.tag(tag:String)
+
 # Subscription
 POST		/subscription/:id/subscribe 		com.lucidchart.open.nark.controllers.SubscriptionsController.subscribe(id: java.util.UUID)
 POST 	/subscription/:id/edit		com.lucidchart.open.nark.controllers.SubscriptionsController.edit(id: java.util.UUID)

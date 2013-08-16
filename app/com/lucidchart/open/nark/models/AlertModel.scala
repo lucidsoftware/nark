@@ -71,14 +71,23 @@ class AlertModel extends AppModel {
 	 * @return the requested alert
 	 */
 	def getAlert(id: UUID): Option[Alert] = {
+		getAlerts(List(id)).headOption
+	}
+
+	/**
+	 * Get the alerts specified by the uuids passed in
+	 * @param ids the ids of the alerts to get
+	 * @return the requested alerts
+	 */
+	def getAlerts(ids: List[UUID]): List[Alert] = {
 		DB.withConnection("main") { connection =>
-			SQL("""
+			RichSQL("""
 				SELECT *
 				FROM `alerts`
-				WHERE `id`={id}
-			""").on(
-				"id" -> id
-			).as(alertsRowParser singleOpt)(connection)
+				WHERE `id` IN ({ids})
+			""").onList(
+				"ids" -> ids
+			).toSQL.as(alertsRowParser *)(connection)
 		}
 	}
 
