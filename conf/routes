@@ -55,7 +55,9 @@ GET 	/t/:tag 					com.lucidchart.open.nark.controllers.DashboardTagsController.t
 GET     /alert/create           com.lucidchart.open.nark.controllers.AlertsController.create
 POST		/alert/createSubmit		com.lucidchart.open.nark.controllers.AlertsController.createSubmit
 GET 		/alert/search		com.lucidchart.open.nark.controllers.AlertsController.search(term: String ?= "")
-GET 		/alert/view/:uuid		com.lucidchart.open.nark.controllers.AlertsController.view(uuid: java.util.UUID)
+GET 		/alert/:uuid/view		com.lucidchart.open.nark.controllers.AlertsController.view(uuid: java.util.UUID)
+GET 		/alert/:uuid/edit 	com.lucidchart.open.nark.controllers.AlertsController.edit(uuid: java.util.UUID)
+POST 		/alert/:uuid/edit 	com.lucidchart.open.nark.controllers.AlertsController.editSubmit(uuid: java.util.UUID)
 
 # Subscription
 POST		/subscription/:id/subscribe 		com.lucidchart.open.nark.controllers.SubscriptionsController.subscribe(id: java.util.UUID)

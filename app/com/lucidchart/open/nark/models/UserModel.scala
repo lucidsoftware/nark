@@ -74,8 +74,8 @@ class UserModel extends AppModel {
 	def createUser(user: User) {
 		DB.withConnection("main") { connection =>
 			SQL("""
-				INSERT INTO `users` (`id`, `email`, `created`, `name`)
-				VALUES ({id}, {email}, {created}, {name})
+				INSERT INTO `users` (`id`, `email`, `created`, `name`, `warn_address`, `warn_enable`, `error_address`, `error_enable`)
+				VALUES ({id}, {email}, {created}, {name}, {email}, true, {email}, true)
 			""").on(
 				"id"         -> user.id,
 				"email"      -> user.email,

@@ -1,6 +1,6 @@
 @(
 	alert: com.lucidchart.open.nark.models.records.Alert,
-	creator: com.lucidchart.open.nark.models.records.User,
+	owner: com.lucidchart.open.nark.models.records.User,
 	subscriptions: List[com.lucidchart.open.nark.models.records.SubscriptionRecord]
 )(
 	implicit
@@ -25,6 +25,20 @@
 		svg {
 			width: 100%;
 			height: 300px;
+		}
+		input.btn {
+			margin-top: 20px;
+			margin-left: 10px;
+		}
+		p#login-message {
+			margin-top: 10px;
+			margin-left: 20px;
+		}
+		#info-container {
+			display: none;
+		}
+		#info-button {
+			margin-left: 10px;
 		}
 	</style>
 	<script type="text/javascript">
@@ -91,10 +105,89 @@
 					console.log("Failed to retrieve graphite data", data);
 				}
 			});
+
+			$('#info-button').click(function() {
+				$('#info-container').slideToggle();
+			});
 		});
 	</script>
 
-	<h3>@alert.name</h3>
+	<table>
+		<tr>
+			<td><h3>@alert.name</h3></td>
+			<td>
+				<a id="info-button" class="btn">Info</a>
+			</td>
+			@if(userOption.isDefined) {
+				@defining(subscriptions.find { subscription => subscription.userOption.get.id == userOption.get.id }) { subscription =>
+					<td>
+						@helper.form(action=narkRoutes.AlertsController.edit(alert.id)) {
+							@helpers.csrfHiddenInput()
+							<input class="btn @if(userOption.get.id != owner.id){ disabled }" type="submit" @if(userOption.get.id != owner.id){ disabled } value='Manage Alert' />
+						}
+					</td>
+					@if(subscription.isDefined) {
+						<td>
+							@helper.form(action=narkRoutes.SubscriptionsController.edit(alert.id)) {
+								@helpers.csrfHiddenInput()
+								<input name="alert_type" type="hidden" value="@AlertType.alert.id" />
+								<input name="active" type="hidden" value="@(subscription.get.subscription.active == false)" />
+								<input class="btn" type="submit" value='@if(subscription.get.subscription.active) {Deactivate Subscription} else {Reactivate Subscription}' />
+							}
+						</td>
+						<td>
+							@helper.form(action=narkRoutes.SubscriptionsController.delete(alert.id)) {
+								@helpers.csrfHiddenInput()
+								<input class="btn btn-danger" name="ignored" type="submit" value="Delete Subscription" />
+							}
+						</td>
+					} else {
+						<td>
+							@helper.form(action=narkRoutes.SubscriptionsController.subscribe(alert.id)) {
+								@helpers.csrfHiddenInput()
+								<input name="alert_type" type="hidden" value="@AlertType.alert.id" />
+								<input class="btn" type="submit" value="Subscribe to this Alert" />
+							}
+						</td>
+					}
+				}
+			} else {
+				<td class="text-info"><p id="login-message">Login to subscribe to alerts</p></td>
+			}
+		</tr>
+	</table>
+	<div>
+		<div id="info-container">
+			<h4>Alert Details</h4>
+			<div>
+				<div class="row">
+					<div class="span1" />
+					<div class="span11">
+						<div class="well container">
+							<div class="row-fluid">
+								<div class="span6">
+									<div id="tags-group" class="field-container">
+										<div class="form-inline">
+											<label><strong>Tags</strong></label>
+										</div>
+									</div>
+									<div id="owner-group" class="field-container">
+										<div class="form-inline">
+											<label><strong>Owner</strong></label>
+											<div class="info-group">
+												@owner.name
+												<a href="mailto:@owner.email">@owner.email</a>
+											</div>
+										</div>
+									</div>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
 	<div>	
 		<div class="row">
 			<div class="span1" />
@@ -144,32 +237,6 @@
 			</div>
 		</div>
 	</div>
-	<h4>Alert Creator</h4>
-	<div>
-		<div class="row">
-			<div class="span1" />
-			<div class="span11">
-				<div class="well">
-					<table class="table">
-						<thead>
-							<tr>
-								<th>Name</th>
-								<th>Email</th>
-								<th>Creation Date</th>
-							</tr>
-						</thead>
-						<tbody>
-							<tr>
-								<td>@creator.name</td>
-								<td>@creator.email</td>
-								<td>@alert.created</td>
-							</tr>
-						</tbody>
-					</table>
-				</div>
-			</div>
-		</div>
-	</div>
 	<h4>Alert Subscriptions</h4>
 	<div>
 		<div class="row">
@@ -203,38 +270,4 @@
 		</div>
 	</div>
 	<br />
-	<div class="row">
-		<div class="span12">
-			@if(userOption.isDefined) {
-				@defining(subscriptions.find { subscription => subscription.userOption.get.id == userOption.get.id }) { subscription =>
-					@if(subscription.isDefined) {
-						<div class="row pull-right">
-							<div class="span2">
-							@helper.form(action=narkRoutes.SubscriptionsController.edit(alert.id)) {
-								@helpers.csrfHiddenInput()
-								<input name="alert_type" type="hidden" value="@AlertType.alert.id" />
-								<input name="active" type="hidden" value="@(subscription.get.subscription.active == false)" />
-								<input class="btn button-large" type="submit" value='@if(subscription.get.subscription.active) {Deactivate Subscription} else {Reactivate Subscription}' />
-							}
-							</div>
-							<div class="span2 pull-right">
-							@helper.form(action=narkRoutes.SubscriptionsController.delete(alert.id)) {
-								@helpers.csrfHiddenInput()
-								<input class="btn btn-danger button-large" name="ignored" type="submit" value="Delete Subscription" />
-							}
-							</div>
-						</div>
-					} else {
-						@helper.form(action=narkRoutes.SubscriptionsController.subscribe(alert.id)) {
-							@helpers.csrfHiddenInput()
-							<input name="alert_type" type="hidden" value="@AlertType.alert.id" />
-							<input class="btn button-large pull-right" type="submit" value="Subscribe to this Alert" />
-						}
-					}
-				}
-			} else {
-				<p class="lead text-info pull-right">Login to subscribe to alerts</p>
-			}
-		</div>
-	</div>
 }

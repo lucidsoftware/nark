@@ -102,4 +102,27 @@ class AlertModel extends AppModel {
 			).as(alertsRowParser *)(connection)
 		}
 	}
+
+	/**
+	 * Edit an alert in the database
+	 * @param alert the edited values
+	 */
+	def editAlert(alert: Alert) = {
+		DB.withConnection("main") { connection =>
+			SQL("""
+				UPDATE `alerts`
+				SET name={name}, target={target}, error_threshold={error_threshold}, warn_threshold={warn_threshold}, comparison={comparison}, frequency={frequency}, active={active}
+				WHERE id={id}
+			""").on(
+				"name" -> alert.name,
+				"target" -> alert.target,
+				"error_threshold" -> alert.errorThreshold.underlying,
+				"warn_threshold" -> alert.warnThreshold.underlying,
+				"comparison" -> alert.comparison.id,
+				"frequency" -> alert.frequency,
+				"active" -> alert.active,
+				"id" -> alert.id
+			).executeUpdate()(connection)
+		}
+	}
 }

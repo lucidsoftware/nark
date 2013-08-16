@@ -1,0 +1,57 @@
+@(
+	formCreate:Form[_],
+	id: java.util.UUID
+)(
+	implicit
+	request: com.lucidchart.open.nark.request.AppRequest[_],
+	user: com.lucidchart.open.nark.models.records.User
+)
+
+@import com.lucidchart.open.nark.controllers.{routes=>narkRoutes}
+@import com.lucidchart.open.nark.views.html.helpers
+@import helper.twitterBootstrap._
+@import helper._
+
+@com.lucidchart.open.nark.views.html.layouts.main("Edit Alert", userOption = Some(user), scripts = List("js/graphite-metric-search.js", "js/dygraph-combined.js", "js/dashboard.js")) {
+	<style type="text/css">
+		input[type=text] { width: 95%; }
+	</style>
+	<h3>Edit an alert</h3>
+
+	<br />
+	<div class='row-fluid'>
+		<div class='span6'>
+			@helper.form(action=narkRoutes.AlertsController.editSubmit(id)) {
+				<fieldset>
+					@helpers.csrfHiddenInput()
+					@helper.inputText(formCreate("name"), 'class -> "input-xlarge", '_label -> "Name", 'placeholder -> "CPU High", 'required -> true, '_showConstraints -> false)
+					@helper.inputText(formCreate("target"), 'id -> "target-input", 'class -> "input-xlarge", '_label -> "Target", 'placeholder -> "stats.gauges.servers.*.*.*.cpu.count", 'required -> true, '_showConstraints -> false)
+					@helper.inputText(formCreate("error_threshold"), 'class -> "input-xlarge", '_label -> "Error Threshold", 'placeholder -> "0.0", 'required -> true, '_showConstraints -> false)
+					@helper.inputText(formCreate("warn_threshold"), 'class -> "input-xlarge", '_label -> "Warn Threshold", 'placeholder -> "0.0", 'required -> true, '_showConstraints -> false)
+					@helper.select(formCreate("comparison"), com.lucidchart.open.nark.models.records.Comparisons.values.map(m => m.id.toString -> m.toString).toSeq, '_label -> "Comparison Type", '_showConstraints -> false)
+					@helper.inputText(formCreate("frequency"), 'class -> "input-xlarge", '_label -> "Frequency in Seconds", 'placeholder -> "0", 'required -> true, '_showConstraints -> false)
+					@helper.checkbox(formCreate("active"), 'class -> "input-xlarge", '_label -> "Active", 'placeholder -> true, '_text -> "", '_help -> "")
+					<br />
+					<button id="save" name="save" class="btn btn-primary">Save Changes</button>
+				</fieldset>
+			}
+		</div>
+		<div class="span6">
+			<div class="well">
+				<style>
+					#target-graph {
+						height:400px;
+					}
+					#target-graph svg {
+						height: 400px;
+					}
+				</style>
+
+				<div id="target-graph">
+					<p class="lead text-info text-center">Graph Preview (If Available)</p>
+					<svg></svg>
+				</div>
+			</div>
+		</div>
+	</div>
+}
