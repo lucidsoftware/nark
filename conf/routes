@@ -69,6 +69,7 @@ GET 	/alert/tags/:tag 			com.lucidchart.open.nark.controllers.AlertTagsControlle
 POST		/subscription/:id/subscribe 		com.lucidchart.open.nark.controllers.SubscriptionsController.subscribe(id: java.util.UUID)
 POST 	/subscription/:id/edit		com.lucidchart.open.nark.controllers.SubscriptionsController.edit(id: java.util.UUID)
 POST	/subscription/:id/delete 		com.lucidchart.open.nark.controllers.SubscriptionsController.delete(id: java.util.UUID)
+GET 	/user/:id/subscriptions 		com.lucidchart.open.nark.controllers.SubscriptionsController.allSubscriptionsForUser(id: java.util.UUID)
 
 # Map static resources from the /public folder to the /assets URL path
 GET     /favicon.ico                controllers.Assets.at(path="/public", file = "img/favicon.png")

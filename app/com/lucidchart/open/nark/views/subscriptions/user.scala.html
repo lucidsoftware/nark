@@ -1,0 +1,46 @@
+@(
+	subscriptions: List[com.lucidchart.open.nark.models.records.SubscriptionRecord]
+)(
+	implicit
+	request: com.lucidchart.open.nark.request.AppRequest[_],
+	userOption: Option[com.lucidchart.open.nark.models.records.User]
+)
+@import com.lucidchart.open.nark.controllers.{routes=>narkRoutes}
+@import com.lucidchart.open.nark.models.records.AlertType
+@import com.lucidchart.open.nark.views.html.helpers
+@import helper._
+
+@com.lucidchart.open.nark.views.html.layouts.main("Subscriptions", userOption = userOption) {
+	<h4>Subscriptions</h4>
+	<div>
+		<div class="row">
+			<div class="span1" />
+			<div class="span11">
+				<div class="well">
+					@if(subscriptions.size == 0){
+						<p class="lead text-info">You have no subscriptions.</p>
+					} else {
+						<table class="table">
+							<thead>
+								<tr>
+									<th>User</th>
+									<th>Email</th>
+									<th>Active</th>
+								</tr>
+							</thead>
+							<tbody>
+								@subscriptions.map { subscription =>
+									<tr>
+										<td>@if(subscription.userOption.isDefined){@subscription.userOption.get.name} else {""}</td>
+										<td>@if(subscription.userOption.isDefined){@subscription.userOption.get.email} else {""}</td>
+										<td>@subscription.subscription.active</td>
+									</tr>
+								}
+							</tbody>
+						</table>
+					}
+				</div>
+			</div>
+		</div>
+	</div>
+}

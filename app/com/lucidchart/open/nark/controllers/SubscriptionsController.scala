@@ -3,6 +3,7 @@ package com.lucidchart.open.nark.controllers
 import com.lucidchart.open.nark.models.SubscriptionModel
 import com.lucidchart.open.nark.models.records.{AlertType, Subscription}
 import com.lucidchart.open.nark.request.{AppFlash, AppAction, AuthAction}
+import com.lucidchart.open.nark.views
 import java.util.UUID
 import play.api.data._
 import play.api.data.Forms._
@@ -99,5 +100,21 @@ object SubscriptionsController extends AppController {
 	 		)
 	 	}
 	 }
+
+	/**
+	 * Get all subscriptions for a user
+	 * @param id the id of the user to look up
+	 */
+	def allSubscriptionsForUser(id: UUID) = AuthAction.authenticatedUser { implicit user =>
+		AppAction { implicit request =>
+			if (id != user.id) {
+				Redirect(routes.HomeController.index()).flashing(AppFlash.error("You do not have access to manage this user's subscriptions."))
+			}
+			else {
+				val subscriptions = SubscriptionModel.getSubscriptionsByUser(id)
+				Ok(views.html.subscriptions.user(subscriptions)(request, Some(user)))
+			}
+		}
+	}
 
 }
