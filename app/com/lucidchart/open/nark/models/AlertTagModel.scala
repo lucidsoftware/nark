@@ -60,14 +60,28 @@ class AlertTagModel extends AppModel {
 	 * @param id the id of the alert to search for
 	 */
 	def findTagsForAlert(id: UUID): List[AlertTag] = {
-		DB.withConnection("main") { connection =>
-			SQL("""
-				SELECT *
-				FROM `alert_tags`
-				WHERE `alert_id`={id}
-			""").on(
-				"id" -> id
-			).as(tagsRowParser *)(connection)
+		findTagsForAlert(List(id))
+	}
+	
+	/**
+	 * Find all tags for a list of alerts
+	 * @param ids the ids of the alerts to look for
+	 * @return a list of matching AlertTags
+	 */
+	def findTagsForAlert(ids: List[UUID]) : List[AlertTag] = {
+		if (ids.isEmpty) {
+			Nil
+		}
+		else {
+			DB.withConnection("main") { connection =>
+				RichSQL("""
+					SELECT *
+					FROM `alert_tags`
+					WHERE `alert_id` IN ({ids})
+				""").onList(
+					"ids" -> ids
+				).toSQL.as(tagsRowParser *)(connection)
+			}
 		}
 	}
 
@@ -135,6 +149,20 @@ object AlertTagConverter {
 				ret
 			}
 		} 
+	}
+
+	def toAlertMap(tags: List[AlertTag]): Map[UUID, List[String]] = {
+		tags.foldLeft[Map[UUID, List[String]]](Map()) { (ret, tag) =>
+			ret + (tag.alertId -> (
+					if (ret contains tag.alertId) {
+						tag.tag :: ret.get(tag.alertId).get
+					}
+					else {
+						List(tag.tag)
+					}
+				)
+			)
+		}
 	}
 
 }

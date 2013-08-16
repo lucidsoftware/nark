@@ -1,6 +1,7 @@
 package com.lucidchart.open.nark.controllers
 
 import com.lucidchart.open.nark.models.{AlertModel, AlertTagModel, SubscriptionModel, UserModel}
+import com.lucidchart.open.nark.models.AlertTagConverter._
 import com.lucidchart.open.nark.models.records.{Alert, Comparisons, AlertState}
 import com.lucidchart.open.nark.request.{AlertAction, AppFlash, AppAction, AuthAction}
 import com.lucidchart.open.nark.views
@@ -107,7 +108,8 @@ object AlertsController extends AppController {
 	def search(term: String) = AuthAction.maybeAuthenticatedUser { implicit user =>
 		AppAction { implicit request =>
 			val matches = AlertModel.searchByName(term).filter(_.active)
-			Ok(views.html.alerts.search(term, matches))
+			val tags = toAlertMap(AlertTagModel.findTagsForAlert(matches.map{_.id}))
+			Ok(views.html.alerts.search(term, matches, tags))
 		}
 	}
 

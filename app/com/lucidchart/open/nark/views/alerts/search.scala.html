@@ -1,6 +1,7 @@
 @(
 	term: String,
-	matches: List[com.lucidchart.open.nark.models.records.Alert]
+	matches: List[com.lucidchart.open.nark.models.records.Alert],
+	tags: Map[java.util.UUID, List[String]]
 )(
 	implicit
 	request: com.lucidchart.open.nark.request.AppRequest[_],
@@ -42,6 +43,7 @@
 						<th>Warn</th>
 						<th>Comparison</th>
 						<th>State</th>
+						<th>Tags</th>
 					</tr>
 				</thead>
 				<tbody>
@@ -53,6 +55,11 @@
 							<td>@alert.warnThreshold</td>
 							<td>@alert.comparison</td>
 							<td>@alert.state.toString</td>
+							<td>
+								@tags.get(alert.id).get.map { tag =>
+									<a href="@narkRoutes.AlertTagsController.tag(tag)">@tag</a>
+								}
+							</td>
 						</tr>
 					}
 				</tbody>
