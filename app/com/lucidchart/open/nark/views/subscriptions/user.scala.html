@@ -23,17 +23,30 @@
 						<table class="table">
 							<thead>
 								<tr>
-									<th>User</th>
-									<th>Email</th>
+									<th>Alert Name</th>
+									<th>Target</th>
+									<th>Error</th>
+									<th>Warn</th>
+									<th>Comparison</th>
+									<th>State</th>
 									<th>Active</th>
 								</tr>
 							</thead>
 							<tbody>
 								@subscriptions.map { subscription =>
 									<tr>
-										<td>@if(subscription.userOption.isDefined){@subscription.userOption.get.name} else {""}</td>
-										<td>@if(subscription.userOption.isDefined){@subscription.userOption.get.email} else {""}</td>
-										<td>@subscription.subscription.active</td>
+										@helper.form(action=narkRoutes.SubscriptionsController.edit(subscription.alert.id)) {
+										@helpers.csrfHiddenInput()
+										<input type="hidden" name="alert_type" value="@subscription.subscription.alertType.id" />
+										<input type="hidden" name="active" value="@(subscription.subscription.active == false)" />
+											<td><a href="@narkRoutes.AlertsController.view(subscription.alert.id)">@subscription.alert.name</a></td>
+											<td>@subscription.alert.target</td>
+											<td>@subscription.alert.errorThreshold</td>
+											<td>@subscription.alert.warnThreshold</td>
+											<td>@subscription.alert.comparison</td>
+											<td>@subscription.alert.state.toString</td>
+											<td><input class="btn" type="submit" value="@if(subscription.subscription.active){Deactivate Subscription} else {Reactivate Subscription}" /></td>
+										}
 									</tr>
 								}
 							</tbody>

@@ -105,8 +105,10 @@ class SubscriptionModel extends AppModel {
 				(user.id, user)
 			}.toMap
 
+			val alert = AlertModel.getAlert(id)
+
 			subscriptions.map { subscription =>
-				SubscriptionRecord(subscription, users.get(subscription.userId))
+				SubscriptionRecord(subscription, alert.get, users.get(subscription.userId))
 			}
 		}
 	}
@@ -132,8 +134,13 @@ class SubscriptionModel extends AppModel {
 		else {
 			val user = UserModel.findUserByID(id).get
 
+			val alertIds = subscriptions.map { _.alertId }
+			val alerts = AlertModel.getAlerts(alertIds).map { alert =>
+				(alert.id, alert)
+			}.toMap
+
 			subscriptions.map { subscription =>
-				SubscriptionRecord(subscription, Some(user))
+				SubscriptionRecord(subscription, alerts.get(subscription.alertId).get, Some(user))
 			}
 		}
 
