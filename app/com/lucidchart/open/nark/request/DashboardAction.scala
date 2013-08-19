@@ -16,6 +16,7 @@ import com.lucidchart.open.nark.models.DashboardModel
 import com.lucidchart.open.nark.models.GraphModel
 import com.lucidchart.open.nark.models.TargetModel
 import com.lucidchart.open.nark.controllers.routes
+import com.lucidchart.open.nark.utils.DashboardHistory
 
 /**
  * Provides helpers for creating `DashboardAction` values.
@@ -27,7 +28,12 @@ trait DashboardActionBuilder {
 	def existingDashboard(id: UUID, allowDeleted: Boolean = false)(block: (Dashboard) => EssentialAction): EssentialAction = EssentialAction { requestHeader =>
 		DashboardModel.findDashboardByID(id) match {
 			case Some(dashboard) if (!dashboard.deleted || allowDeleted) => block(dashboard)(requestHeader)
-			case _ => Done(Redirect(routes.HomeController.index()).flashing(AppFlash.error("That dashboard does not exist!")))
+			case _ => {
+				val historyCookie = DashboardHistory.removeFromHistory(requestHeader, id)
+				Done(
+					Redirect(routes.HomeController.index()).flashing(AppFlash.error("That dashboard does not exist!")).withCookies(historyCookie)
+				)
+			}
 		}
 	}
 
@@ -37,7 +43,12 @@ trait DashboardActionBuilder {
 	def existingDashboardByUrl(url: String, allowDeleted: Boolean = false)(block: (Dashboard) => EssentialAction): EssentialAction = EssentialAction { requestHeader =>
 		DashboardModel.findDashboardByURL(url) match {
 			case Some(dashboard) if (!dashboard.deleted || allowDeleted) => block(dashboard)(requestHeader)
-			case _ => Done(Redirect(routes.HomeController.index()).flashing(AppFlash.error("That dashboard does not exist!")))
+			case _ => {
+				val historyCookie = DashboardHistory.removeFromHistory(requestHeader, url)
+				Done(
+					Redirect(routes.HomeController.index()).flashing(AppFlash.error("That dashboard does not exist!")).withCookies(historyCookie)
+				)
+			}
 		}
 	}
 

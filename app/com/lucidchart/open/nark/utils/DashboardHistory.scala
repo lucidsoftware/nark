@@ -84,4 +84,40 @@ object DashboardHistory {
 		val history = getHistory()(request)
 		addToHistory(history, item)
 	}
+
+	/**
+	 * Remove an item from the history.
+	 * Return a cookie that represents the new history
+	 */
+	def removeFromHistory(history: List[DashboardHistoryItem], id: UUID): Cookie = {
+		val newlist = history.filter(_.dashboardId != id)
+		DashboardHistoryCookieBaker.encodeAsCookie(newlist)
+	}
+
+	/**
+	 * Remove an item from the history.
+	 * Return a cookie that represents the new history
+	 */
+	def removeFromHistory(history: List[DashboardHistoryItem], url: String): Cookie = {
+		val newlist = history.filter(_.url != url)
+		DashboardHistoryCookieBaker.encodeAsCookie(newlist)
+	}
+
+	/**
+	 * Remove an item from the history found in the request cookie.
+	 * Return a cookie that represents the new history
+	 */
+	def removeFromHistory(request: RequestHeader, id: UUID): Cookie = {
+		val history = getHistory()(request)
+		removeFromHistory(history, id)
+	}
+
+	/**
+	 * Remove an item from the history found in the request cookie.
+	 * Return a cookie that represents the new history
+	 */
+	def removeFromHistory(request: RequestHeader, url: String): Cookie = {
+		val history = getHistory()(request)
+		removeFromHistory(history, url)
+	}
 }
