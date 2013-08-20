@@ -61,7 +61,7 @@ class HostModel extends AppModel {
 				SELECT COUNT(1) FROM `hosts`
 				WHERE `name` LIKE {name}
 			""").on(
-				"name" -> ("%" + name + "%")
+				"name" -> name
 			).as(scalar[Long].single)(connection)
 
 			val matches = SQL("""
@@ -70,7 +70,7 @@ class HostModel extends AppModel {
 				ORDER BY `name` ASC
 				LIMIT {limit} OFFSET {offset}
 			""").on(
-				"name" -> ("%" + name + "%"),
+				"name" -> name,
 				"limit" -> configuredLimit,
 				"offset" -> configuredLimit * page
 			).as(hostsRowParser *)(connection)
