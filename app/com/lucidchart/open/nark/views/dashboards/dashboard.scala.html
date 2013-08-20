@@ -480,6 +480,25 @@
 			return parseInt(fromLocalStorage(keys, defaultValue), 10);
 		}
 
+		function mapTargetsByType(selectCallback, textCallback) {
+			$.map(targets, function(target) {
+				if (target['target'].indexOf('%') != -1) {
+					var targetPieces = target['target'].split('%');
+					for (var i = 1; i < targetPieces.length; i = i + 2) {
+						if (targetPieces[i].indexOf('|') != -1) {
+							variablePieces = targetPieces[i].split('|');
+							var nonEmptyOptions = variablePieces.slice(1).filter(function(n){return n});
+							selectCallback(variablePieces[0], nonEmptyOptions);
+						}
+						else {
+							var variablePieces = targetPieces[i].split('=', 2);
+							textCallback(variablePieces[0], variablePieces.slice(1).join("="));
+						}
+					}
+				}
+			});
+		}
+
 		$(document).resize(function() {
 			adjustGraphHeights();
 		});
@@ -566,70 +585,81 @@
 			setDateRange(fromLocalStorage(localStorageDateRangeKeys, 3600));
 			setOptionsPanel(fromLocalStorage(localStorageOptionsPanelKeys, "visible"));
 
-			var alreadyDisplayedVariables = [];
-			var selectVariables = [];
-			$.map(targets, function(target) {
-				if (target['target'].indexOf('%') != -1) {
-					var targetPieces = target['target'].split('%');
-					for (var i = 1; i < targetPieces.length; i = i + 2) {
-						if (targetPieces[i].indexOf('|') != -1) {
-							variablePieces = targetPieces[i].split('|');
-							
-							if ($('#input-' + variablePieces[0]).length == 0) {
-								$('#variables-group').append('<div class="row field-container"><label rel="tooltip" title="' + variablePieces[0] + '" for="' + variablePieces[0] + '"><strong>' + variablePieces[0] + '</strong></label><select id="input-' + variablePieces[0] + '" name="' + variablePieces[0] + '" key="' + variablePieces[0] + '"></select></div>');
-								selectVariables.push(variablePieces[0]);
-							}
+			var selectTargetOptions = {};
+			var textTargetDefaults = {};
+			mapTargetsByType(
+				// select targets
+				function(name, options) {
+					if (!selectTargetOptions[name]) {
+						selectTargetOptions[name] = [];
+					}
 
-							for (var j = 1; j < variablePieces.length; j++) {
-								if ($('#input-' + variablePieces[0] + ' option[value="' + variablePieces[j] + '"]').length == 0) {
-
-									$('#input-' + variablePieces[0]).append('<option value="' + variablePieces[j] + '">' + variablePieces[j] + '</option>');
-								}
-							}
-							$('#input-' + variablePieces[0]).change(function(event) {
-								setLocalStorage([dashKey + $(this).attr('key')], $(this).val());
-								var graphIds = getAffectedGraphs($(this).attr('key'));
-								queueRefreshData(graphIds);
-							});
+					$.map(options, function(option) {
+						if (-1 == $.inArray(option, selectTargetOptions[name])) {
+							selectTargetOptions[name].push(option);
 						}
-						else {
-							var variablePieces = targetPieces[i].split('=');
-							var defaultValue = fromLocalStorage([dashKey + variablePieces[0]], (variablePieces.length == 2) ? variablePieces[1] : '');
-							if ($.inArray(variablePieces[0], alreadyDisplayedVariables) == -1) {
-								$('#variables-group').append('<div class="row field-container"><label rel="tooltip" title="' + variablePieces[0] + '" for="' + variablePieces[0] + '"><strong>' + variablePieces[0] +'</strong></label><input id="input-' + variablePieces[0] + '" name="' + variablePieces[0] + '" type="text" class="span9 input-large" key="' + variablePieces[0] + '" value="' + defaultValue + '" /></div>');
-
-								var inputElement = $('#input-' + variablePieces[0]);
-								var lastValue = defaultValue;
-								function updateInput() {
-									var newValue = inputElement.val();
-									if (newValue != lastValue) {
-										lastValue = newValue;
-										setLocalStorage([dashKey + inputElement.attr('key')], newValue);
-										var graphIds = getAffectedGraphs(inputElement.attr('key'));
-										queueRefreshData(graphIds);
-									}
-								}
-
-								inputElement.keypress(function(e) {
-									if(e.which == 13) {
-										updateInput();
-									}
-								});
-								inputElement.focusout(function(e) {
-									updateInput();
-								});
-								
-								alreadyDisplayedVariables.push(variablePieces[0]);
-							}
-						}
+					});
+				},
+				// text targets
+				function(name, value) {
+					if (!textTargetDefaults[name]) {
+						textTargetDefaults[name] = value;
 					}
 				}
-			});
+			);
 
-			$.map(selectVariables, function(variable) {
-				var defaultValue = fromLocalStorage([dashKey + variable], '');
-				if (defaultValue != '') {
-					$('#input-' + variable + ' option[value="' + defaultValue + '"]').attr('selected', 'selected');
+			var sortedInputNames = [];
+			$.map(selectTargetOptions, function(value, name) { sortedInputNames.push(name); });
+			$.map(textTargetDefaults, function(value, name) { sortedInputNames.push(name); });
+			sortedInputNames.sort();
+
+			var inputGroup = $('#variables-group');
+			$.map(sortedInputNames, function(inputName) {
+				if (selectTargetOptions.hasOwnProperty(inputName)) {
+					var options = selectTargetOptions[inputName];
+					console.log(inputName);
+					console.log(options);
+
+					inputGroup.append('<div class="row field-container"><label rel="tooltip" title="' + inputName + '" for="' + inputName + '"><strong>' + inputName + '</strong></label><select id="input-' + inputName + '" name="' + inputName + '" key="' + inputName + '"></select></div>');
+					var inputElement = $('#input-' + inputName);
+
+					$.map(options, function(option) {
+						inputElement.append('<option value="' + option + '">' + option + '</option>');
+					});
+
+					inputElement.change(function(event) {
+						setLocalStorage([dashKey + inputName], inputElement.val());
+						var graphIds = getAffectedGraphs(inputName);
+						queueRefreshData(graphIds);
+					});
+
+					var defaultValue = fromLocalStorage([dashKey + inputName], options[0]);
+					$('#input-' + inputName + ' option[value="' + defaultValue + '"]').attr('selected', 'selected');
+				}
+				else if (textTargetDefaults.hasOwnProperty(inputName)) {
+					var defaultValue = fromLocalStorage([dashKey + inputName], textTargetDefaults[inputName]);
+					inputGroup.append('<div class="row field-container"><label rel="tooltip" title="' + inputName + '" for="' + inputName + '"><strong>' + inputName +'</strong></label><input id="input-' + inputName + '" name="' + inputName + '" type="text" class="span9 input-large" key="' + inputName + '" value="' + defaultValue + '" /></div>');
+
+					var inputElement = $('#input-' + inputName);
+					var lastValue = defaultValue;
+					function updateInput() {
+						var newValue = inputElement.val();
+						if (newValue != lastValue) {
+							lastValue = newValue;
+							setLocalStorage([dashKey + inputElement.attr('key')], newValue);
+							var graphIds = getAffectedGraphs(inputElement.attr('key'));
+							queueRefreshData(graphIds);
+						}
+					}
+
+					inputElement.keypress(function(e) {
+						if(e.which == 13) {
+							updateInput();
+						}
+					});
+					inputElement.focusout(function(e) {
+						updateInput();
+					});
 				}
 			});
 		});
