@@ -89,7 +89,7 @@ class DashboardModel extends AppModel {
 				LIMIT {limit}
 			""").on(
 				"name" -> ("%" + name + "%"),
-				"limit" -> configuration.getInt("search.limit").get
+				"limit" -> configuredLimit
 			).as(dashboardsRowParser *)(connection)
 		}
 	}
@@ -112,7 +112,7 @@ class DashboardModel extends AppModel {
 			""").on(
 				"user_id" -> user_id,
 				"name" -> ("%" + name + "%"),
-				"limit" -> configuration.getInt("search.limit").get
+				"limit" -> configuredLimit
 			).as(dashboardsRowParser *)(connection)
 		}
 	}

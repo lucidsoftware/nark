@@ -13,7 +13,6 @@ GET     /openid-callback                     com.lucidchart.open.nark.controller
 # Graphite data
 GET     /graphite/datapoints                 com.lucidchart.open.nark.controllers.GraphiteDataController.dataPoints()
 GET     /graphite/metrics                    com.lucidchart.open.nark.controllers.GraphiteDataController.metrics()
-GET     /graphite/hosts                      com.lucidchart.open.nark.controllers.GraphiteDataController.hosts()
 
 # Dashboards
 GET     /dashboard/create                    com.lucidchart.open.nark.controllers.DashboardsController.create
@@ -70,6 +69,9 @@ POST    /subscription/:id/subscribe          com.lucidchart.open.nark.controller
 POST    /subscription/:id/edit               com.lucidchart.open.nark.controllers.SubscriptionsController.edit(id: java.util.UUID)
 POST    /subscription/:id/delete             com.lucidchart.open.nark.controllers.SubscriptionsController.delete(id: java.util.UUID)
 GET     /user/:id/subscriptions              com.lucidchart.open.nark.controllers.SubscriptionsController.allSubscriptionsForUser(id: java.util.UUID)
+
+# Hosts
+GET     /hosts/search                        com.lucidchart.open.nark.controllers.HostsController.search(term: String ?= "", page: Int ?= 0)
 
 # Map static resources from the /public folder to the /assets URL path
 GET     /favicon.ico                         controllers.Assets.at(path="/public", file = "img/favicon.png")

@@ -55,13 +55,27 @@ class HostModel extends AppModel {
 	/**
 	 * Find all the hosts that match the name
 	 */
-	def findAllByName(name: String) = {
+	def search(name: String, page: Int) = {
 		DB.withConnection("main") { connection =>
-			SQL("""
-				SELECT * FROM `hosts` WHERE `name` LIKE {name}
+			val found = SQL("""
+				SELECT COUNT(1) FROM `hosts`
+				WHERE `name` LIKE {name}
 			""").on(
 				"name" -> ("%" + name + "%")
+			).as(scalar[Long].single)(connection)
+
+			val matches = SQL("""
+				SELECT * FROM `hosts`
+				WHERE `name` LIKE {name}
+				ORDER BY `name` ASC
+				LIMIT {limit} OFFSET {offset}
+			""").on(
+				"name" -> ("%" + name + "%"),
+				"limit" -> configuredLimit,
+				"offset" -> configuredLimit * page
 			).as(hostsRowParser *)(connection)
+
+			(found, matches)
 		}
 	}
 }

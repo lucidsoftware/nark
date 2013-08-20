@@ -1,0 +1,69 @@
+@(
+	term: String,
+	page: Int,
+	limit: Int,
+	found: Long,
+	matches: List[com.lucidchart.open.nark.models.records.Host]
+)(
+	implicit
+	request: com.lucidchart.open.nark.request.AppRequest[_],
+	userOption: Option[com.lucidchart.open.nark.models.records.User]
+)
+@import com.lucidchart.open.nark.controllers.{routes=>narkRoutes}
+@import com.lucidchart.open.nark.views
+@import com.lucidchart.open.nark.views.html.helpers
+@import helper._
+
+@com.lucidchart.open.nark.views.html.layouts.main("Host Search", userOption = userOption) {
+	<h3>Host Search</h3>
+	<br>
+	@helper.form(action=narkRoutes.HostsController.search(page = 0)) {
+		<fieldset>
+			<div class="clearfix" id="search_field">
+				<label for="term">Search</label>
+				<div class="input">
+					<input id="term" type="text" name="term" class="input-xlarge" placeholder="hostname.domain.com" value="@term">
+					<span class="help-block"></span> 
+				</div>
+			</div>
+			<button id="search" class="btn btn-primary">Search</button>
+		</fieldset>
+	}
+
+	<h3>Search Results</h3>
+	@defining((found / limit).toInt + (if (found % limit > 0) 1 else 0)) { maxPage =>
+		@if(matches.isEmpty) {
+			<div class="alert alert-info">No hosts were found using your search term.</div>
+		} else {
+			<div class="results">
+				<table class="table table-bordered table-hover">
+					<thead>
+						<tr>
+							<th>Host</th>
+							<th>State</th>
+						</tr>
+					</thead>
+					<tbody>
+						@matches.map { host =>
+							<tr>
+								<td>@host.name</td>
+								<td>@host.state.toString</td>
+							</tr>
+						}
+					</tbody>
+				</table>
+				<div class="pagination pagination-centered">
+					<ul>
+						@for(i <- List(page - 5, 0).max to List(page + 5, maxPage - 1).min) {
+							@if(i == page) {
+								<li class="active"><a href="#">@{i + 1}</a></li>
+							} else {
+								<li><a href="@narkRoutes.HostsController.search(term, i)">@{i + 1}</a></li>
+							}
+						}
+					</ul>
+				</div>
+	 		</div>
+		}
+	}
+}

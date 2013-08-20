@@ -3,7 +3,6 @@ package com.lucidchart.open.nark.controllers
 import com.lucidchart.open.nark.request.{AppFlash, AppAction, AuthAction}
 import com.lucidchart.open.nark.views
 import com.lucidchart.open.nark.utils.Graphite
-import com.lucidchart.open.nark.models.HostModel
 import com.lucidchart.open.nark.forms.Forms
 import com.lucidchart.open.nark.utils.StatsD
 import java.util.Date
@@ -102,22 +101,6 @@ class GraphiteDataController extends AppController {
 						Ok(views.models.graphiteMetricData(metrics))
 					}
 				}
-			}
-		)
-	}
-
-	/**
-	 * Search for graphite hosts in the host cache
-	 */
-	def hosts = AppAction { implicit request =>
-		StatsD.increment("graphite.hosts")
-		hostForm.bindFromRequest().fold(
-			formWithErrors => {
-				BadRequest
-			},
-			data => {
-				val hosts = HostModel.findAllByName(data.search)
-				Ok(Json.toJson(hosts.map(views.models.host(_))))
 			}
 		)
 	}

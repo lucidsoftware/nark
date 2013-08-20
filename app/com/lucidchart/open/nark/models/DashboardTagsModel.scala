@@ -35,7 +35,7 @@ class DashboardTagsModel extends AppModel {
 				LIMIT {limit}
 			""").on(
 				"query" -> ("%" + query + "%"),
-				"limit" -> configuration.getInt("search.limit")
+				"limit" -> configuredLimit
 			).as(get[String]("tag") *)(connection)
 		}
 	}
@@ -55,7 +55,7 @@ class DashboardTagsModel extends AppModel {
 	// 			LIMIT {limit}
 	// 		""").on(
 	// 			"query" -> ("%" + query + "%"),
-	// 			"limit" -> configuration.getInt("search.limit")
+	// 			"limit" -> configuredLimit
 	// 		).as(tagsRowParser *)(connection)
 	// 	}
 	// }
@@ -82,7 +82,7 @@ class DashboardTagsModel extends AppModel {
 				WHERE `tag` in ({tags})
 			""")
 			.onList("tags" -> tags)
-			.toSQL.on("limit" -> configuration.getInt("search.limit"))
+			.toSQL.on("limit" -> configuredLimit)
 			.as(tagsRowParser *)(connection)
 		}	
 	}

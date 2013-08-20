@@ -112,7 +112,7 @@ class AlertModel extends AppModel {
 				LIMIT {limit}
 			""").on(
 				"name" -> ("%" + name + "%"),
-				"limit" -> configuration.getInt("search.limit").get
+				"limit" -> configuredLimit
 			).as(alertsRowParser *)(connection)
 		}
 	}
