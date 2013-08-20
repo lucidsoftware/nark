@@ -25,40 +25,30 @@ class DashboardTagsModel extends AppModel {
 	 * Gets all tags.
 	 * @returns tags
 	 */
-	def search(query:String) :List[String] = {
+	def search(tag: String, page: Int) = {
 		DB.withConnection("main") { connection =>
-			SQL("""
-				SELECT `tag` 
-				FROM `dashboard_tags` 
-				WHERE `tag` LIKE {query}
-				GROUP BY `tag`
-				LIMIT {limit}
+			val found = SQL("""
+				SELECT COUNT(1) FROM `dashboard_tags`
+				WHERE `tag` LIKE {tag}
 			""").on(
-				"query" -> ("%" + query + "%"),
-				"limit" -> configuredLimit
+				"tag" -> tag
+			).as(scalar[Long].single)(connection)
+
+			val matches = SQL("""
+				SELECT * FROM `dashboard_tags`
+				WHERE `tag` LIKE {tag}
+				GROUP BY `tag`
+				ORDER BY `tag` ASC
+				LIMIT {limit} OFFSET {offset}
+			""").on(
+				"tag" -> tag,
+				"limit" -> configuredLimit,
+				"offset" -> configuredLimit * page
 			).as(get[String]("tag") *)(connection)
+
+			(found, matches)
 		}
 	}
-
-	/**
-	 * Search all tags.
-	 * @param searchTerm
-	 * @returns dashboardTags
-	 */
-	// def search(query:String) :List[DashboardTag] = {
-	// 	DB.withConnection("main") { connection =>
-	// 		SQL("""
-	// 			SELECT *
-	// 			FROM `dashboard_tags`
-	// 			WHERE `tag` LIKE {query}
-	// 			ORDER BY `tag`
-	// 			LIMIT {limit}
-	// 		""").on(
-	// 			"query" -> ("%" + query + "%"),
-	// 			"limit" -> configuredLimit
-	// 		).as(tagsRowParser *)(connection)
-	// 	}
-	// }
 
 	/**
 	 * Gets all dashboards with this tag.
@@ -75,16 +65,21 @@ class DashboardTagsModel extends AppModel {
 	 * @returns dashboardTags
 	 */
 	def findDashboardsWithTag(tags: List[String]): List[DashboardTag] = {
-		DB.withConnection("main") { connection =>
-			RichSQL("""
-				SELECT * 
-				FROM `dashboard_tags` 
-				WHERE `tag` in ({tags})
-			""")
-			.onList("tags" -> tags)
-			.toSQL.on("limit" -> configuredLimit)
-			.as(tagsRowParser *)(connection)
-		}	
+		if (tags.isEmpty) {
+			Nil
+		}
+		else {
+			DB.withConnection("main") { connection =>
+				RichSQL("""
+					SELECT * 
+					FROM `dashboard_tags` 
+					WHERE `tag` in ({tags})
+				""")
+				.onList("tags" -> tags)
+				.toSQL.on("limit" -> configuredLimit)
+				.as(tagsRowParser *)(connection)
+			}
+		}
 	}
 
 

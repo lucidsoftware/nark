@@ -106,11 +106,12 @@ object AlertsController extends AppController {
 	 * Search for a particular alert
 	 * @param term the search term to use when looking for alerts
 	 */
-	def search(term: String) = AuthAction.maybeAuthenticatedUser { implicit user =>
+	def search(term: String, page: Int) = AuthAction.maybeAuthenticatedUser { implicit user =>
 		AppAction { implicit request =>
-			val matches = AlertModel.searchByName(term).filter(_.active)
+			val realPage = page.max(1)
+			val (found, matches) = AlertModel.search(term, realPage - 1)
 			val tags = toAlertMap(AlertTagModel.findTagsForAlert(matches.map{_.id}))
-			Ok(views.html.alerts.search(term, matches, tags))
+			Ok(views.html.alerts.search(term, realPage, AlertModel.configuredLimit, found, matches, tags))
 		}
 	}
 

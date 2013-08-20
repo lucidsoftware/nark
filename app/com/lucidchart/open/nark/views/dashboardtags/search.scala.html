@@ -1,5 +1,8 @@
 @(
 	term: String,
+	page: Int,
+	limit: Int,
+	found: Long,
 	matches: Map[String, List[com.lucidchart.open.nark.models.records.Dashboard]]
 )(
 	implicit
@@ -24,38 +27,41 @@
 				<label for="term">Search</label>
 				<div class="input">
 					<input id="term" type="text" name="term" class="input-xlarge" placeholder="ops" value="@term">
-					<span class="help-block">Tags can be searched by name.</span> 
+					<span class="help-block">Use '%' as a wildcard.</span>
 				</div>
 			</div>
 			<button id="search" class="btn btn-primary">Search</button>
 		</fieldset>
 	}
 
-	@if(matches.isEmpty) {
-		<div class="alert alert-info">No tags were found using your search term.</div>
-	} else {
-		<h3>Search Results</h3>
-		<div class="results">
-		<table class="table table-bordered table-hover">
-				<thead>
-					<tr>
-						<th>Tag</th>
-						<th>Dashboard Names</th>
-					</tr>
-				</thead>
-				<tbody>
-					@matches.map { tag =>
+	<h3>Search Results</h3>
+	@helpers.paginationMaxPage(found, limit) { maxPage =>
+		@if(matches.isEmpty) {
+			<div class="alert alert-info">No tags were found using your search term.</div>
+		} else {
+			<div class="results">
+			<table class="table table-bordered table-hover">
+					<thead>
 						<tr>
-							<td><a href="@narkRoutes.DashboardTagsController.tag(tag._1)">@tag._1</a></td>
-							<td>
-							@tag._2.map{ dashboard =>
-								<a href="@narkRoutes.DashboardsController.dashboard(dashboard.url)">@dashboard.name</a>
-							}
-							</td>
+							<th>Tag</th>
+							<th>Dashboard Names</th>
 						</tr>
-					}
-				</tbody>
-			</table>
- 		</div>
+					</thead>
+					<tbody>
+						@matches.map { tag =>
+							<tr>
+								<td><a href="@narkRoutes.DashboardTagsController.tag(tag._1)" class="btn btn-mini">@tag._1</a></td>
+								<td>
+								@tag._2.map{ dashboard =>
+									<a href="@narkRoutes.DashboardsController.dashboard(dashboard.url)" class="btn btn-mini btn-info">@dashboard.name</a>
+								}
+								</td>
+							</tr>
+						}
+					</tbody>
+				</table>
+				@{ helpers.paginationLinks(page, maxPage) { i => narkRoutes.DashboardTagsController.search(term, i).toString } }
+			</div>
+		}
 	}
 }

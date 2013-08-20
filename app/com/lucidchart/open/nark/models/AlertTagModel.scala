@@ -40,18 +40,30 @@ class AlertTagModel extends AppModel {
 
 	/**
 	 * Find all tags similar to the search term
-	 * @param term the search term
+	 * @param name the search term
 	 * @return the list of matched tags
 	 */
-	def search(term: String): List[AlertTag] = {
+	def search(name: String, page: Int) = {
 		DB.withConnection("main") { connection =>
-			SQL("""
-				SELECT *
-				FROM `alert_tags`
-				WHERE `name` LIKE {tag}
+			val found = SQL("""
+				SELECT COUNT(1) FROM `alert_tags`
+				WHERE `name` LIKE {name}
 			""").on(
-				"tag" -> ("%" + term + "%")
+				"name" -> name
+			).as(scalar[Long].single)(connection)
+
+			val matches = SQL("""
+				SELECT * FROM `alert_tags`
+				WHERE `name` LIKE {name}
+				ORDER BY `name` ASC
+				LIMIT {limit} OFFSET {offset}
+			""").on(
+				"name" -> name,
+				"limit" -> configuredLimit,
+				"offset" -> configuredLimit * page
 			).as(tagsRowParser *)(connection)
+
+			(found, matches)
 		}
 	}
 

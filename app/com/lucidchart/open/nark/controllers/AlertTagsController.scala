@@ -25,11 +25,12 @@ class AlertTagsController extends AppController {
 	 * Search for a specific tag
 	 * @param term the search term to look for tags by
 	 */
-	def search(term: String) = AuthAction.maybeAuthenticatedUser { implicit user =>
+	def search(term: String, page: Int) = AuthAction.maybeAuthenticatedUser { implicit user =>
 		AppAction { implicit request =>
-			val tags = AlertTagModel.search(term)
+			val realPage = page.max(1)
+			val (found, tags) = AlertTagModel.search(term, realPage - 1)
 			val alerts = AlertModel.getAlerts(tags.map(_.alertId).distinct).filter(!_.deleted)
-			Ok(views.html.alerttags.search(term, toTagMap(tags, alerts)))
+			Ok(views.html.alerttags.search(term, realPage, AlertTagModel.configuredLimit, found, toTagMap(tags, alerts)))
 		}
 	}
 
@@ -38,10 +39,10 @@ class AlertTagsController extends AppController {
 	 */
 	def searchToJson(term: String) = AuthAction.maybeAuthenticatedUser { implicit user =>
 		AppAction { implicit request =>
-			val matches = AlertTagModel.search(term).map{ m =>
+			val (found, matches) = AlertTagModel.search(term, 1)
+			Ok(Json.toJson(matches.map{ m =>
 				Json.obj("id" -> m.alertId.toString, "name" -> m.tag)
-			}
-			Ok(Json.toJson(matches))
+			}))
 		}
 	}
 }

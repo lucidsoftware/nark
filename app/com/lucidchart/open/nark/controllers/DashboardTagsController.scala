@@ -28,12 +28,13 @@ class DashboardTagsController extends AppController {
 	/*
 	 * Search tags by name.
 	 */
-	def search(term: String) = AuthAction.maybeAuthenticatedUser { implicit userOption =>
+	def search(term: String, page: Int) = AuthAction.maybeAuthenticatedUser { implicit userOption =>
 		AppAction {implicit request =>
-			val tags = DashboardTagsModel.search(term)
+			val realPage = page.max(1)
+			val (found, tags) = DashboardTagsModel.search(term, realPage - 1)
 			val dashboardTags = DashboardTagsModel.findDashboardsWithTag(tags)
 			val dashboards = DashboardModel.findDashboardByID(dashboardTags.map(_.dashboardId).distinct).filter(!_.deleted)
-			Ok(views.html.dashboardtags.search(term, convertToTagsMap(dashboardTags, dashboards)))
+			Ok(views.html.dashboardtags.search(term, realPage, DashboardModel.configuredLimit, found, convertToTagsMap(dashboardTags, dashboards)))
 		}
 	}
 
@@ -42,10 +43,10 @@ class DashboardTagsController extends AppController {
 	 */
 	def searchToJson(term: String) = AuthAction.maybeAuthenticatedUser { implicit userOption =>
 		AppAction { implicit request =>
-			val matches = DashboardTagsModel.search(term).map{ m =>
+			val (found, matches) = DashboardTagsModel.search(term, 1)
+			Ok(Json.toJson(matches.map{ m =>
 				Json.obj("id" -> m, "name" -> m)
-			}
-			Ok(Json.toJson(matches))
+			}))
 		}
 	}
 }

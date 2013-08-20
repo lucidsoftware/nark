@@ -101,19 +101,27 @@ class AlertModel extends AppModel {
 	 * @param name the search term to search by
 	 * @return a List of Alert records
 	 */
-	def searchByName(name: String): List[Alert] = {
+	def search(name: String, page: Int) = {
 		DB.withConnection("main") { connection =>
-			SQL("""
-				SELECT *
-				FROM `alerts`
-				WHERE `name` LIKE {name}
-				AND `deleted` = false
-				ORDER BY `name`
-				LIMIT {limit}
+			val found = SQL("""
+				SELECT COUNT(1) FROM `alerts`
+				WHERE `name` LIKE {name} AND `deleted` = FALSE
 			""").on(
-				"name" -> ("%" + name + "%"),
-				"limit" -> configuredLimit
+				"name" -> name
+			).as(scalar[Long].single)(connection)
+
+			val matches = SQL("""
+				SELECT * FROM `alerts`
+				WHERE `name` LIKE {name} AND `deleted` = FALSE
+				ORDER BY `name` ASC
+				LIMIT {limit} OFFSET {offset}
+			""").on(
+				"name" -> name,
+				"limit" -> configuredLimit,
+				"offset" -> configuredLimit * page
 			).as(alertsRowParser *)(connection)
+
+			(found, matches)
 		}
 	}
 
