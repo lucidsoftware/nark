@@ -33,8 +33,9 @@ object DashboardHistory {
 		override val maxAge = Some(315360000)
 		
 		def deserialize(data: Map[String, String]) = {
-			val unserialized = for (i <- 0 until data.size) yield {
-				val itemString = data(i.toString)
+			val nonEmptyData = data.filter(!_._1.isEmpty)
+			val unserialized = for (i <- 0 until nonEmptyData.size) yield {
+				val itemString = nonEmptyData(i.toString)
 				val parts = itemString.split("\\|", 3)
 				DashboardHistoryItem(
 					UUID.fromString(parts(0)),
