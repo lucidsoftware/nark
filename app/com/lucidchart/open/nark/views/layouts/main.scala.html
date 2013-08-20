@@ -73,9 +73,10 @@
 								<a href="#dropdown" class="dropdown-toggle" data-toggle="dropdown">Dashboards <b class="caret"></b></a>
 								<ul class="dropdown-menu">
 									<li><a href="@narkRoutes.DashboardsController.create">Create a Dashboard</a></li>
+									<li class="divider"></li>
 									<li><a href="@narkRoutes.DashboardsController.search()">Search by Name</a></li>
-									<li><a href="@narkRoutes.DashboardTagsController.search()">Search Tags</a></li>
-									<li><a href="@narkRoutes.DashboardsController.deleted()">Trash</a></li>
+									<li><a href="@narkRoutes.DashboardTagsController.search()">Search by Tag</a></li>
+									<li><a href="@narkRoutes.DashboardsController.deleted()">Recover Deactivated</a></li>
 									@defining(DashboardHistory.getHistory()) { history =>
 										@if(!history.isEmpty) {
 											<li class="divider"></li>
@@ -89,26 +90,20 @@
 							<li class="dropdown">
 								<a href="#alert" class="dropdown-toggle" data-toggle="dropdown">Alerts <b class="caret"></b></a>
 								<ul class="dropdown-menu">
-									<li><a href='@narkRoutes.AlertsController.search("")'>Search by Name</a></li>
-									<li><a href='@narkRoutes.AlertTagsController.search("")'>Search Tags</a></li>
-									<li class="divider"></li>
 									<li><a href="@narkRoutes.AlertsController.create">Create an Alert</a></li>
+									<li class="divider"></li>
+									<li><a href='@narkRoutes.AlertsController.search("")'>Search by Name</a></li>
+									<li><a href='@narkRoutes.AlertTagsController.search("")'>Search by Tag</a></li>
 								</ul>
 							</li>
-							@if(userOption.isDefined) {
-								<li class="dropdown">
-									<a href="#alert" class="dropdown-toggle" data-toggle="dropdown">Subscriptions <b class="caret"></b></a>
-									<ul class="dropdown-menu">
-										<li><a href='@narkRoutes.SubscriptionsController.allSubscriptionsForUser(userOption.get.id)'>View Your Subscriptions</a></li>
-									</ul>
-								</li>
-							}
 						</ul>
 						<ul class="nav pull-right">
 							@if(userOption.isDefined) {
 								<li class="dropdown">
 									<a href="#" class="dropdown-toggle" data-toggle="dropdown">@userOption.get.name <b class="caret"></b></a>
 									<ul class="dropdown-menu">
+										<li><a href='@narkRoutes.SubscriptionsController.allSubscriptionsForUser(userOption.get.id)'>My Subscriptions</a></li>
+										<li class="divider"></li>
 										<li><a href="@narkRoutes.AuthController.logout()">Logout</a></li>
 									</ul>
 								</li>
