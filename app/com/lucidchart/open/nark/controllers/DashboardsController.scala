@@ -181,17 +181,15 @@ class DashboardsController extends AppController {
 	def sortGraphsSubmit(dashboardId: UUID) = AuthAction.authenticatedUser {implicit user =>
 		DashboardAction.dashboardManagementAccess(dashboardId, user.id) { dashboard =>
 			AppAction { implicit request => 
+				val graphs = GraphModel.findGraphsByDashboardId(dashboard.id)
 				sortForm.bindFromRequest().fold (
 					formWithErrors => {
-						Redirect(routes.DashboardsController.manage(dashboard.id)).flashing(AppFlash.error("Graph order could not be saved."))
+						BadRequest(views.html.dashboards.sortGraphs(dashboard, graphs, user)).flashing(AppFlash.error("Graph order could not be saved."))
 					},
 					data => {
-						val graphs = GraphModel.findGraphsByDashboardId(dashboard.id)
 						graphs.foreach{ graph =>
 							GraphModel.editGraph(graph.copy(sort=data.order.indexOf(graph.id.toString)))
 						}
-
-
 						Redirect(routes.DashboardsController.manage(dashboard.id)).flashing(AppFlash.success("Graph order was successfully saved."))
 					}
 				)

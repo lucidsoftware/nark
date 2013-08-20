@@ -81,37 +81,29 @@ class AuthController extends AppController {
 	 */
 	def openidLogin = AuthAction.loggedOut {
 		AppAction { implicit request =>
-			try {
-				// this code was taken, almost copy/paste, from
-				// https://code.google.com/p/openid4java/wiki/SampleConsumer
-				val discoveries = openIDManager.discover(openIDDiscoveryURL)
-				val discovered = openIDManager.associate(discoveries)
-				
-				val discoveredAsString = DiscoveryInformationConverter.infoToString(discovered)
-				val discoveredCookie = Cookie(
-					"openid-discovery",
-					URLEncoder.encode(Crypto.sign(discoveredAsString) + "|" + discoveredAsString, "UTF-8"),
-					None
-				)
-				
-				val openIDReturn = routes.AuthController.openidCallback().absoluteURL()
-				val authRequest = openIDManager.authenticate(discoveries, openIDReturn)
-				
-				val fetch = FetchRequest.createFetchRequest()
-				fetch.addAttribute("email", "http://axschema.org/contact/email",    true)
-				fetch.addAttribute("first", "http://axschema.org/namePerson/first", true)
-				fetch.addAttribute("last",  "http://axschema.org/namePerson/last",  true)
-				authRequest.addExtension(fetch)
-				
-				// Because of the 2kiB limit on urls, this may need to be an auto-submitted form in the future
-				Redirect(authRequest.getDestinationUrl(true)).withCookies(discoveredCookie)
-			}
-			catch {
-				case e: OpenIDException => {
-					Logger.error("OpenID login error", e)
-					BadRequest
-				}
-			}
+			// this code was taken, almost copy/paste, from
+			// https://code.google.com/p/openid4java/wiki/SampleConsumer
+			val discoveries = openIDManager.discover(openIDDiscoveryURL)
+			val discovered = openIDManager.associate(discoveries)
+			
+			val discoveredAsString = DiscoveryInformationConverter.infoToString(discovered)
+			val discoveredCookie = Cookie(
+				"openid-discovery",
+				URLEncoder.encode(Crypto.sign(discoveredAsString) + "|" + discoveredAsString, "UTF-8"),
+				None
+			)
+			
+			val openIDReturn = routes.AuthController.openidCallback().absoluteURL()
+			val authRequest = openIDManager.authenticate(discoveries, openIDReturn)
+			
+			val fetch = FetchRequest.createFetchRequest()
+			fetch.addAttribute("email", "http://axschema.org/contact/email",    true)
+			fetch.addAttribute("first", "http://axschema.org/namePerson/first", true)
+			fetch.addAttribute("last",  "http://axschema.org/namePerson/last",  true)
+			authRequest.addExtension(fetch)
+			
+			// Because of the 2kiB limit on urls, this may need to be an auto-submitted form in the future
+			Redirect(authRequest.getDestinationUrl(true)).withCookies(discoveredCookie)
 		}
 	}
 	
@@ -144,7 +136,7 @@ class AuthController extends AppController {
 					
 					discoveredOption match {
 						case None => Redirect(routes.HomeController.index()).discardingCookies(discardDiscovery) // they tampered with their cookie
-						case Some(discovered) => try {
+						case Some(discovered) => {
 							val receivingURL = "http://" + request.host + request.request.uri.toString
 							val response = new ParameterList(JavaConversions.mapAsJavaMap(request.queryString.map { case (k,v) => (k, v.toArray) }))
 							val verification = openIDManager.verify(receivingURL, response, discovered)
@@ -170,16 +162,6 @@ class AuthController extends AppController {
 									
 									loginRedirect(user.id, false).discardingCookies(discardDiscovery)
 								}
-							}
-						}
-						catch {
-							case e: OpenIDException => {
-								Logger.error("OpenID callback OpenID error", e)
-								InternalServerError
-							}
-							case e: Exception => {
-								Logger.error("OpenID callback error", e)
-								InternalServerError
 							}
 						}
 					}

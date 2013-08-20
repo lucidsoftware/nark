@@ -33,7 +33,7 @@ trait AlertActionBuilder {
 			block(alert.get, user.get)(requestHeader)
 		}
 		else {
-			Done(Redirect(routes.AlertsController.view(alertId)).flashing(AppFlash.error("You do not have access to manage this alert")))
+			Done(Forbidden)
 		}
 	}
 }

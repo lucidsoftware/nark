@@ -5,6 +5,7 @@ import com.lucidchart.open.nark.models.AlertTagConverter._
 import com.lucidchart.open.nark.models.records.{Alert, Comparisons, AlertState}
 import com.lucidchart.open.nark.request.{AlertAction, AppFlash, AppAction, AuthAction}
 import com.lucidchart.open.nark.views
+import com.lucidchart.open.nark.Global
 import java.util.UUID
 import play.api.data._
 import play.api.data.Forms._
@@ -128,7 +129,7 @@ object AlertsController extends AppController {
 				Ok(views.html.alerts.view(alert.get, tags, creator.get, subscriptions))
 			}
 			else {
-				Redirect(routes.HomeController.index()).flashing(AppFlash.error("Alert not found"))
+				Global.error404(request)
 			}
 		}
 	}

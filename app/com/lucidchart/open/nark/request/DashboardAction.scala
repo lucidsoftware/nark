@@ -17,6 +17,7 @@ import com.lucidchart.open.nark.models.GraphModel
 import com.lucidchart.open.nark.models.TargetModel
 import com.lucidchart.open.nark.controllers.routes
 import com.lucidchart.open.nark.utils.DashboardHistory
+import com.lucidchart.open.nark.Global
 
 /**
  * Provides helpers for creating `DashboardAction` values.
@@ -31,7 +32,7 @@ trait DashboardActionBuilder {
 			case _ => {
 				val historyCookie = DashboardHistory.removeFromHistory(requestHeader, id)
 				Done(
-					Redirect(routes.HomeController.index()).flashing(AppFlash.error("That dashboard does not exist!")).withCookies(historyCookie)
+					Global.error404(requestHeader).withCookies(historyCookie)
 				)
 			}
 		}
@@ -46,7 +47,7 @@ trait DashboardActionBuilder {
 			case _ => {
 				val historyCookie = DashboardHistory.removeFromHistory(requestHeader, url)
 				Done(
-					Redirect(routes.HomeController.index()).flashing(AppFlash.error("That dashboard does not exist!")).withCookies(historyCookie)
+					Global.error404(requestHeader).withCookies(historyCookie)
 				)
 			}
 		}
@@ -61,7 +62,7 @@ trait DashboardActionBuilder {
 				block(dashboard)(requestHeader)
 			}
 			else {
-				Done(Redirect(routes.HomeController.index()).flashing(AppFlash.error("You do not have access to manage this dashboard.")))
+				Done(Forbidden)
 			}
 		}
 	}
@@ -75,7 +76,7 @@ trait DashboardActionBuilder {
 				dashboardManagementAccess(graph.dashboardId, userId, allowDeletedDashboard) { dashboard => block(dashboard, graph) }(requestHeader)
 			}
 			case _ => {
-				Done(Redirect(routes.HomeController.index()).flashing(AppFlash.error("You do not have access to manage this graph.")))
+				Done(Forbidden)
 			}
 		}
 	}
@@ -89,7 +90,7 @@ trait DashboardActionBuilder {
 				graphManagementAccess(target.graphId, userId, allowDeletedDashboard, allowDeletedGraph) { (dashboard, graph) => block(dashboard, graph, target) }(requestHeader)
 			}
 			case _ => {
-				Done(Redirect(routes.HomeController.index()).flashing(AppFlash.error("You do not have access to manage this target.")))
+				Done(Forbidden)
 			}
 		}
 	}
