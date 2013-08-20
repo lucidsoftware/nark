@@ -48,7 +48,7 @@ POST    /target/deactivate/:uuid             com.lucidchart.open.nark.controller
 # Dashboard Tags
 GET     /dashboard/tags/searchjson           com.lucidchart.open.nark.controllers.DashboardTagsController.searchToJson(q: String ?= "")
 GET     /dashboard/tags/search               com.lucidchart.open.nark.controllers.DashboardTagsController.search(term: String ?= "")
-GET     /t/:tag                              com.lucidchart.open.nark.controllers.DashboardTagsController.tag(tag: String)
+GET     /dt/:tag                             com.lucidchart.open.nark.controllers.DashboardTagsController.tag(tag: String)
 
 # Alerts
 GET     /alert/create                        com.lucidchart.open.nark.controllers.AlertsController.create
@@ -62,7 +62,7 @@ POST    /alert/:uuid/delete                  com.lucidchart.open.nark.controller
 # Alert Tags
 GET     /alert/tags/searchjson               com.lucidchart.open.nark.controllers.AlertTagsController.searchToJson(q: String ?= "")
 GET     /alert/tags/search                   com.lucidchart.open.nark.controllers.AlertTagsController.search(term: String ?= "")
-GET     /alert/tags/:tag                     com.lucidchart.open.nark.controllers.AlertTagsController.tag(tag:String)
+GET     /at/:tag                             com.lucidchart.open.nark.controllers.AlertTagsController.tag(tag:String)
 
 # Subscription
 POST    /subscription/:id/subscribe          com.lucidchart.open.nark.controllers.SubscriptionsController.subscribe(id: java.util.UUID)
