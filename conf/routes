@@ -3,32 +3,32 @@
 # ~~~~
 
 # Home page
-GET     /                           com.lucidchart.open.nark.controllers.HomeController.index
+GET     /                                    com.lucidchart.open.nark.controllers.HomeController.index
 
 # authentication
-GET     /login                      com.lucidchart.open.nark.controllers.AuthController.openidLogin
-GET     /logout                     com.lucidchart.open.nark.controllers.AuthController.logout
-GET     /openid-callback            com.lucidchart.open.nark.controllers.AuthController.openidCallback
+GET     /login                               com.lucidchart.open.nark.controllers.AuthController.openidLogin
+GET     /logout                              com.lucidchart.open.nark.controllers.AuthController.logout
+GET     /openid-callback                     com.lucidchart.open.nark.controllers.AuthController.openidCallback
 
 # Graphite data
-GET     /graphite/datapoints        com.lucidchart.open.nark.controllers.GraphiteDataController.dataPoints()
-GET     /graphite/metrics           com.lucidchart.open.nark.controllers.GraphiteDataController.metrics()
-GET     /graphite/hosts             com.lucidchart.open.nark.controllers.GraphiteDataController.hosts()
+GET     /graphite/datapoints                 com.lucidchart.open.nark.controllers.GraphiteDataController.dataPoints()
+GET     /graphite/metrics                    com.lucidchart.open.nark.controllers.GraphiteDataController.metrics()
+GET     /graphite/hosts                      com.lucidchart.open.nark.controllers.GraphiteDataController.hosts()
 
 # Dashboards
-GET     /dashboard/create           com.lucidchart.open.nark.controllers.DashboardsController.create
-POST    /dashboard/create           com.lucidchart.open.nark.controllers.DashboardsController.createSubmit
-GET     /dashboard/search           com.lucidchart.open.nark.controllers.DashboardsController.search(term: String ?= "")
-GET     /dashboard/deleted          com.lucidchart.open.nark.controllers.DashboardsController.deleted(term: String ?= "")
-GET     /dashboard/manage/:uuid     com.lucidchart.open.nark.controllers.DashboardsController.manage(uuid: java.util.UUID)
-GET     /dashboard/manage/sub/:uuid com.lucidchart.open.nark.controllers.DashboardsController.manageGraphsAndTargets(uuid: java.util.UUID)
-GET     /dashboard/sortGraphs/:uuid com.lucidchart.open.nark.controllers.DashboardsController.sortGraphs(uuid: java.util.UUID)
-POST	/dashboard/sortGraphs/:uuid com.lucidchart.open.nark.controllers.DashboardsController.sortGraphsSubmit(uuid: java.util.UUID)
-GET     /dashboard/edit/:uuid       com.lucidchart.open.nark.controllers.DashboardsController.edit(uuid: java.util.UUID)
-POST    /dashboard/edit/:uuid       com.lucidchart.open.nark.controllers.DashboardsController.editSubmit(uuid: java.util.UUID)
-POST    /dashboard/deactivate/:uuid com.lucidchart.open.nark.controllers.DashboardsController.deactivate(uuid: java.util.UUID)
-POST    /dashboard/activate/:uuid   com.lucidchart.open.nark.controllers.DashboardsController.activate(uuid: java.util.UUID)
-GET     /d/:url                     com.lucidchart.open.nark.controllers.DashboardsController.dashboard(url: String)
+GET     /dashboard/create                    com.lucidchart.open.nark.controllers.DashboardsController.create
+POST    /dashboard/create                    com.lucidchart.open.nark.controllers.DashboardsController.createSubmit
+GET     /dashboard/search                    com.lucidchart.open.nark.controllers.DashboardsController.search(term: String ?= "")
+GET     /dashboard/deleted                   com.lucidchart.open.nark.controllers.DashboardsController.deleted(term: String ?= "")
+GET     /dashboard/manage/:uuid              com.lucidchart.open.nark.controllers.DashboardsController.manage(uuid: java.util.UUID)
+GET     /dashboard/manage/sub/:uuid          com.lucidchart.open.nark.controllers.DashboardsController.manageGraphsAndTargets(uuid: java.util.UUID)
+GET     /dashboard/sortGraphs/:uuid          com.lucidchart.open.nark.controllers.DashboardsController.sortGraphs(uuid: java.util.UUID)
+POST    /dashboard/sortGraphs/:uuid          com.lucidchart.open.nark.controllers.DashboardsController.sortGraphsSubmit(uuid: java.util.UUID)
+GET     /dashboard/edit/:uuid                com.lucidchart.open.nark.controllers.DashboardsController.edit(uuid: java.util.UUID)
+POST    /dashboard/edit/:uuid                com.lucidchart.open.nark.controllers.DashboardsController.editSubmit(uuid: java.util.UUID)
+POST    /dashboard/deactivate/:uuid          com.lucidchart.open.nark.controllers.DashboardsController.deactivate(uuid: java.util.UUID)
+POST    /dashboard/activate/:uuid            com.lucidchart.open.nark.controllers.DashboardsController.activate(uuid: java.util.UUID)
+GET     /d/:url                              com.lucidchart.open.nark.controllers.DashboardsController.dashboard(url: String)
 
 # Graphs
 GET     /graph/:dashboardId/add              com.lucidchart.open.nark.controllers.GraphsController.add(dashboardId: java.util.UUID)
@@ -47,30 +47,30 @@ POST    /target/activate/:uuid               com.lucidchart.open.nark.controller
 POST    /target/deactivate/:uuid             com.lucidchart.open.nark.controllers.TargetsController.deactivate(uuid: java.util.UUID)
 
 # Dashboard Tags
-GET 	/dashboard/tags/searchjson	com.lucidchart.open.nark.controllers.DashboardTagsController.searchToJson(q: String ?= "")
-GET 	/dashboard/tags/search		com.lucidchart.open.nark.controllers.DashboardTagsController.search(term: String ?= "")
-GET 	/t/:tag 					com.lucidchart.open.nark.controllers.DashboardTagsController.tag(tag: String)
+GET     /dashboard/tags/searchjson           com.lucidchart.open.nark.controllers.DashboardTagsController.searchToJson(q: String ?= "")
+GET     /dashboard/tags/search               com.lucidchart.open.nark.controllers.DashboardTagsController.search(term: String ?= "")
+GET     /t/:tag                              com.lucidchart.open.nark.controllers.DashboardTagsController.tag(tag: String)
 
-#Alerts
-GET     /alert/create           com.lucidchart.open.nark.controllers.AlertsController.create
-POST		/alert/createSubmit		com.lucidchart.open.nark.controllers.AlertsController.createSubmit
-GET 		/alert/search		com.lucidchart.open.nark.controllers.AlertsController.search(term: String ?= "")
-GET 		/alert/:uuid/view		com.lucidchart.open.nark.controllers.AlertsController.view(uuid: java.util.UUID)
-GET 		/alert/:uuid/edit 	com.lucidchart.open.nark.controllers.AlertsController.edit(uuid: java.util.UUID)
-POST 		/alert/:uuid/edit 	com.lucidchart.open.nark.controllers.AlertsController.editSubmit(uuid: java.util.UUID)
-POST 		/alert/:uuid/delete 	com.lucidchart.open.nark.controllers.AlertsController.delete(uuid: java.util.UUID)
+# Alerts
+GET     /alert/create                        com.lucidchart.open.nark.controllers.AlertsController.create
+POST    /alert/createSubmit                  com.lucidchart.open.nark.controllers.AlertsController.createSubmit
+GET     /alert/search                        com.lucidchart.open.nark.controllers.AlertsController.search(term: String ?= "")
+GET     /alert/:uuid/view                    com.lucidchart.open.nark.controllers.AlertsController.view(uuid: java.util.UUID)
+GET     /alert/:uuid/edit                    com.lucidchart.open.nark.controllers.AlertsController.edit(uuid: java.util.UUID)
+POST    /alert/:uuid/edit                    com.lucidchart.open.nark.controllers.AlertsController.editSubmit(uuid: java.util.UUID)
+POST    /alert/:uuid/delete                  com.lucidchart.open.nark.controllers.AlertsController.delete(uuid: java.util.UUID)
 
 # Alert Tags
-GET 	/alert/tags/searchjson 		com.lucidchart.open.nark.controllers.AlertTagsController.searchToJson(q: String ?= "")
-GET 	/alert/tags/search 		com.lucidchart.open.nark.controllers.AlertTagsController.search(term: String ?= "")
-GET 	/alert/tags/:tag 			com.lucidchart.open.nark.controllers.AlertTagsController.tag(tag:String)
+GET     /alert/tags/searchjson               com.lucidchart.open.nark.controllers.AlertTagsController.searchToJson(q: String ?= "")
+GET     /alert/tags/search                   com.lucidchart.open.nark.controllers.AlertTagsController.search(term: String ?= "")
+GET     /alert/tags/:tag                     com.lucidchart.open.nark.controllers.AlertTagsController.tag(tag:String)
 
 # Subscription
-POST		/subscription/:id/subscribe 		com.lucidchart.open.nark.controllers.SubscriptionsController.subscribe(id: java.util.UUID)
-POST 	/subscription/:id/edit		com.lucidchart.open.nark.controllers.SubscriptionsController.edit(id: java.util.UUID)
-POST	/subscription/:id/delete 		com.lucidchart.open.nark.controllers.SubscriptionsController.delete(id: java.util.UUID)
-GET 	/user/:id/subscriptions 		com.lucidchart.open.nark.controllers.SubscriptionsController.allSubscriptionsForUser(id: java.util.UUID)
+POST    /subscription/:id/subscribe          com.lucidchart.open.nark.controllers.SubscriptionsController.subscribe(id: java.util.UUID)
+POST    /subscription/:id/edit               com.lucidchart.open.nark.controllers.SubscriptionsController.edit(id: java.util.UUID)
+POST    /subscription/:id/delete             com.lucidchart.open.nark.controllers.SubscriptionsController.delete(id: java.util.UUID)
+GET     /user/:id/subscriptions              com.lucidchart.open.nark.controllers.SubscriptionsController.allSubscriptionsForUser(id: java.util.UUID)
 
 # Map static resources from the /public folder to the /assets URL path
-GET     /favicon.ico                controllers.Assets.at(path="/public", file = "img/favicon.png")
-GET     /assets/*file               controllers.Assets.at(path="/public", file)
+GET     /favicon.ico                         controllers.Assets.at(path="/public", file = "img/favicon.png")
+GET     /assets/*file                        controllers.Assets.at(path="/public", file)
