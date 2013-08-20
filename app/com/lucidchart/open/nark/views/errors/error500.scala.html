@@ -1,0 +1,23 @@
+@(
+	errorOption: Option[Throwable]
+)(
+	implicit
+	request: RequestHeader
+)
+@import com.lucidchart.open.nark.controllers.{routes=>narkRoutes}
+@import com.lucidchart.open.nark.views
+@import com.lucidchart.open.nark.views.html.helpers
+@import helper._
+
+@com.lucidchart.open.nark.views.html.layouts.main("Error!") {
+	<h3>Internal Server Error</h3>
+	<br>
+	@errorOption.map { error =>
+		<div class="alert alert-danger">
+			@error.getMessage
+		</div>
+	}
+	<div class="well">
+		I'll bet you were wishing you had a support contract right now.
+	</div>
+}

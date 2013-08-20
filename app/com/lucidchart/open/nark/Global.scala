@@ -3,12 +3,12 @@ package com.lucidchart.open.nark
 import com.lucidchart.open.nark.utils.StatsD
 import com.lucidchart.open.nark.offline.HostDiscoverer
 import com.lucidchart.open.nark.request.KeepFlashFilter
+import com.lucidchart.open.nark.request.AppRequest
 
-import play.api.Application
-import play.api.GlobalSettings
-import play.api.Logger
-import play.api.libs.concurrent.Akka
+import play.api._
 import play.api.mvc._
+import play.api.mvc.Results._
+import play.api.libs.concurrent.Akka
 import play.filters.csrf.CSRFFilter
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -30,21 +30,49 @@ object Global extends WithFilters(CSRFFilter(), KeepFlashFilter()) with GlobalSe
 	}
 	
 	override def onError(request: RequestHeader, e: Throwable) = {
-		val result = super.onError(request, e)
-		StatsD.increment("global500." + errorStatsKey(request) + "." + request.method.toUpperCase())
-		StatsD.increment("global500-total")
-		result
+		if (Play.isProd) {
+			error500(request, Some(e))
+		}
+		else {
+			super.onError(request, e)
+		}
 	}
 	
 	override def onHandlerNotFound(request: RequestHeader): Result = {
-		val result = super.onHandlerNotFound(request)
-		StatsD.increment("global404." + errorStatsKey(request) + "." + request.method.toUpperCase())
-		StatsD.increment("global404-total")
-		result
+		if (Play.isProd) {
+			error404(request)
+		}
+		else {
+			super.onHandlerNotFound(request)
+		}
 	}
 	
 	override def onRequestCompletion(request: RequestHeader) {
 		super.onRequestCompletion(request)
 		StatsD.increment("requests")
+	}
+
+	/**
+	 * Generic 500 Error Page
+	 */
+	def error500(request: RequestHeader, errorOption: Option[Throwable]) = {
+		StatsD.increment("global500." + errorStatsKey(request) + "." + request.method.toUpperCase())
+		StatsD.increment("global500-total")
+
+		errorOption match {
+			case Some(error) => Logger.error("Uncaught error on " + request.method.toUpperCase + " " + request.uri, error)
+			case _ => Logger.error("Uncaught, unknown error on " + request.method.toUpperCase + " " + request.uri)
+		}
+
+		InternalServerError(views.html.errors.error500(errorOption)(request))
+	}
+
+	/**
+	 * Generic 404 Error Page
+	 */
+	def error404(request: RequestHeader) = {
+		StatsD.increment("global404." + errorStatsKey(request) + "." + request.method.toUpperCase())
+		StatsD.increment("global404-total")
+		NotFound(views.html.errors.error404()(request))
 	}
 }

@@ -1,0 +1,17 @@
+@(
+)(
+	implicit
+	request: RequestHeader
+)
+@import com.lucidchart.open.nark.controllers.{routes=>narkRoutes}
+@import com.lucidchart.open.nark.views
+@import com.lucidchart.open.nark.views.html.helpers
+@import helper._
+
+@com.lucidchart.open.nark.views.html.layouts.main("Page Not Found") {
+	<h3>Page Not Found</h3>
+	<br>
+	<div class="well">
+		Maybe try searching for something that exists?
+	</div>
+}
