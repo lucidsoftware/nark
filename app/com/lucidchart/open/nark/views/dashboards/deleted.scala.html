@@ -15,7 +15,7 @@
 @import helper.twitterBootstrap._
 @import helper._
 
-@com.lucidchart.open.nark.views.html.layouts.main("Trash") {
+@com.lucidchart.open.nark.views.html.layouts.main("Trash", userOption = Some(user)) {
 	<h3>Trash</h3>
 	<br>
 	@helper.form(action=narkRoutes.DashboardsController.deleted()) {
