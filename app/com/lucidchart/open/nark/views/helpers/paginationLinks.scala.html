@@ -1,0 +1,21 @@
+@(
+	currentPage: Int,
+	maxPage: Int
+)(
+	linkGenerator: (Int) => String
+)(
+	implicit
+	request: com.lucidchart.open.nark.request.AppRequest[_]
+)
+
+<div class="pagination pagination-centered">
+	<ul>
+		@for(i <- List(currentPage - 5, 1).max to List(currentPage + 5, maxPage).min) {
+			@if(i == currentPage) {
+				<li class="active"><a href="#">@i</a></li>
+			} else {
+				<li><a href="@linkGenerator(i)">@i</a></li>
+			}
+		}
+	</ul>
+</div>

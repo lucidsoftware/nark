@@ -224,21 +224,24 @@ class DashboardsController extends AppController {
 	/**
 	 * Dashboard searching utility
 	 */
-	def search(term: String) = AuthAction.maybeAuthenticatedUser { implicit userOption =>
+	def search(term: String, page: Int) = AuthAction.maybeAuthenticatedUser { implicit userOption =>
 		AppAction { implicit request =>
-			val matches = DashboardModel.searchByName(term).filter(!_.deleted)
+			val realPage = page.max(1)
+			val (found, matches) = DashboardModel.search(term, realPage - 1)
 			val tags = convertToDashboardMap(DashboardTagsModel.findTagsForDashboard(matches.map(_.id)))
-			Ok(views.html.dashboards.search(term, matches, tags))
+			Ok(views.html.dashboards.search(term, realPage, DashboardModel.configuredLimit, found, matches, tags))
 		}
 	}
+
 	/**
 	 * Deactivated dashboards
 	 */
-	def deleted(term: String) = AuthAction.authenticatedUser { implicit user =>
+	def deleted(term: String, page: Int) = AuthAction.authenticatedUser { implicit user =>
 		AppAction { implicit request =>
-			val matches = DashboardModel.searchDeletedByName(user.id, term)
+			val realPage = page.max(1)
+			val (found, matches) = DashboardModel.searchDeleted(user.id, term, realPage - 1)
 			val tags = convertToDashboardMap(DashboardTagsModel.findTagsForDashboard(matches.map(_.id)))
-			Ok(views.html.dashboards.deleted(term, matches, tags))
+			Ok(views.html.dashboards.deleted(term, realPage, DashboardModel.configuredLimit, found, matches, tags))
 		}
 	}
 }

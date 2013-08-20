@@ -78,19 +78,27 @@ class DashboardModel extends AppModel {
 	/**
 	 * Search for dashboards by name
 	 */
-	def searchByName(name: String): List[Dashboard] = {
+	def search(name: String, page: Int) = {
 		DB.withConnection("main") { connection =>
-			SQL("""
-				SELECT *
-				FROM `dashboards`
-				WHERE `name` LIKE {name}
-				AND `deleted` = false
-				ORDER BY `name`
-				LIMIT {limit}
+			val found = SQL("""
+				SELECT COUNT(1) FROM `dashboards`
+				WHERE `name` LIKE {name} AND `deleted` = FALSE
 			""").on(
-				"name" -> ("%" + name + "%"),
-				"limit" -> configuredLimit
+				"name" -> name
+			).as(scalar[Long].single)(connection)
+
+			val matches = SQL("""
+				SELECT * FROM `dashboards`
+				WHERE `name` LIKE {name} AND `deleted` = FALSE
+				ORDER BY `name` ASC
+				LIMIT {limit} OFFSET {offset}
+			""").on(
+				"name" -> name,
+				"limit" -> configuredLimit,
+				"offset" -> configuredLimit * page
 			).as(dashboardsRowParser *)(connection)
+
+			(found, matches)
 		}
 	}
 
@@ -99,21 +107,29 @@ class DashboardModel extends AppModel {
 	 * @param user_id
 	 * @return dashboards
 	 */
-	def searchDeletedByName(user_id: UUID, name: String): List[Dashboard] = {
+	def searchDeleted(userId: UUID, name: String, page: Int) = {
 		DB.withConnection("main") { connection =>
-			SQL("""
-				SELECT *
-				FROM `dashboards`
-				WHERE `deleted` = true
-				AND `user_id` = {user_id}
-				AND `name` LIKE {name}
-				ORDER BY `name`
-				LIMIT {limit}
+			val found = SQL("""
+				SELECT COUNT(1) FROM `dashboards`
+				WHERE `name` LIKE {name} AND `deleted` = TRUE AND `user_id` = {user_id}
 			""").on(
-				"user_id" -> user_id,
-				"name" -> ("%" + name + "%"),
-				"limit" -> configuredLimit
+				"name" -> name,
+				"user_id" -> userId
+			).as(scalar[Long].single)(connection)
+
+			val matches = SQL("""
+				SELECT * FROM `dashboards`
+				WHERE `name` LIKE {name} AND `deleted` = TRUE AND `user_id` = {user_id}
+				ORDER BY `name` ASC
+				LIMIT {limit} OFFSET {offset}
+			""").on(
+				"name" -> name,
+				"user_id" -> userId,
+				"limit" -> configuredLimit,
+				"offset" -> configuredLimit * page
 			).as(dashboardsRowParser *)(connection)
+
+			(found, matches)
 		}
 	}
 

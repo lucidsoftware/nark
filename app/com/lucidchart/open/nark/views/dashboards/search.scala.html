@@ -1,5 +1,8 @@
 @(
 	term: String,
+	page: Int,
+	limit: Int,
+	found: Long,
 	matches: List[com.lucidchart.open.nark.models.records.Dashboard],
 	tags: Map[java.util.UUID, List[String]]
 )(
@@ -25,40 +28,43 @@
 				<label for="term">Search</label>
 				<div class="input">
 					<input id="term" type="text" name="term" class="input-xlarge" placeholder="Vitals" value="@term">
-					<span class="help-block">Dashboards can be searched by name.</span> 
+					<span class="help-block">Use '%' as a wildcard.</span>
 				</div>
 			</div>
 			<button id="search" class="btn btn-primary">Search</button>
 		</fieldset>
 	}
 
-	@if(matches.isEmpty) {
-		<div class="alert alert-info">No dashboards were found using your search term.</div>
-	} else {
-		<h3>Search Results</h3>
-		<div class="results">
-		<table class="table table-bordered table-hover">
-				<thead>
-					<tr>
-						<th>Dashboard Name</th>
-						<th>Tags</th>
-					</tr>
-				</thead>
-				<tbody>
-					@matches.sortWith(_.name.toLowerCase < _.name.toLowerCase).map { dashboard =>
+	<h3>Search Results</h3>
+	@helpers.paginationMaxPage(found, limit) { maxPage =>
+		@if(matches.isEmpty) {
+			<div class="alert alert-info">No dashboards were found using your search term.</div>
+		} else {
+			<div class="results">
+				<table class="table table-bordered table-hover">
+					<thead>
 						<tr>
-							<td><a href="@narkRoutes.DashboardsController.dashboard(dashboard.url)">@dashboard.name</a></td>
-							<td>
-								@if(tags contains dashboard.id) {
-									@tags.get(dashboard.id).get.map{ tag =>
-										<a href="@narkRoutes.DashboardTagsController.tag(tag)">@tag</a>
-									}
-								}
-							</td>
+							<th>Dashboard Name</th>
+							<th>Tags</th>
 						</tr>
-					}
-				</tbody>
-			</table>
- 		</div>
+					</thead>
+					<tbody>
+						@matches.sortWith(_.name.toLowerCase < _.name.toLowerCase).map { dashboard =>
+							<tr>
+								<td><a href="@narkRoutes.DashboardsController.dashboard(dashboard.url)">@dashboard.name</a></td>
+								<td>
+									@if(tags contains dashboard.id) {
+										@tags.get(dashboard.id).get.map{ tag =>
+											<a href="@narkRoutes.DashboardTagsController.tag(tag)" class="btn btn-mini">@tag</a>
+										}
+									}
+								</td>
+							</tr>
+						}
+					</tbody>
+				</table>
+				@{ helpers.paginationLinks(page, maxPage) { i => narkRoutes.DashboardsController.search(term, i).toString } }
+			</div>
+		}
 	}
 }

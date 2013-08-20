@@ -1,5 +1,8 @@
 @(
 	term: String,
+	page: Int,
+	limit: Int,
+	found: Long,
 	matches: List[com.lucidchart.open.nark.models.records.Dashboard],
 	tags: Map[java.util.UUID, List[String]]
 )(
@@ -15,8 +18,15 @@
 @import helper.twitterBootstrap._
 @import helper._
 
-@com.lucidchart.open.nark.views.html.layouts.main("Trash", userOption = Some(user)) {
-	<h3>Trash</h3>
+@com.lucidchart.open.nark.views.html.layouts.main("Deactivated Dashboards", userOption = Some(user)) {
+	<style type="text/css">
+		td form {
+			padding: 0;
+			margin: 0;
+		}
+	</style>
+
+	<h3>Deactivated Dashboards</h3>
 	<br>
 	@helper.form(action=narkRoutes.DashboardsController.deleted()) {
 		<fieldset>
@@ -24,48 +34,51 @@
 				<label for="term">Search deactivated dashboards</label>
 				<div class="input">
 					<input id="term" type="text" name="term" class="input-xlarge" placeholder="Vitals" value="@term">
-					<span class="help-block">Dashboards can be searched by name.</span> 
+					<span class="help-block">Use '%' as a wildcard.</span>
 				</div>
 			</div>
 			<button id="search" class="btn btn-primary">Search</button>
 		</fieldset>
 	}
 
-	@if(matches.isEmpty) {
-		<div class="alert alert-info">No dashboards were found using your search term.</div>
-	} else {
-		<h3>Search Results</h3>
-		<div class="results">
-		<table class="table table-bordered table-hover">
-				<thead>
-					<tr>
-						<th>Dashboard Name</th>
-						<th>Tags</th>
-						<th>Activate</th>
-					</tr>
-				</thead>
-				<tbody>
-					@matches.sortWith(_.name.toLowerCase < _.name.toLowerCase).map { dashboard =>
+	<h3>Search Results</h3>
+	@helpers.paginationMaxPage(found, limit) { maxPage =>
+		@if(matches.isEmpty) {
+			<div class="alert alert-info">No dashboards were found using your search term.</div>
+		} else {
+			<div class="results">
+				<table class="table table-bordered table-hover">
+					<thead>
 						<tr>
-							<td>@dashboard.name</td>
-							<td>
-								@if(tags contains dashboard.id) {
-									@tags.get(dashboard.id).get.map{ tag =>
-										<a href="@narkRoutes.DashboardTagsController.tag(tag)">@tag</a>
-									}
-								}
-							</td>
-							<td>
-								@helper.form(action=narkRoutes.DashboardsController.activate(dashboard.id)) {
-									@helpers.csrfHiddenInput()
-									<button id="activate" class="btn btn-primary">Activate</button>
-								}
-							</td>
+							<th>Dashboard Name</th>
+							<th>Tags</th>
+							<th>Activate</th>
 						</tr>
-					}
-				</tbody>
-			</table>
- 		</div>
-		<p>These graphs are currently <span class="label label-important">deactivated</span>. They will not show up on the dashboard page. </p>
+					</thead>
+					<tbody>
+						@matches.sortWith(_.name.toLowerCase < _.name.toLowerCase).map { dashboard =>
+							<tr>
+								<td>@dashboard.name</td>
+								<td>
+									@if(tags contains dashboard.id) {
+										@tags.get(dashboard.id).get.map{ tag =>
+											<a href="@narkRoutes.DashboardTagsController.tag(tag)" class="btn btn-mini">@tag</a>
+										}
+									}
+								</td>
+								<td>
+									@helper.form(action=narkRoutes.DashboardsController.activate(dashboard.id)) {
+										@helpers.csrfHiddenInput()
+										<button id="activate" class="btn btn-primary">Activate</button>
+									}
+								</td>
+							</tr>
+						}
+					</tbody>
+				</table>
+				@{ helpers.paginationLinks(page, maxPage) { i => narkRoutes.DashboardsController.deleted(term, i).toString } }
+			</div>
+			<p>These graphs are currently <span class="label label-important">deactivated</span>. They will not show up on the dashboard page. </p>
+		}
 	}
 }

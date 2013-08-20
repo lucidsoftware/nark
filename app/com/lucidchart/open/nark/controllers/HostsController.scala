@@ -11,8 +11,9 @@ class HostsController extends AppController {
 	 */
 	def search(term: String, page: Int) = AuthAction.maybeAuthenticatedUser { implicit userOption =>
 		AppAction { implicit request =>
-			val (found, matches) = HostModel.search(term, page)
-			Ok(views.html.hosts.search(term, page, HostModel.configuredLimit, found, matches))
+			val realPage = page.max(1)
+			val (found, matches) = HostModel.search(term, realPage - 1)
+			Ok(views.html.hosts.search(term, realPage, HostModel.configuredLimit, found, matches))
 		}
 	}
 }

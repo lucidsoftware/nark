@@ -17,13 +17,13 @@
 @com.lucidchart.open.nark.views.html.layouts.main("Host Search", userOption = userOption) {
 	<h3>Host Search</h3>
 	<br>
-	@helper.form(action=narkRoutes.HostsController.search(page = 0)) {
+	@helper.form(action=narkRoutes.HostsController.search()) {
 		<fieldset>
 			<div class="clearfix" id="search_field">
 				<label for="term">Search</label>
 				<div class="input">
 					<input id="term" type="text" name="term" class="input-xlarge" placeholder="hostname.domain.com" value="@term">
-					<span class="help-block">Use '%' as a wildcard.</span> 
+					<span class="help-block">Use '%' as a wildcard.</span>
 				</div>
 			</div>
 			<button id="search" class="btn btn-primary">Search</button>
@@ -31,7 +31,7 @@
 	}
 
 	<h3>Search Results</h3>
-	@defining((found / limit).toInt + (if (found % limit > 0) 1 else 0)) { maxPage =>
+	@helpers.paginationMaxPage(found, limit) { maxPage =>
 		@if(matches.isEmpty) {
 			<div class="alert alert-info">No hosts were found using your search term.</div>
 		} else {
@@ -52,17 +52,7 @@
 						}
 					</tbody>
 				</table>
-				<div class="pagination pagination-centered">
-					<ul>
-						@for(i <- List(page - 5, 0).max to List(page + 5, maxPage - 1).min) {
-							@if(i == page) {
-								<li class="active"><a href="#">@{i + 1}</a></li>
-							} else {
-								<li><a href="@narkRoutes.HostsController.search(term, i)">@{i + 1}</a></li>
-							}
-						}
-					</ul>
-				</div>
+				@{ helpers.paginationLinks(page, maxPage) { i => narkRoutes.HostsController.search(term, i).toString } }
 	 		</div>
 		}
 	}

@@ -1,0 +1,10 @@
+@(
+	found: Long,
+	limit: Int
+)(
+	withMaxPage: (Int) => Html
+)
+
+@defining((found / limit).toInt + (if (found % limit > 0) 1 else 0)) { maxPage =>
+	@withMaxPage(maxPage)
+}
