@@ -31,7 +31,6 @@
 			<button id="search" class="btn btn-primary">Search</button>
 		</fieldset>
 	}
-
 	<h3>Search Results</h3>
 	@helpers.paginationMaxPage(found, limit) { maxPage =>
 		@if(matches.isEmpty) {
@@ -46,7 +45,7 @@
 							<th>Error</th>
 							<th>Warn</th>
 							<th>Comparison</th>
-							<th>State</th>
+							<th>WorstState</th>
 							<th>Tags</th>
 						</tr>
 					</thead>
@@ -58,7 +57,7 @@
 								<td>@alert.errorThreshold</td>
 								<td>@alert.warnThreshold</td>
 								<td>@alert.comparison</td>
-								<td>@alert.state.toString</td>
+								<td>@alert.worstState.toString</td>
 								<td>
 									@tags.get(alert.id).get.map { tag =>
 										<a href="@narkRoutes.AlertTagsController.tag(tag)" class="btn btn-mini">@tag</a>

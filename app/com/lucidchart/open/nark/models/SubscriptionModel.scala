@@ -84,31 +84,40 @@ class SubscriptionModel extends AppModel {
 	 * @param id the id of the Alert for which to find subscriptions
 	 */
 	def getSubscriptionsByAlert(id: UUID): List[SubscriptionRecord] = {
-		val subscriptions: List[Subscription] = DB.withConnection("main") { connection =>
-			SQL("""
-				SELECT *
-				FROM `alert_subscriptions`
-				WHERE `alert_id` = {alert_id}
-			""").on(
-				"alert_id" -> id
-			).as(subscriptionsRowParser *)(connection)
-		}
-
-		if (subscriptions.size == 0) {
+		getSubscriptionsByAlerts(List(id))
+	}
+	/**
+	 * Get all subscriptions for specified alerts
+	 * @param id the id of the Alert for which to find subscriptions
+	 */
+	def getSubscriptionsByAlerts(ids: List[UUID]): List[SubscriptionRecord] = {
+		if(ids.isEmpty) {
 			Nil
-		}
-		else {
-			val userIds = subscriptions.map { subscription =>
-				subscription.userId
+			
+		} else {
+			val subscriptions: List[Subscription] = DB.withConnection("main") { connection =>
+				RichSQL("""
+					SELECT *
+					FROM `alert_subscriptions`
+					WHERE `alert_id` IN ({alert_ids})
+				""").onList(
+					"alert_ids" -> ids
+				).toSQL.as(subscriptionsRowParser *)(connection)
 			}
-			val users = UserModel.findUsersByID(userIds).map { user =>
-				(user.id, user)
-			}.toMap
 
-			val alert = AlertModel.getAlert(id)
+			if (subscriptions.size == 0) {
+				Nil
+			}
+			else {
+				val userIds = subscriptions.map( _.userId ).distinct
+				val users = UserModel.findUsersByID(userIds).map { user =>
+					(user.id, user)
+				}.toMap
 
-			subscriptions.map { subscription =>
-				SubscriptionRecord(subscription, alert.get, users.get(subscription.userId))
+				val alerts = AlertModel.getAlerts(ids)
+				subscriptions.map { subscription =>
+					SubscriptionRecord(subscription, alerts.find(alert => alert.id == subscription.alertId).get, users.get(subscription.userId))
+				}
 			}
 		}
 	}

@@ -16,9 +16,13 @@ class UserModel extends AppModel {
 		get[UUID]("id") ~
 		get[String]("email") ~
 		get[Date]("created") ~
-		get[String]("name") map {
-			case id ~ email ~ created ~ name =>
-				new User(id, email, created, name)
+		get[String]("name") ~
+		get[String]("warn_address") ~
+		get[Boolean]("warn_enable") ~
+		get[String] ("error_address") ~
+		get[Boolean]("error_enable") map {
+			case id ~ email ~ created ~ name ~ warn_address ~ warn_enable ~ error_address ~ error_enable=>
+				new User(id, email, created, name, warn_address, warn_enable, error_address, error_enable)
 		}
 	}
 	
@@ -75,12 +79,16 @@ class UserModel extends AppModel {
 		DB.withConnection("main") { connection =>
 			SQL("""
 				INSERT INTO `users` (`id`, `email`, `created`, `name`, `warn_address`, `warn_enable`, `error_address`, `error_enable`)
-				VALUES ({id}, {email}, {created}, {name}, {email}, true, {email}, true)
+				VALUES ({id}, {email}, {created}, {name}, {warn_address}, {warn_enable}, {error_address}, {error_enable})
 			""").on(
 				"id"         -> user.id,
 				"email"      -> user.email,
 				"created"    -> user.created,
-				"name"       -> user.name
+				"name"       -> user.name,
+				"warn_address"	-> user.warnAddress,
+				"warn_enable"	-> user.warnEnable,
+				"error_address"	-> user.errorAddress,
+				"error_enable"	-> user.errorEnable
 			).executeUpdate()(connection)
 		}
 	}

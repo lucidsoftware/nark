@@ -9,6 +9,12 @@ object Comparisons extends Enumeration {
 	val == = Value(2, "==")
 	val >= = Value(3, ">=")
 	val > = Value(4, ">")
+	val != = Value(5, "!=")
+}
+
+object AlertStatus extends Enumeration {
+	val success = Value(0, "success")
+	val failure = Value(1, "failure")
 }
 
 object AlertState extends Enumeration {
@@ -20,7 +26,6 @@ object AlertState extends Enumeration {
 object AlertType extends Enumeration {
 	val alert = Value(0, "alert")
 	val dynamicAlert = Value(1, "dynamic alert")
-	val alertTag = Value(2, "alert tag")
 }
 
 case class Alert (
@@ -29,19 +34,22 @@ case class Alert (
 	userId: UUID,
 	target: String,
 	comparison: Comparisons.Value,
+	dynamicAlertId: Option[UUID],
 	active: Boolean,
 	deleted: Boolean,
 	created: Date,
 	threadId: Option[UUID],
+	threadStart: Option[Date],
 	lastChecked: Date,
 	nextCheck: Date,
 	frequency: Int,
 	warnThreshold: BigDecimal,
 	errorThreshold: BigDecimal,
-	state: AlertState.Value
+	worstState: AlertState.Value,
+	consecutiveFailures: Int
 ) extends AppRecord {
 	/**
 	 * Create a new Alert record for inserting into the database
 	*/
-	def this(name: String, userId: UUID, target: String, comparison: Comparisons.Value, frequency: Int, warnThreshold: BigDecimal, errorThreshold: BigDecimal) = this(UUID.randomUUID(), name, userId, target, comparison, true, false, new Date(), None, new Date(), new Date(), frequency, warnThreshold, errorThreshold, AlertState.normal)
+	def this(name: String, userId: UUID, target: String, comparison: Comparisons.Value, frequency: Int, warnThreshold: BigDecimal, errorThreshold: BigDecimal) = this(UUID.randomUUID(), name, userId, target, comparison, None, true, false, new Date(), None, None, new Date(), new Date(), frequency, warnThreshold, errorThreshold, AlertState.normal, 0)
 }

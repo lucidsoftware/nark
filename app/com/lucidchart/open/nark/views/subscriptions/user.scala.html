@@ -28,7 +28,7 @@
 									<th>Error</th>
 									<th>Warn</th>
 									<th>Comparison</th>
-									<th>State</th>
+									<th>Worst State</th>
 									<th>Active</th>
 								</tr>
 							</thead>
@@ -44,7 +44,7 @@
 											<td>@subscription.alert.errorThreshold</td>
 											<td>@subscription.alert.warnThreshold</td>
 											<td>@subscription.alert.comparison</td>
-											<td>@subscription.alert.state.toString</td>
+											<td>@subscription.alert.worstState.toString</td>
 											<td><input class="btn" type="submit" value="@if(subscription.subscription.active){Deactivate Subscription} else {Reactivate Subscription}" /></td>
 										}
 									</tr>
