@@ -414,11 +414,13 @@
 
 		var currentColumnCount = null;
 		function setColumnCount(count) {
-			currentColumnCount = count;
-			$("#column-group button.active").removeClass("active");
-			$("#column-group button[data='" + count + "']").addClass("active");
-			$("#allgraphs").removeClass("g1 g2 g3 g4 g5 g6").addClass("g" + count);
-			adjustGraphHeights();
+			if (currentColumnCount != count) {
+				currentColumnCount = count;
+				$("#column-group button.active").removeClass("active");
+				$("#column-group button[data='" + count + "']").addClass("active");
+				$("#allgraphs").removeClass("g1 g2 g3 g4 g5 g6").addClass("g" + count);
+				adjustGraphHeights();
+			}
 		}
 
 		var refreshRateSeconds = null;
@@ -438,57 +440,63 @@
 		}
 
 		function setRefreshRate(seconds) {
-			$("#refreshrate-group button.active").removeClass("active");
-			$("#refreshrate-group button[data='" + seconds + "']").addClass("active");
+			if (seconds != refreshRateSeconds) {
+				$("#refreshrate-group button.active").removeClass("active");
+				$("#refreshrate-group button[data='" + seconds + "']").addClass("active");
 
-			// updating a graph for a static time period seems like a waste... change it to 1h
-			if (seconds != "disable" && dateRange["type"] == "custom") {
-				setDateRange(3600);
+				// updating a graph for a static time period seems like a waste... change it to 1h
+				if (seconds != "disable" && dateRange["type"] == "custom") {
+					setDateRange(3600);
+				}
+
+				refreshRateSeconds = seconds;
+				refreshTimerTick();
 			}
-
-			refreshRateSeconds = seconds;
-			refreshTimerTick();
 		}
 
-		var summarizer = 'auto';
+		var summarizer = null;
 		function setSummarizer(seconds) {
-			$("#summarizer-group button.active").removeClass("active");
-			$("#summarizer-group button[data='" + seconds + "']").addClass("active");
-			summarizer = seconds;
-			queueRefreshData();
+			if (seconds != summarizer) {
+				$("#summarizer-group button.active").removeClass("active");
+				$("#summarizer-group button[data='" + seconds + "']").addClass("active");
+				summarizer = seconds;
+				queueRefreshData();
+			}
 		}
 
 		var dateRange = { "type": null };
 		function setDateRange(seconds) {
-			$("#daterange-group button.active").removeClass("active");
-			$("#daterange-group button[data='" + seconds + "']").addClass("active");
+			if ((seconds == "custom" && dateRange['type'] != "custom") || (seconds != "custom" && seconds != dateRange['seconds'])) {
+				$("#daterange-group button.active").removeClass("active");
+				$("#daterange-group button[data='" + seconds + "']").addClass("active");
 
-			if (seconds == "custom") {
-				$("#custom-daterange-group").slideDown();
-				if (dateRange["type"] != "custom") {
-					dateRange = {
-						"type": "custom",
-						"start": null,
-						"end": null
-					};
+				if (seconds == "custom") {
+					$("#custom-daterange-group").slideDown();
+					if (dateRange["type"] != "custom") {
+						dateRange = {
+							"type": "custom",
+							"start": null,
+							"end": null
+						};
 
-					updateCustomDates();
+						updateCustomDates();
 
-					// updating a graph for a static time period seems like a waste... disable it.
-					if (refreshRateSeconds != "disable") {
-						setRefreshRate("disable");
+						// updating a graph for a static time period seems like a waste... disable it.
+						if (refreshRateSeconds != "disable") {
+							setRefreshRate("disable");
+						}
 					}
 				}
-			}
-			else {
-				$("#custom-daterange-group").slideUp();
-				dateRange = {
-					"type": "recent",
-					"seconds": seconds
-				};
-			}
+				else {
+					$("#custom-daterange-group").slideUp();
+					dateRange = {
+						"type": "recent",
+						"seconds": seconds
+					};
+				}
 
-			refreshTimerTick();
+				queueRefreshData();
+			}
 		}
 
 		function updateCustomDates() {
