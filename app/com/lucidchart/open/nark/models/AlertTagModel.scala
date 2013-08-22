@@ -120,6 +120,8 @@ class AlertTagModel extends AppModel {
 	 * @return the AlertTags
 	 */
 	def findAlertsByTag(tags: List[String]): List[AlertTag] = {
+		if(tags.isEmpty)
+			return Nil
 		DB.withConnection("main") { connection =>
 			RichSQL("""
 				SELECT *
