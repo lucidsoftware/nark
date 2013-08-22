@@ -126,30 +126,42 @@ class SubscriptionModel extends AppModel {
 	 * Get all subscriptions for a certain user
 	 * @param id the id of the User for which to find subscriptions
 	 */
-	def getSubscriptionsByUser(id: UUID): List[SubscriptionRecord] = {
-		val subscriptions = DB.withConnection("main") { connection =>
-			SQL("""
-				SELECT *
-				FROM `alert_subscriptions`
+	def getSubscriptionsByUser(id: UUID, page:Int) = {
+		DB.withConnection("main") { connection =>
+			val found = SQL("""
+				SELECT COUNT(1) FROM `alert_subscriptions`
 				WHERE `user_id` = {user_id}
 			""").on(
 				"user_id" -> id
-			).as(subscriptionsRowParser *)(connection)
-		}
+			).as(scalar[Long].single)(connection)
 
-		if (subscriptions.size == 0) {
-			Nil
-		}
-		else {
-			val user = UserModel.findUserByID(id).get
 
-			val alertIds = subscriptions.map { _.alertId }
-			val alerts = AlertModel.getAlerts(alertIds).map { alert =>
-				(alert.id, alert)
-			}.toMap
+			val subscriptions = SQL("""
+					SELECT *
+					FROM `alert_subscriptions`
+					WHERE `user_id` = {user_id}
+					ORDER BY `alert_id` ASC
+					LIMIT {limit} OFFSET {offset}
+				""").on(
+					"user_id" -> id,
+					"limit" -> configuredLimit,
+					"offset" -> configuredLimit * page
+				).as(subscriptionsRowParser *)(connection)
 
-			subscriptions.map { subscription =>
-				SubscriptionRecord(subscription, alerts.get(subscription.alertId).get, Some(user))
+			if (subscriptions.size == 0) {
+				(found, Nil)
+			}
+			else {
+				val user = UserModel.findUserByID(id).get
+
+				val alertIds = subscriptions.map { _.alertId }
+				val alerts = AlertModel.getAlerts(alertIds).map { alert =>
+					(alert.id, alert)
+				}.toMap
+
+				(found, (subscriptions.map { subscription =>
+					SubscriptionRecord(subscription, alerts.get(subscription.alertId).get, Some(user))
+				}))
 			}
 		}
 

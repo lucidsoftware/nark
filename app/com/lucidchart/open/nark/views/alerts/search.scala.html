@@ -67,7 +67,7 @@
 						}
 					</tbody>
 				</table>
-				@{ helpers.paginationLinks(page, maxPage) { i => narkRoutes.AlertTagsController.search(term, i).toString } }
+				@{ helpers.paginationLinks(page, maxPage) { i => narkRoutes.AlertsController.search(term, i).toString } }
 			</div>
 		}
 	}

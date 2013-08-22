@@ -1,4 +1,7 @@
 @(
+	page: Int,
+	limit: Int,
+	found: Long,
 	subscriptions: List[com.lucidchart.open.nark.models.records.SubscriptionRecord]
 )(
 	implicit
@@ -23,6 +26,7 @@
 			<td><a href="@narkRoutes.TagSubscriptionsController.allSubscriptionsForUser(userOption.get.id)" class="btn btn-info">View Tag Subscriptions</a></td>
 		</tr>
 	</table>
+	@helpers.paginationMaxPage(found, limit) { maxPage =>
 	<div>
 		<div class="row">
 			<div class="span1" />
@@ -46,7 +50,7 @@
 							<tbody>
 								@subscriptions.map { subscription =>
 									<tr>
-										@helper.form(action=narkRoutes.SubscriptionsController.edit(subscription.alert.id, true)) {
+										@helper.form(action=narkRoutes.SubscriptionsController.edit(subscription.alert.id, page)) {
 										@helpers.csrfHiddenInput()
 										<input type="hidden" name="alert_type" value="@subscription.subscription.alertType.id" />
 										<input type="hidden" name="active" value="@(subscription.subscription.active == false)" />
@@ -67,4 +71,6 @@
 			</div>
 		</div>
 	</div>
+	@{ helpers.paginationLinks(page, maxPage) { i => narkRoutes.SubscriptionsController.allSubscriptionsForUser(userOption.get.id, i).toString } }
+	}
 }

@@ -28,7 +28,7 @@ class DashboardTagsModel extends AppModel {
 	def search(tag: String, page: Int) = {
 		DB.withConnection("main") { connection =>
 			val found = SQL("""
-				SELECT COUNT(1) FROM `dashboard_tags`
+				SELECT COUNT(DISTINCT(`tag`)) FROM `dashboard_tags`
 				WHERE `tag` LIKE {tag}
 			""").on(
 				"tag" -> tag

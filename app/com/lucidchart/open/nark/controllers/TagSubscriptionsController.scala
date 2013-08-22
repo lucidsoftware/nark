@@ -47,23 +47,24 @@ object TagSubscriptionsController extends AppController {
 	 * Edit a tag subscription
 	 * @param tag the tag of the subscription to edit
 	 */
-	 def edit(tag: String, redirectMySubscriptions: Boolean = false) = AuthAction.authenticatedUser { implicit user =>
+	 def edit(tag: String, mySubscriptionsPage: Int) = AuthAction.authenticatedUser { implicit user =>
 	 	AppAction { implicit request =>
 	 		editForm.bindFromRequest().fold(
 	 			formWithErrors => {
-	 				if(redirectMySubscriptions) {
-	 					Redirect(routes.TagSubscriptionsController.allSubscriptionsForUser(user.id)).flashing(AppFlash.error("Unable to edit subscription."))
-	 				} else {
+
+	 				if(mySubscriptionsPage < 1) {
 	 					Redirect(routes.AlertTagsController.tag(tag)).flashing(AppFlash.error("Unable to edit subscription."))
+	 				} else {
+	 					Redirect(routes.TagSubscriptionsController.allSubscriptionsForUser(user.id, mySubscriptionsPage)).flashing(AppFlash.error("Unable to edit subscription."))
 	 				}
 	 			},
 	 			data => {
 	 				val subscription = new TagSubscription(user.id, tag, data.active)
 	 				TagSubscriptionModel.editSubscription(tag, user.id, subscription)
-	 				if(redirectMySubscriptions) {
-	 					Redirect(routes.TagSubscriptionsController.allSubscriptionsForUser(user.id)).flashing(AppFlash.success("Successfully saved changes."))
- 					} else {
+	 				if(mySubscriptionsPage < 1) {
 	 					Redirect(routes.AlertTagsController.tag(tag)).flashing(AppFlash.success("Successfully saved changes."))
+ 					} else {
+	 					Redirect(routes.TagSubscriptionsController.allSubscriptionsForUser(user.id, mySubscriptionsPage)).flashing(AppFlash.success("Successfully saved changes."))
  					}
 	 			}
 	 		)
@@ -92,16 +93,17 @@ object TagSubscriptionsController extends AppController {
 	 * Get all subscriptions for a user
 	 * @param id the id of the user to look up
 	 */
-	def allSubscriptionsForUser(id: UUID) = AuthAction.authenticatedUser { implicit user =>
+	def allSubscriptionsForUser(id: UUID, page: Int) = AuthAction.authenticatedUser { implicit user =>
 		AppAction { implicit request =>
 			if (id != user.id) {
 				Redirect(routes.HomeController.index()).flashing(AppFlash.error("You do not have access to manage this user's subscriptions."))
 			}
 			else {
-				val tagSubscriptions = TagSubscriptionModel.getSubscriptionsByUser(id)
-				val tags = AlertTagModel.findAlertsByTag(tagSubscriptions.map{ts => ts.subscription.tag}.distinct)
-				val alerts = AlertModel.getAlerts(tags.map{tag => tag.alertId})
-				Ok(views.html.tagsubscriptions.user(tagSubscriptions, AlertTagConverter.toTagMap(tags, alerts))(request, Some(user)))
+				val realPage = page.max(1)
+				val (found, tagSubscriptions) = TagSubscriptionModel.getSubscriptionsByUser(id, realPage - 1)
+				val tags = AlertTagModel.findAlertsByTag(tagSubscriptions.map{ts => ts.subscription.tag})
+				val alerts = AlertModel.getAlerts(tags.map{tag => tag.alertId}.distinct)
+				Ok(views.html.tagsubscriptions.user(realPage, TagSubscriptionModel.configuredLimit, found, tagSubscriptions, AlertTagConverter.toTagMap(tags, alerts))(request, Some(user)))
 			}
 		}
 	}

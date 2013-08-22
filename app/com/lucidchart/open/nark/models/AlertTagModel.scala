@@ -46,7 +46,7 @@ class AlertTagModel extends AppModel {
 	def search(name: String, page: Int) = {
 		DB.withConnection("main") { connection =>
 			val found = SQL("""
-				SELECT COUNT(1) FROM `alert_tags`
+				SELECT COUNT(distinct(`name`)) FROM `alert_tags`
 				WHERE `name` LIKE {name}
 			""").on(
 				"name" -> name
@@ -55,6 +55,7 @@ class AlertTagModel extends AppModel {
 			val matches = SQL("""
 				SELECT * FROM `alert_tags`
 				WHERE `name` LIKE {name}
+				GROUP BY `name`
 				ORDER BY `name` ASC
 				LIMIT {limit} OFFSET {offset}
 			""").on(

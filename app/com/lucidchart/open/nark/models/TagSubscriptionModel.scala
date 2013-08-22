@@ -123,25 +123,37 @@ class TagSubscriptionModel extends AppModel {
 	 * Get all subscriptions for a certain user
 	 * @param id the id of the User for which to find subscriptions
 	 */
-	def getSubscriptionsByUser(id: UUID): List[TagSubscriptionRecord] = {
-		val subscriptions = DB.withConnection("main") { connection =>
-			SQL("""
-				SELECT *
-				FROM `alert_tag_subscriptions`
+	def getSubscriptionsByUser(id: UUID, page: Int) = {
+		DB.withConnection("main") { connection =>
+			val found = SQL("""
+				SELECT COUNT(1) FROM `alert_tag_subscriptions`
 				WHERE `user_id` = {user_id}
 			""").on(
 				"user_id" -> id
-			).as(tagSubscriptionRowParser *)(connection)
-		}
+			).as(scalar[Long].single)(connection)
 
-		if (subscriptions.size == 0) {
-			Nil
-		}
-		else {
-			val user = UserModel.findUserByID(id).get
-			subscriptions.map { subscription =>
-				TagSubscriptionRecord(subscription, Some(user))
+			val subscriptions = SQL("""
+				SELECT *
+				FROM `alert_tag_subscriptions`
+				WHERE `user_id` = {user_id}
+				ORDER BY `tag` ASC
+				LIMIT {limit} OFFSET {offset}
+			""").on(
+				"user_id" -> id,
+				"limit" -> configuredLimit,
+				"offset" -> configuredLimit * page
+			).as(tagSubscriptionRowParser *)(connection)
+			
+			if (subscriptions.size == 0) {
+				(found, Nil)
+			}
+			else {
+				val user = UserModel.findUserByID(id).get
+				(found, (subscriptions.map { subscription =>
+					TagSubscriptionRecord(subscription, Some(user))
+				}))
 			}
 		}
+
 	}
 }

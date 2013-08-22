@@ -30,8 +30,9 @@ class AlertTagsController extends AppController {
 		AppAction { implicit request =>
 			val realPage = page.max(1)
 			val (found, tags) = AlertTagModel.search(term, realPage - 1)
-			val alerts = AlertModel.getAlerts(tags.map(_.alertId).distinct).filter(!_.deleted)
-			Ok(views.html.alerttags.search(term, realPage, AlertTagModel.configuredLimit, found, AlertTagConverter.toTagMap(tags, alerts)))
+			val alertTags = AlertTagModel.findAlertsByTag(tags.map{_.tag})
+			val alerts = AlertModel.getAlerts(alertTags.map(_.alertId).distinct).filter(!_.deleted)
+			Ok(views.html.alerttags.search(term, realPage, AlertTagModel.configuredLimit, found, AlertTagConverter.toTagMap(alertTags, alerts)))
 		}
 	}
 
