@@ -266,6 +266,26 @@ class AlertModel extends AppModel {
 
 		}
 	}
+
+	def cleanAlertThreadsBefore(date: Date) {
+		DB.withConnection("main") { connection =>
+
+			SQL("""
+				UPDATE `alerts` 
+				SET `thread_id` = NULL,
+					`thread_start` = NULL,
+					`next_check` = NOW()
+				WHERE `thread_id` IS NOT NULL
+				AND `thread_start` < {date}
+				AND `active` = 1
+				AND `deleted` = 0
+			""").on(
+				"date" -> date
+			).executeUpdate() (connection)
+
+		}
+	}
+
 	private def secondsFromNow(seconds: Int) : Date = {
 		new Date(new Date().getTime + (1000 * seconds))
 	}

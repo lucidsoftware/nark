@@ -1,16 +1,18 @@
 package com.lucidchart.open.nark.jobs.alerts
 
+import java.util.Date
 import play.api.Play.current
 import play.api.Play.configuration
+import play.api.libs.concurrent.Akka
+import akka.routing.RoundRobinRouter
 import akka.actor.Actor
 import akka.actor.ActorRef
 import akka.actor.Props
-import akka.routing.RoundRobinRouter
-import scala.concurrent.duration._
 import scala.concurrent.ExecutionContext.Implicits.global
-import play.api.libs.concurrent.Akka
+import scala.concurrent.duration._
 
 case class DoneMessage(success: Integer, failure: Integer)
+case class DoneCleaningMessage()
 
 class Master extends Actor {
 	private var threadCount = configuration.getInt("alerts.initialThreadCount").get
@@ -22,6 +24,9 @@ class Master extends Actor {
 	private val maxSleepSeconds = configuration.getInt("alerts.maxSleepSeconds").get
 	private val backoffMultiplier = configuration.getInt("alerts.backoffMultiplier").get
 	private val alertsPerWorker = configuration.getInt("alerts.alertsPerWorker").get
+	private val cleanupUnfinishedSeconds = configuration.getInt("alerts.cleanupSeconds").get
+	private var cleanupFrequency = configuration.getInt("alerts.cleanupFrequencySeconds").get
+	private var nextCleanup = new Date()
 
 
 	private def setupWorkerRouter(): ActorRef = {
@@ -30,8 +35,17 @@ class Master extends Actor {
 	}
 
 	private def sendWork(threads: Integer) {
-		for(i <- 1 to threads) {
-			workerRouter ! CheckAlertMessage(alertsPerWorker)
+		if(nextCleanup.before(new Date())) {
+			nextCleanup = new Date(new Date().getTime + (1000 * cleanupFrequency))
+
+			for(i <- 1 to threads-1) {
+				workerRouter ! CheckAlertMessage(alertsPerWorker)
+			}
+			workerRouter ! CleanupMessage(cleanupUnfinishedSeconds)
+		} else {
+			for(i <- 1 to threads) {
+				workerRouter ! CheckAlertMessage(alertsPerWorker)
+			}
 		}
 	}
 	
@@ -64,8 +78,13 @@ class Master extends Actor {
 		}
 	}
 
+	def handleDone(m: DoneCleaningMessage) {
+		sendWork(1)
+	}
+
 	def receive = {
 		case m: DoneMessage => handleDone(m)
+		case m: DoneCleaningMessage => handleDone(m)
 		case "start" => sendWork(threadCount)
 	}
 }

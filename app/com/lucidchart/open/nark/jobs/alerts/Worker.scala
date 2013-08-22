@@ -17,6 +17,7 @@ import internet._
 import java.util.{Date, UUID}
 
 case class CheckAlertMessage(limit: Int)
+case class CleanupMessage(seconds: Int)
 
 class Worker extends Actor {
 	private val threadId = UUID.randomUUID()
@@ -51,6 +52,12 @@ class Worker extends Actor {
 
 	def receive = {
 		case m: CheckAlertMessage => checkAlert(m)
+		case m: CleanupMessage => cleanUnfinishedAlerts(m)
+	}
+
+	private def cleanUnfinishedAlerts(message: CleanupMessage) = {
+		AlertModel.cleanAlertThreadsBefore(secondsFromNow(-message.seconds))
+		sender ! DoneCleaningMessage()
 	}
 
 	private def checkAlert(message: CheckAlertMessage) {
