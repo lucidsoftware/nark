@@ -83,7 +83,7 @@ CREATE TABLE `alert_subscriptions` (
 CREATE TABLE `alert_tag_subscriptions` (
 	`hiddenid` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
 	`user_id` BINARY(16) NOT NULL,
-	`tag` BINARY(16) NOT NULL,
+	`tag` VARCHAR(25) NOT NULL,
 	`active` BOOLEAN NOT NULL,
 	PRIMARY KEY (`hiddenid`),
 	UNIQUE KEY `alert_tag_lookup` (`user_id`, `tag`),

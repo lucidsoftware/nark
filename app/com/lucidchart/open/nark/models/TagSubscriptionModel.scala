@@ -138,9 +138,9 @@ class TagSubscriptionModel extends AppModel {
 			Nil
 		}
 		else {
-
+			val user = UserModel.findUserByID(id).get
 			subscriptions.map { subscription =>
-				TagSubscriptionRecord(subscription, UserModel.findUserByID(id))
+				TagSubscriptionRecord(subscription, Some(user))
 			}
 		}
 	}

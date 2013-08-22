@@ -4,7 +4,7 @@ import com.lucidchart.open.nark.request.{AppFlash, AppAction, AuthAction, Dashbo
 import com.lucidchart.open.nark.views
 import com.lucidchart.open.nark.models.DashboardTagsModel
 import com.lucidchart.open.nark.models.DashboardModel
-import com.lucidchart.open.nark.models.DashboardTagsConverter._
+import com.lucidchart.open.nark.models.DashboardTagConverter
 import com.lucidchart.open.nark.utils.StatsD
 import play.api.data._
 import play.api.data.Forms._
@@ -34,7 +34,7 @@ class DashboardTagsController extends AppController {
 			val (found, tags) = DashboardTagsModel.search(term, realPage - 1)
 			val dashboardTags = DashboardTagsModel.findDashboardsWithTag(tags)
 			val dashboards = DashboardModel.findDashboardByID(dashboardTags.map(_.dashboardId).distinct).filter(!_.deleted)
-			Ok(views.html.dashboardtags.search(term, realPage, DashboardModel.configuredLimit, found, convertToTagsMap(dashboardTags, dashboards)))
+			Ok(views.html.dashboardtags.search(term, realPage, DashboardModel.configuredLimit, found, DashboardTagConverter.toTagMap(dashboardTags, dashboards)))
 		}
 	}
 

@@ -1,8 +1,8 @@
 package com.lucidchart.open.nark.controllers
 
 import com.lucidchart.open.nark.request.{AppAction, AuthAction}
-import com.lucidchart.open.nark.models.{AlertModel, AlertTagModel}
-import com.lucidchart.open.nark.models.AlertTagConverter._
+import com.lucidchart.open.nark.models.{AlertModel, AlertTagModel, TagSubscriptionModel}
+import com.lucidchart.open.nark.models.AlertTagConverter
 import com.lucidchart.open.nark.views
 import play.api.libs.json.Json
 
@@ -17,7 +17,8 @@ class AlertTagsController extends AppController {
 		AppAction { implicit request =>
 			val alertIds = AlertTagModel.findAlertsByTag(tag).map(_.alertId)
 			val alerts = AlertModel.getAlerts(alertIds)
-			Ok(views.html.alerttags.tag(tag, alerts))
+			val subscriptions = TagSubscriptionModel.getSubscriptionsByTag(tag)
+			Ok(views.html.alerttags.tag(tag, alerts, subscriptions))
 		}
 	}
 
@@ -30,7 +31,7 @@ class AlertTagsController extends AppController {
 			val realPage = page.max(1)
 			val (found, tags) = AlertTagModel.search(term, realPage - 1)
 			val alerts = AlertModel.getAlerts(tags.map(_.alertId).distinct).filter(!_.deleted)
-			Ok(views.html.alerttags.search(term, realPage, AlertTagModel.configuredLimit, found, toTagMap(tags, alerts)))
+			Ok(views.html.alerttags.search(term, realPage, AlertTagModel.configuredLimit, found, AlertTagConverter.toTagMap(tags, alerts)))
 		}
 	}
 

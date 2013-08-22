@@ -191,8 +191,8 @@ class DashboardTagsModel extends AppModel {
 
 object DashboardTagsModel extends DashboardTagsModel
 
-object DashboardTagsConverter {
-		def convertToDashboardMap(tags : List[DashboardTag]) : Map[UUID, List[String]] = {
+object DashboardTagConverter {
+	def toDashboardMap(tags : List[DashboardTag]) : Map[UUID, List[String]] = {
 		tags.foldLeft[Map[UUID,List[String]]](Map())((ret,dt) =>
 	    	ret + (dt.dashboardId -> 
 	    				(if(ret contains dt.dashboardId)
@@ -203,7 +203,7 @@ object DashboardTagsConverter {
 		)
 	}
 
-	def convertToTagsMap(tags : List[DashboardTag], dashboards: List[Dashboard]) : Map[String, List[Dashboard]] = {
+	def toTagMap(tags : List[DashboardTag], dashboards: List[Dashboard]) : Map[String, List[Dashboard]] = {
 		tags.foldLeft[Map[String,List[Dashboard]]](Map()){(ret,dt) =>
 			val dashboard = dashboards.find(_.id == dt.dashboardId)
 			if(dashboard.isDefined) {

@@ -63,7 +63,7 @@ class AlertTargetStateModel extends AppModel {
 		}
 	}
 	/**
-	 * Delete targets not updated within the last minute
+	 * Delete targets not updated within the time period
 	 * @param alertId
 	 * @param boundaryTime . Delete any records for the alertId that were updated before this time
 	 *

@@ -1,5 +1,6 @@
 @(
-	subscriptions: List[com.lucidchart.open.nark.models.records.SubscriptionRecord]
+	tagSubscriptions: List[com.lucidchart.open.nark.models.records.TagSubscriptionRecord],
+	tagAlerts: Map[String, List[com.lucidchart.open.nark.models.records.Alert]]
 )(
 	implicit
 	request: com.lucidchart.open.nark.request.AppRequest[_],
@@ -11,7 +12,6 @@
 @import helper._
 
 @com.lucidchart.open.nark.views.html.layouts.main("Subscriptions", userOption = userOption) {
-
 	<style type="text/css">
 		a.btn {
 			margin-left: 10px;
@@ -19,8 +19,8 @@
 	</style>
 	<table>
 		<tr>
-			<td><h3>Alert Subscriptions</h3></td>
-			<td><a href="@narkRoutes.TagSubscriptionsController.allSubscriptionsForUser(userOption.get.id)" class="btn btn-info">View Tag Subscriptions</a></td>
+			<td><h3>Tag Subscriptions</h3></td>
+			<td><a href="@narkRoutes.SubscriptionsController.allSubscriptionsForUser(userOption.get.id)" class="btn btn-info">View Alert Subscriptions</a></td>
 		</tr>
 	</table>
 	<div>
@@ -28,34 +28,29 @@
 			<div class="span1" />
 			<div class="span11">
 				<div class="well">
-					@if(subscriptions.size == 0){
-						<p class="lead text-info">You have no alert subscriptions.</p>
+					@if(tagSubscriptions.size == 0){
+						<p class="lead text-info">You have no tag subscriptions.</p>
 					} else {
 						<table class="table">
 							<thead>
 								<tr>
-									<th>Alert Name</th>
-									<th>Target</th>
-									<th>Error</th>
-									<th>Warn</th>
-									<th>Comparison</th>
-									<th>Worst State</th>
+									<th>Tag</th>
+									<th>Alerts</th>
 									<th>Active</th>
 								</tr>
 							</thead>
 							<tbody>
-								@subscriptions.map { subscription =>
+								@tagSubscriptions.map {subscription =>
 									<tr>
-										@helper.form(action=narkRoutes.SubscriptionsController.edit(subscription.alert.id)) {
+										@helper.form(action=narkRoutes.TagSubscriptionsController.edit(subscription.subscription.tag)) {
 										@helpers.csrfHiddenInput()
-										<input type="hidden" name="alert_type" value="@subscription.subscription.alertType.id" />
 										<input type="hidden" name="active" value="@(subscription.subscription.active == false)" />
-											<td><a href="@narkRoutes.AlertsController.view(subscription.alert.id)">@subscription.alert.name</a></td>
-											<td>@subscription.alert.target</td>
-											<td>@subscription.alert.errorThreshold</td>
-											<td>@subscription.alert.warnThreshold</td>
-											<td>@subscription.alert.comparison</td>
-											<td>@subscription.alert.worstState.toString</td>
+											<td><a href="@narkRoutes.AlertTagsController.tag(subscription.subscription.tag)" class="btn btn-mini">@subscription.subscription.tag</a></td>
+											<td>
+												@tagAlerts(subscription.subscription.tag).map { alert =>
+													<a href="@narkRoutes.AlertsController.view(alert.id)" class="btn btn-mini btn-info">@alert.name</a>
+												}
+											</td>
 											<td><input class="btn" type="submit" value="@if(subscription.subscription.active){Deactivate Subscription} else {Reactivate Subscription}" /></td>
 										}
 									</tr>

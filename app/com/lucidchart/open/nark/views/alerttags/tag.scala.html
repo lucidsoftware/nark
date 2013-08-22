@@ -1,6 +1,7 @@
 @(
 	tag: String,
-	alerts: List[com.lucidchart.open.nark.models.records.Alert]
+	alerts: List[com.lucidchart.open.nark.models.records.Alert],
+	subscriptions: List[com.lucidchart.open.nark.models.records.TagSubscriptionRecord]
 )(
 	implicit
 	request: com.lucidchart.open.nark.request.AppRequest[_],
@@ -13,7 +14,44 @@
 @import helper._
 
 @com.lucidchart.open.nark.views.html.layouts.main("Tag", userOption = userOption) {
-	<h3>Alerts tagged with "@tag"</h3>
+	<style type="text/css">
+		input.btn {
+			margin-top: 20px;
+			margin-left: 10px;
+		}
+	</style>
+	<table>
+		<tr>
+			<td><h3>Alert Tag "@tag"</h3></td>
+			@if(userOption.isDefined) {
+				@defining(subscriptions.find {subscription => subscription.userOption.get.id == userOption.get.id }) {subscription =>
+					@if(subscription.isDefined) {
+						<td>
+							@helper.form(action=narkRoutes.TagSubscriptionsController.edit(tag)) {
+									@helpers.csrfHiddenInput()
+									<input name="active" type="hidden" value="@(subscription.get.subscription.active == false)" />
+									<input class="btn" type="submit" value='@if(subscription.get.subscription.active) {Deactivate Subscription} else {Reactivate Subscription}' />
+								}
+						</td>
+						<td>
+							@helper.form(action=narkRoutes.TagSubscriptionsController.delete(tag)) {
+								@helpers.csrfHiddenInput()
+								<input class="btn btn-danger" name="ignored" type="submit" value="Delete Subscription" />
+							}
+						</td>
+					} else {
+						<td>
+							@helper.form(action=narkRoutes.TagSubscriptionsController.subscribe(tag)) {
+								@helpers.csrfHiddenInput()
+								<input class="btn" type="submit" value="Subscribe to this Tag" />
+							}
+						</td>
+					}
+				}
+			}
+		</tr>
+	</table>
+	<h4>Alerts with tag</h4>
 
 	@if(alerts.isEmpty) {
 		<p class="lead text-info">There are no alerts with this tag.</p>
@@ -45,4 +83,40 @@
 			</tbody>
 		</table>
 	}
+	<br/>
+	<h4>Tag Subscriptions</h4>
+	<div>
+		<div class="row">
+			<div class="span1" />
+			<div class="span11">
+				<div class="well">
+					@if(subscriptions.size == 0){
+						<p class="lead text-info">There are no subscriptions for this tag.</p>
+					} else {
+						<table class="table">
+							<thead>
+								<tr>
+									<th>User</th>
+									<th>Email</th>
+									<th>Active</th>
+								</tr>
+							</thead>
+							<tbody>
+								@subscriptions.map { subscription =>
+									<tr>
+										<td>@if(subscription.userOption.isDefined){@subscription.userOption.get.name} else {""}</td>
+										<td>@if(subscription.userOption.isDefined){@subscription.userOption.get.email} else {""}</td>
+										<td>@subscription.subscription.active</td>
+									</tr>
+								}
+							</tbody>
+						</table>
+					}
+				</div>
+			</div>
+		</div>
+	</div>
+	<br />
+
+
 }

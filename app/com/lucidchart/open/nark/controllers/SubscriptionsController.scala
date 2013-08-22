@@ -1,6 +1,7 @@
 package com.lucidchart.open.nark.controllers
 
 import com.lucidchart.open.nark.models.SubscriptionModel
+import com.lucidchart.open.nark.models.TagSubscriptionModel
 import com.lucidchart.open.nark.models.records.{AlertType, Subscription}
 import com.lucidchart.open.nark.request.{AppFlash, AppAction, AuthAction}
 import com.lucidchart.open.nark.views

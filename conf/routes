@@ -70,6 +70,13 @@ POST    /subscription/:id/edit               com.lucidchart.open.nark.controller
 POST    /subscription/:id/delete             com.lucidchart.open.nark.controllers.SubscriptionsController.delete(id: java.util.UUID)
 GET     /user/:id/subscriptions              com.lucidchart.open.nark.controllers.SubscriptionsController.allSubscriptionsForUser(id: java.util.UUID)
 
+# Tag Subscriptions
+POST	/tagsubscription/:tag/subscribe		com.lucidchart.open.nark.controllers.TagSubscriptionsController.subscribe(tag: String)
+POST	/tagsubscription/:tag/edit			com.lucidchart.open.nark.controllers.TagSubscriptionsController.edit(tag: String)
+POST	/tagsubscription/:tag/delete		com.lucidchart.open.nark.controllers.TagSubscriptionsController.delete(tag: String)
+GET     /user/:id/tagsubscriptions 			com.lucidchart.open.nark.controllers.TagSubscriptionsController.allSubscriptionsForUser(id: java.util.UUID)
+
+
 # Hosts
 GET     /hosts/search                        com.lucidchart.open.nark.controllers.HostsController.search(term: String ?= "", page: Int ?= 1)
 

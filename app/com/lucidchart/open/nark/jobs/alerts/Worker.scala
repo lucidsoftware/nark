@@ -173,8 +173,8 @@ class Worker extends Actor {
 		val alertTags = AlertTagModel.findTagsForAlert(alert.id).map(_.tag)		
 		val alertIds = 	if(alert.dynamicAlertId.isDefined) { List(alert.id, alert.dynamicAlertId.get) } else { List(alert.id) }
 
-		(TagSubscriptionModel.getSubscriptionsByTag(alertTags).map(_.userOption).filter(_.isDefined).map(_.get)) ++ 
-			(SubscriptionModel.getSubscriptionsByAlerts(alertIds).map(_.userOption).filter(_.isDefined).map(_.get))
+		(TagSubscriptionModel.getSubscriptionsByTag(alertTags).filter(_.subscription.active).map(_.userOption).filter(_.isDefined).map(_.get)) ++ 
+			(SubscriptionModel.getSubscriptionsByAlerts(alertIds).filter(_.subscription.active).map(_.userOption).filter(_.isDefined).map(_.get))
 	}
 
 	private def crossesThreshold(value: BigDecimal, threshold:BigDecimal, comparison: Comparisons.Value): Boolean = {

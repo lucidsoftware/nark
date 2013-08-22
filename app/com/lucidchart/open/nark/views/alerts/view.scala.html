@@ -175,7 +175,7 @@
 											<label><strong>Tags</strong></label>
 											<div class="info-group">
 												@tags.map{alertTag =>
-													<span>@alertTag.tag</span>
+													<a href="@narkRoutes.AlertTagsController.tag(alertTag.tag)" class="btn btn-mini">@alertTag.tag</a>
 												}
 											</div>
 										</div>

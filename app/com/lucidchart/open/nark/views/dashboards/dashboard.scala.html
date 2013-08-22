@@ -683,7 +683,7 @@
 							<label><strong>Tags</strong></label>
 							<div class="info-group">
 							@tags.map{dashboardTag =>
-								<a href="@narkRoutes.DashboardTagsController.tag(dashboardTag.tag)">@dashboardTag.tag</a>
+								<a href="@narkRoutes.DashboardTagsController.tag(dashboardTag.tag)" class="btn btn-mini">@dashboardTag.tag</a>
 							}
 							</div>
 						</div>
