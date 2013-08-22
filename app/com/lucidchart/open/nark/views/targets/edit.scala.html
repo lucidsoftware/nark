@@ -28,9 +28,9 @@
 					@helper.select(formEdit("summarizer"), com.lucidchart.open.nark.models.records.TargetSummarizer.values.map(m => m.id.toString -> m.toString).toSeq, '_label -> "Summarizer (when there are too many datapoints to show)", '_showConstraints -> false)
 					@helper.inputText(formEdit("target"), 'id -> "target-input", 'class -> "input-xlarge", 'placeholder -> "stats.gauges.my.stuff", '_label -> "Target", 'required -> true, '_showConstraints -> false, 'autocomplete -> "off")
 					<p class="help-block">
-						Eg. stats.counters.servers.com.lucidchart.mt.eiger.mongod.27018.insert.count<br />
-						<strong>OR</strong> stats.counters.servers.%HOSTNAME= com.lucidchart.server%.mongod.27018.insert.count<br />
-						<strong>OR</strong> stats.gauges.application.*.logins
+						Targets can have variable names in them (see <a href="https://github.com/lucidchart/nark#targets" target="_blank">docs</a>). For example:<br />
+						stats.counters.<strong>%application|app1|app2|app3%</strong>.logins<br />
+						stats.counters.<strong>%application=defaultapplication%</strong>.logins
 					</p>
 					<button id="edit" class="btn btn-primary">Save</button>
 				</fieldset>
