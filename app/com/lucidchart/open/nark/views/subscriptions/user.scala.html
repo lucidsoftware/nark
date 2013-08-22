@@ -46,7 +46,7 @@
 							<tbody>
 								@subscriptions.map { subscription =>
 									<tr>
-										@helper.form(action=narkRoutes.SubscriptionsController.edit(subscription.alert.id)) {
+										@helper.form(action=narkRoutes.SubscriptionsController.edit(subscription.alert.id, true)) {
 										@helpers.csrfHiddenInput()
 										<input type="hidden" name="alert_type" value="@subscription.subscription.alertType.id" />
 										<input type="hidden" name="active" value="@(subscription.subscription.active == false)" />

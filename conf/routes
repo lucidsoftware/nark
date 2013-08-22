@@ -66,13 +66,13 @@ GET     /at/:tag                             com.lucidchart.open.nark.controller
 
 # Subscription
 POST    /subscription/:id/subscribe          com.lucidchart.open.nark.controllers.SubscriptionsController.subscribe(id: java.util.UUID)
-POST    /subscription/:id/edit               com.lucidchart.open.nark.controllers.SubscriptionsController.edit(id: java.util.UUID)
+POST    /subscription/:id/edit               com.lucidchart.open.nark.controllers.SubscriptionsController.edit(id: java.util.UUID, mySubscriptions : Boolean ?= false)
 POST    /subscription/:id/delete             com.lucidchart.open.nark.controllers.SubscriptionsController.delete(id: java.util.UUID)
 GET     /user/:id/subscriptions              com.lucidchart.open.nark.controllers.SubscriptionsController.allSubscriptionsForUser(id: java.util.UUID)
 
 # Tag Subscriptions
 POST	/tagsubscription/:tag/subscribe		com.lucidchart.open.nark.controllers.TagSubscriptionsController.subscribe(tag: String)
-POST	/tagsubscription/:tag/edit			com.lucidchart.open.nark.controllers.TagSubscriptionsController.edit(tag: String)
+POST	/tagsubscription/:tag/edit			com.lucidchart.open.nark.controllers.TagSubscriptionsController.edit(tag: String, mySubscriptions : Boolean ?= false)
 POST	/tagsubscription/:tag/delete		com.lucidchart.open.nark.controllers.TagSubscriptionsController.delete(tag: String)
 GET     /user/:id/tagsubscriptions 			com.lucidchart.open.nark.controllers.TagSubscriptionsController.allSubscriptionsForUser(id: java.util.UUID)
 

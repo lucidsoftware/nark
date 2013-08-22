@@ -67,7 +67,7 @@ object SubscriptionsController extends AppController {
 	 * Edit an alert subscription
 	 * @param alertId the id of the alert to edit
 	 */
-	 def edit(alertId: UUID) = AuthAction.authenticatedUser { implicit user =>
+	 def edit(alertId: UUID, mySubscriptions: Boolean = false) = AuthAction.authenticatedUser { implicit user =>
 	 	AppAction { implicit request =>
 	 		editForm.bindFromRequest().fold(
 	 			formWithErrors => {
@@ -76,8 +76,11 @@ object SubscriptionsController extends AppController {
 	 			data => {
 	 				val subscription = new Subscription(user.id, alertId, data.alertType, data.active)
 	 				SubscriptionModel.editSubscription(alertId, user.id, subscription)
-
-	 				Redirect(routes.AlertsController.view(alertId)).flashing(AppFlash.success("Successfully saved changes."))
+	 				if(mySubscriptions) {
+	 					Redirect(routes.SubscriptionsController.allSubscriptionsForUser(user.id)).flashing(AppFlash.success("Successfully saved changes."))
+	 				} else {	
+	 					Redirect(routes.AlertsController.view(alertId)).flashing(AppFlash.success("Successfully saved changes."))
+	 				}
 	 			}
 	 		)
 	 	}

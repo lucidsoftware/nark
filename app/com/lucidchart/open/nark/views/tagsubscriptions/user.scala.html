@@ -42,7 +42,7 @@
 							<tbody>
 								@tagSubscriptions.map {subscription =>
 									<tr>
-										@helper.form(action=narkRoutes.TagSubscriptionsController.edit(subscription.subscription.tag)) {
+										@helper.form(action=narkRoutes.TagSubscriptionsController.edit(subscription.subscription.tag, true)) {
 										@helpers.csrfHiddenInput()
 										<input type="hidden" name="active" value="@(subscription.subscription.active == false)" />
 											<td><a href="@narkRoutes.AlertTagsController.tag(subscription.subscription.tag)" class="btn btn-mini">@subscription.subscription.tag</a></td>

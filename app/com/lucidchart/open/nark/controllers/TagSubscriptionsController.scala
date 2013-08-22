@@ -47,16 +47,24 @@ object TagSubscriptionsController extends AppController {
 	 * Edit a tag subscription
 	 * @param tag the tag of the subscription to edit
 	 */
-	 def edit(tag: String) = AuthAction.authenticatedUser { implicit user =>
+	 def edit(tag: String, redirectMySubscriptions: Boolean = false) = AuthAction.authenticatedUser { implicit user =>
 	 	AppAction { implicit request =>
 	 		editForm.bindFromRequest().fold(
 	 			formWithErrors => {
-	 				Redirect(routes.AlertTagsController.tag(tag)).flashing(AppFlash.error("Unable to edit subscription."))
+	 				if(redirectMySubscriptions) {
+	 					Redirect(routes.TagSubscriptionsController.allSubscriptionsForUser(user.id)).flashing(AppFlash.error("Unable to edit subscription."))
+	 				} else {
+	 					Redirect(routes.AlertTagsController.tag(tag)).flashing(AppFlash.error("Unable to edit subscription."))
+	 				}
 	 			},
 	 			data => {
 	 				val subscription = new TagSubscription(user.id, tag, data.active)
 	 				TagSubscriptionModel.editSubscription(tag, user.id, subscription)
-	 				Redirect(routes.AlertTagsController.tag(tag)).flashing(AppFlash.success("Successfully saved changes."))
+	 				if(redirectMySubscriptions) {
+	 					Redirect(routes.TagSubscriptionsController.allSubscriptionsForUser(user.id)).flashing(AppFlash.success("Successfully saved changes."))
+ 					} else {
+	 					Redirect(routes.AlertTagsController.tag(tag)).flashing(AppFlash.success("Successfully saved changes."))
+ 					}
 	 			}
 	 		)
 	 	}
