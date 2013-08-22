@@ -24,6 +24,11 @@ $(document).ready(function() {
 				currentAutocompleteRequest.abort();
 			}
 
+			if (request.term.indexOf("%") >= 0) {
+				response([]);
+				return;
+			}
+
 			currentAutocompleteRequest = $.ajax({
 				cache: false,
 				url: '/graphite/metrics',
@@ -60,7 +65,7 @@ $(document).ready(function() {
 	var currentPreviewRequest = null;
 	function graphPreview() {
 		var target = $('#target-input').val();
-		if (target.length == 0 || target[target.length - 1] == ".") {
+		if (target.length == 0 || target[target.length - 1] == "." || target.indexOf("%") >= 0) {
 			return;
 		}
 
