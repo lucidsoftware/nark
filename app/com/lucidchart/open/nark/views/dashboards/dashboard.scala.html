@@ -617,9 +617,6 @@
 			$.map(sortedInputNames, function(inputName) {
 				if (selectTargetOptions.hasOwnProperty(inputName)) {
 					var options = selectTargetOptions[inputName];
-					console.log(inputName);
-					console.log(options);
-
 					inputGroup.append('<div class="row field-container"><label rel="tooltip" title="' + inputName + '" for="' + inputName + '"><strong>' + inputName + '</strong></label><select id="input-' + inputName + '" name="' + inputName + '" key="' + inputName + '"></select></div>');
 					var inputElement = $('#input-' + inputName);
 
