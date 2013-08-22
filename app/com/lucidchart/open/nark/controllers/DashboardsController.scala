@@ -17,9 +17,12 @@ import play.api.mvc.Cookie
 import play.api.mvc.RequestHeader
 import play.api.data._
 import play.api.data.Forms._
+import play.api.Play.current
+import play.api.Play.configuration
 import validation.Constraints
 
 class DashboardsController extends AppController {
+	private val graphiteGranularitySeconds = configuration.getInt("graphite.granularitySeconds").get
 	private case class DashboardFormSubmission(name: String, url: String, tags: List[String])
 
 	private val createDashboardForm = Form(
@@ -75,7 +78,7 @@ class DashboardsController extends AppController {
 					Ok(views.html.dashboards.create(formWithErrors))
 				},
 				data => {
-					val dashboard = new Dashboard(data.name, data.url, user.id, false)
+					val dashboard = new Dashboard(data.name, data.url, user.id)
 					DashboardModel.createDashboard(dashboard)
 					DashboardTagsModel.addTagsForDashboard(dashboard.id, data.tags)
 					val newHistoryCookie = addDashboardToHistoryCookie(dashboard)
@@ -132,7 +135,7 @@ class DashboardsController extends AppController {
 				val targets = TargetModel.findTargetByGraphId(graphs.map(_.id))
 				val tags = DashboardTagsModel.findTagsForDashboard(dashboard.id)
 				val owner = UserModel.findUserByID(dashboard.userId)
-				Ok(views.html.dashboards.dashboard(dashboard, graphs, targets, tags, owner)).withCookies(newHistoryCookie)
+				Ok(views.html.dashboards.dashboard(dashboard, graphs, targets, tags, owner, graphiteGranularitySeconds)).withCookies(newHistoryCookie)
 			}
 		}
 	}

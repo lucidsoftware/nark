@@ -14,7 +14,7 @@ case class Graph(
 	/**
 	 * Create a new Dashboard record for inserting into the database
 	 */
-	def this(name: String, dashboardId: UUID, sort: Int, typeGraph: GraphType.Value, axisLabel: GraphAxisLabel.Value, deleted: Boolean) = this(UUID.randomUUID(), name, dashboardId, sort, typeGraph, axisLabel, deleted)
+	def this(name: String, dashboardId: UUID, sort: Int, typeGraph: GraphType.Value, axisLabel: GraphAxisLabel.Value) = this(UUID.randomUUID(), name, dashboardId, sort, typeGraph, axisLabel, false)
 }
 
 object GraphType extends Enumeration {

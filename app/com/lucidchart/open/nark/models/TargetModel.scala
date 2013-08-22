@@ -1,11 +1,11 @@
 package com.lucidchart.open.nark.models
 
+import com.lucidchart.open.nark.models.records.Target
+import com.lucidchart.open.nark.models.records.TargetSummarizer
 import anorm.SqlParser._
 import java.util.UUID
 import anorm._
 import play.api.db.DB
-import anorm.~
-import records.Target
 import play.api.Play.current
 import AnormImplicits._
 
@@ -15,9 +15,10 @@ class TargetModel extends AppModel {
 		get[UUID]("graph_id") ~
 		get[String]("name") ~
 		get[String]("target") ~
-		get[Boolean]("deleted") map {
-			case id ~ graphId ~ name ~ target ~ deleted =>
-				new Target(id, graphId, name, target, deleted)
+		get[Boolean]("deleted") ~
+		get[Int]("summarizer") map {
+			case id ~ graphId ~ name ~ target ~ deleted ~ summarizer =>
+				new Target(id, graphId, name, target, TargetSummarizer(summarizer), deleted)
 		}
 	}
 
@@ -80,14 +81,15 @@ class TargetModel extends AppModel {
 	def createTarget(target: Target) {
 		DB.withConnection("main") { connection =>
 			SQL("""
-				INSERT INTO `graph_targets` (`id`, `graph_id`, `name`, `target`, `deleted`)
-				VALUES ({id}, {graph_id}, {name}, {target}, {deleted})
+				INSERT INTO `graph_targets` (`id`, `graph_id`, `name`, `target`, `deleted`, `summarizer`)
+				VALUES ({id}, {graph_id}, {name}, {target}, {deleted}, {summarizer})
 			""").on(
 				"id"         -> target.id,
 				"graph_id"   -> target.graphId,
 				"name"       -> target.name,
 				"target"     -> target.target,
-				"deleted"    -> target.deleted
+				"deleted"    -> target.deleted,
+				"summarizer" -> target.summarizer.id
 			).executeUpdate()(connection)
 		}
 	}
@@ -101,12 +103,13 @@ class TargetModel extends AppModel {
 	def editTarget(target: Target) {
 		DB.withConnection("main") { connection =>
 			SQL("""
-				UPDATE `graph_targets` SET `name` = {name}, `target` = {target}, `deleted` = {deleted} WHERE `id` = {id}
+				UPDATE `graph_targets` SET `name` = {name}, `target` = {target}, `deleted` = {deleted}, `summarizer` = {summarizer} WHERE `id` = {id}
 			""").on(
 				"id"         -> target.id,
 				"name"       -> target.name,
 				"target"     -> target.target,
-				"deleted"    -> target.deleted
+				"deleted"    -> target.deleted,
+				"summarizer" -> target.summarizer.id
 			).executeUpdate()(connection)
 		}
 	}

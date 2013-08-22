@@ -10,6 +10,7 @@ object target {
 		"name" -> obj.name,
 		"graphId" -> obj.graphId.toString,
 		"target" -> obj.target,
+		"summarizer" -> obj.summarizer.toString,
 		"deleted" -> obj.deleted
 	)
 }

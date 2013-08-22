@@ -25,6 +25,7 @@
 				<fieldset>
 					@helpers.csrfHiddenInput()
 					@helper.inputText(formEdit("name"), 'id -> "name-input", 'class -> "input-xlarge", 'placeholder -> "My Stuff", '_label -> "Name", 'required -> true, '_showConstraints -> false)
+					@helper.select(formEdit("summarizer"), com.lucidchart.open.nark.models.records.TargetSummarizer.values.map(m => m.id.toString -> m.toString).toSeq, '_label -> "Summarizer (when there are too many datapoints to show)", '_showConstraints -> false)
 					@helper.inputText(formEdit("target"), 'id -> "target-input", 'class -> "input-xlarge", 'placeholder -> "stats.gauges.my.stuff", '_label -> "Target", 'required -> true, '_showConstraints -> false, 'autocomplete -> "off")
 					<p class="help-block">
 						Eg. stats.counters.servers.com.lucidchart.mt.eiger.mongod.27018.insert.count<br />

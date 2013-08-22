@@ -14,5 +14,5 @@ case class Dashboard(
 	/**
 	 * Create a new Dashboard record for inserting into the database
 	 */
-	def this(name: String, url: String, userId: UUID, deleted: Boolean) = this(UUID.randomUUID(), name, url, new Date(), userId, deleted)
+	def this(name: String, url: String, userId: UUID) = this(UUID.randomUUID(), name, url, new Date(), userId, false)
 }

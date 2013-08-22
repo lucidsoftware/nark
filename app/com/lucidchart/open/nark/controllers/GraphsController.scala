@@ -45,7 +45,7 @@ class GraphsController extends AppController {
 						Ok(views.html.graphs.add(formWithErrors, dashboard))
 					},
 					data => {
-						val graph = new Graph(data.name, dashboard.id, 0, data.graphType, data.axisLabel, false)
+						val graph = new Graph(data.name, dashboard.id, 0, data.graphType, data.axisLabel)
 						GraphModel.createGraph(graph)
 						Redirect(routes.TargetsController.add(graph.id)).flashing(AppFlash.success("Graph was added successfully."))
 					}

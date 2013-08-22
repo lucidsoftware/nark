@@ -46,6 +46,7 @@
 					<thead>
 					<tr>
 						<th>Name</th>
+						<th>Summarizer</th>
 						<th>Active</th>
 						<th>Actions</th>
 					</tr>
@@ -54,6 +55,9 @@
 						@targets.sortBy(_.deleted).map { target =>
 							<tr>
 								<td><a href="#" rel="tooltip" title="@target.target">@target.name</a></td>
+								<td>
+									@target.summarizer.toString
+								</td>
 								<td>
 									@if(target.deleted) {
 										No

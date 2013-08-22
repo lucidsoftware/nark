@@ -10,6 +10,9 @@ ALTER TABLE `users`
 	ADD COLUMN `error_address` VARCHAR(100) NOT NULL,
 	ADD COLUMN `error_enable` BOOLEAN NOT NULL;
 
+ALTER TABLE `graph_targets`
+	ADD COLUMN `summarizer` TINYINT UNSIGNED NOT NULL DEFAULT 0;
+
 CREATE TABLE `alert_tags` (
 	`hiddenid` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
 	`alert_id` BINARY(16) NOT NULL,
@@ -127,16 +130,18 @@ CREATE TABLE `dashboard_tags` (
 
 
 # --- !Downs
+DROP TABLE `dashboard_tags`;
+DROP TABLE `alert_target_state`;
 DROP TABLE `alert_history`;
 DROP TABLE `alert_subscriptions`;
 DROP TABLE `alert_tag_subscriptions`;
-DROP TABLE `alert_target_state`;
 DROP TABLE `alerts`;
 DROP TABLE `dynamic_alerts`;
 DROP TABLE `alert_tags`;
+ALTER TABLE `graph_targets`
+	DROP COLUMN `summarizer`;
 ALTER TABLE `users`
 	DROP COLUMN `warn_address`,
 	DROP COLUMN `warn_enable`,
 	DROP COLUMN `error_address`,
 	DROP COLUMN `error_enable`;
-DROP TABLE `dashboard_tags`;

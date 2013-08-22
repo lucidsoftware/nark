@@ -3,7 +3,8 @@
 	graphs: List[com.lucidchart.open.nark.models.records.Graph],
 	targets: List[com.lucidchart.open.nark.models.records.Target],
 	tags: List[com.lucidchart.open.nark.models.records.DashboardTag],
-	owner: Option[com.lucidchart.open.nark.models.records.User]
+	owner: Option[com.lucidchart.open.nark.models.records.User],
+	dataGranularitySeconds: Int
 )(
 	implicit
 	request: com.lucidchart.open.nark.request.AppRequest[_],
@@ -99,6 +100,8 @@
 	</style>
 
 	<script type="text/javascript">
+		var granularitySeconds = @dataGranularitySeconds;
+		var autoIntervalPointsPerPixel = 0.25;
 		var dashboard = @Html(views.models.dashboard(dashboard).toString);
 		var dashKey = 'dashboard-' + dashboard['id'] + '-';
 		var graphs = @Html(Json.toJson(graphs.filter(!_.deleted).map(views.models.graph(_))).toString);
@@ -122,6 +125,7 @@
 		var localStorageRefreshRateKeys = ["dashboard-" + dashboard.id + "-refresh", "dashboard-default-refresh"];
 		var localStorageDateRangeKeys = ["dashboard-" + dashboard.id + "-daterange", "dashboard-default-daterange"];
 		var localStorageOptionsPanelKeys = ["dashboard-" + dashboard.id + "-optionspanel", "dashboard-default-optionspanel"];
+		var localStorageSummarizerKeys = ["dashboard-" + dashboard.id + "-summarizer", "dashboard-default-summarizer"];
 
 		var allGraphIds = [];
 		$.map(graphs, function(graph) {
@@ -219,21 +223,57 @@
 				var graphUrl = '@Graphite.baseUrl';
 				graphUrl += '/render?title=' + graph['name'] + '&width=650&height=400&';
 
+				var graphSeconds = null;
 				if (dateRange["type"] == "custom") {
 					data["start"] = Math.floor(dateRange["start"].getTime() / 1000);
 					data["end"] = Math.floor(dateRange["end"].getTime() / 1000);
+					graphSeconds = Math.abs(data["end"] - data["start"]);
 					graphUrl += 'from=' + data['start'] + '&to=' + data['end'];
 				}
 				else {
 					data["seconds"] = dateRange["seconds"];
+					graphSeconds = data["seconds"];
 					graphUrl += 'from=-' + data['seconds'] + 's';
 				}
 
+				var intervalString = null;
+				if (summarizer == "auto") {
+					// the number of pixels isn't exact, because of axis labels and graph padding, but it will be close enough.
+					var pixels = getGraphWidth();
+
+					// calculate number of data points based on interval, pixels, and the magic number.
+					var intervalSeconds = graphSeconds / (autoIntervalPointsPerPixel * pixels);
+
+					// adjust to a multiple of granularitySeconds
+					intervalSeconds = intervalSeconds + (granularitySeconds - intervalSeconds % granularitySeconds);
+
+					// require at least granularitySeconds seconds
+					intervalSeconds = Math.max(intervalSeconds, granularitySeconds);
+
+					if (intervalSeconds > granularitySeconds) {
+						intervalString = intervalSeconds + "s";
+					}
+				}
+				else if (summarizer == "all") {
+					// do nothing, get all data points.
+					// summarization function will not be applied below.
+				}
+				else {
+					intervalString = summarizer + "s";
+				}
+
 				var count = 0;
-				$.map(updatedTargets, function(target) {
+				$.map(targets, function(target) {
 					if (target["graphId"] == graph["id"]) {
-						data['target[' + (count++) + ']'] = target['target'];
-						graphUrl += '&target=' + target['target'];
+						var updatedTarget = updatedTargets[target['id']];
+
+						var summarizedTarget = updatedTarget;
+						if (intervalString) {
+							summarizedTarget = "summarize(" + updatedTarget + ",'" + intervalString + "','" + target['summarizer'] + "')";
+						}
+
+						data['target[' + (count++) + ']'] = summarizedTarget;
+						graphUrl += '&target=' + summarizedTarget;
 					}
 				});
 
@@ -294,7 +334,7 @@
 				variables.push({'key': $(this).attr('key'), 'value': $(this).val()});
 			});
 
-			var updatedTargets = [];
+			var updatedTargets = {};
 			$.map(targets, function(target) {
 				var parts = target['target'].split("%");
 				for (var i = 1; i < parts.length; i += 2) {
@@ -309,12 +349,7 @@
 					}
 				});
 
-				updatedTargets.push(
-					{
-						'graphId': target['graphId'],
-						'target': parts.join("")
-					}
-				);
+				updatedTargets[target['id']] = parts.join("");
 			});
 
 			return updatedTargets;
@@ -355,10 +390,18 @@
 			}, 1);
 		}
 
+		function getGraphWidth() {
+			return $("#allgraphs .graph-wrapper").width();
+		}
+
 		function adjustGraphHeights() {
-			var width = $("#allgraphs .graph-wrapper").width();
-			$("#allgraphs .graph-container").css('height', Math.floor((width - 20) * 0.66) + "px");
+			// the 20 pixels is for the caption
+			$("#allgraphs .graph-container").css('height', Math.floor((getGraphWidth() - 20) * 0.66) + "px");
 			queueRedrawAllGraphs();
+
+			if (summarizer == "auto") {
+				queueRefreshData();
+			}
 		}
 
 		function setOptionsPanel(visibility) {
@@ -405,6 +448,14 @@
 
 			refreshRateSeconds = seconds;
 			refreshTimerTick();
+		}
+
+		var summarizer = 'auto';
+		function setSummarizer(seconds) {
+			$("#summarizer-group button.active").removeClass("active");
+			$("#summarizer-group button[data='" + seconds + "']").addClass("active");
+			summarizer = seconds;
+			queueRefreshData();
 		}
 
 		var dateRange = { "type": null };
@@ -540,6 +591,15 @@
 				setRefreshRate(seconds);
 			});
 
+			$("#summarizer-group button").click(function(event) {
+				var seconds = $(event.target).attr("data");
+				if (seconds != "auto" && seconds != "all") {
+					seconds = parseInt(seconds, 10);
+				}
+				setLocalStorage(localStorageSummarizerKeys, seconds);
+				setSummarizer(seconds);
+			});
+
 			$("#daterange-group button").click(function(event) {
 				var seconds = $(event.target).attr("data");
 				if (seconds != "custom") {
@@ -584,6 +644,7 @@
 			setRefreshRate(fromLocalStorage(localStorageRefreshRateKeys, 60));
 			setDateRange(fromLocalStorage(localStorageDateRangeKeys, 3600));
 			setOptionsPanel(fromLocalStorage(localStorageOptionsPanelKeys, "visible"));
+			setSummarizer(fromLocalStorage(localStorageSummarizerKeys, "auto"));
 
 			var selectTargetOptions = {};
 			var textTargetDefaults = {};
@@ -753,6 +814,24 @@
 							<label><strong>Custom Dates</strong></label>
 							<input type="text" id="custom-daterange-start-input" placeholder="Start Date">
 							<input type="text" id="custom-daterange-end-input" placeholder="End Date">
+						</div>
+					</div>
+					<div id="summarizer-group" class="field-container">
+						<div class="form-inline">
+							<label><strong>Data Interval</strong></label>
+							<div class="btn-group">
+								<button class="btn" data="auto">Auto</button>
+								<button class="btn" data="all">All</button>
+							</div>
+							<div class="btn-group">
+								<button class="btn" data="60">1m</button>
+								<button class="btn" data="1800">30m</button>
+								<button class="btn" data="3600">1h</button>
+								<button class="btn" data="43200">12h</button>
+								<button class="btn" data="86400">1d</button>
+								<button class="btn" data="604800">7d</button>
+								<button class="btn" data="2592000">30d</button>
+							</div>
 						</div>
 					</div>
 				</div>
