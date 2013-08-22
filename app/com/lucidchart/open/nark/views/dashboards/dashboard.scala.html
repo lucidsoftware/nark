@@ -225,10 +225,10 @@
 
 				var graphSeconds = null;
 				if (dateRange["type"] == "custom") {
-					data["start"] = Math.floor(dateRange["start"].getTime() / 1000);
-					data["end"] = Math.floor(dateRange["end"].getTime() / 1000);
-					graphSeconds = Math.abs(data["end"] - data["start"]);
-					graphUrl += 'from=' + data['start'] + '&to=' + data['end'];
+					data["from"] = Math.floor(dateRange["start"].getTime() / 1000);
+					data["to"] = Math.floor(dateRange["end"].getTime() / 1000);
+					graphSeconds = Math.abs(data["to"] - data["from"]);
+					graphUrl += 'from=' + data['from'] + '&to=' + data['to'];
 				}
 				else {
 					data["seconds"] = dateRange["seconds"];
