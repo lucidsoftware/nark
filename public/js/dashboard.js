@@ -1,4 +1,7 @@
 function convertToDygraph(data) {
+	// this sort makes sure that the graph colors are always the same.
+	data.sort(function(a,b) { return a['t'] - b['t']; });
+
 	var dygraph = {};
 	dygraph['datapoints'] = [];
 	if (data.length == 0) {
