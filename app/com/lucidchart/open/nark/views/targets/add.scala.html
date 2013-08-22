@@ -24,7 +24,7 @@
 			@helper.form(action=narkRoutes.TargetsController.addSubmit(graph.id)) {
 				<fieldset>
 					@helpers.csrfHiddenInput()
-					@helper.inputText(formAdd("name"), 'id -> "name-input", 'class -> "input-xlarge", 'placeholder -> "My Stuff", '_label -> "Name", 'required -> true, '_showConstraints -> false)
+					@helper.inputText(formAdd("name"), 'id -> "name-input", 'class -> "input-xlarge", 'placeholder -> "My Stuff", '_label -> "Name", 'required -> true, '_showConstraints -> false, 'autofocus -> "true")
 					@helper.select(formAdd("summarizer"), com.lucidchart.open.nark.models.records.TargetSummarizer.values.map(m => m.id.toString -> m.toString).toSeq, '_label -> "Summarizer (when there are too many datapoints to show)", '_showConstraints -> false)
 					@helper.inputText(formAdd("target"), 'id -> "target-input", 'class -> "input-xlarge", 'placeholder -> "stats.gauges.my.stuff", '_label -> "Target", 'required -> true, '_showConstraints -> false, 'autocomplete -> "off")
 					<p class="help-block">

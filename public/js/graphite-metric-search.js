@@ -2,7 +2,7 @@
 $(document).ready(function() {
 	var currentAutocompleteRequest = null;
 	$('#target-input').autocomplete({
-		autoFocus: true,
+		autoFocus: false,
 		delay: 500,
 		minLength: 0,
 		select: function(event, selected) {
@@ -51,11 +51,6 @@ $(document).ready(function() {
 			});
 		}
 	});
-
-	setTimeout(function() {
-		$('#target-input').focus();
-		$('#target-input').autocomplete("search", "");
-	}, 1);
 
 	//try to render a preview if the user leaves the text box
 	$('#target-input').focusout(function() {

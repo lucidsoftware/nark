@@ -44,7 +44,7 @@
 			@helper.form(action=narkRoutes.AlertsController.createSubmit()) {
 				<fieldset>
 					@helpers.csrfHiddenInput()
-					@helper.inputText(formCreate("name"), 'class -> "input-xlarge", '_label -> "Name", 'placeholder -> "CPU High", 'required -> true, '_showConstraints -> false)
+					@helper.inputText(formCreate("name"), 'class -> "input-xlarge", '_label -> "Name", 'placeholder -> "CPU High", 'required -> true, '_showConstraints -> false, 'autofocus->"true")
 					@helper.inputText(formCreate("tags"), 'id -> "tags", 'class -> "input-xlarge", '_label -> "Tags (separate by comma)", 'placeholder -> "ops", '_showConstraints -> false)
 					@helper.inputText(formCreate("target"), 'id -> "target-input", 'class -> "input-xlarge", '_label -> "Target", 'placeholder -> "stats.gauges.servers.*.*.*.cpu.count", 'required -> true, '_showConstraints -> false)
 					@helper.inputText(formCreate("error_threshold"), 'class -> "input-xlarge", '_label -> "Error Threshold", 'placeholder -> "0.0", 'required -> true, '_showConstraints -> false)

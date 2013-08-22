@@ -52,7 +52,7 @@
 	@helper.form(action=narkRoutes.DashboardsController.createSubmit()) {
 		<fieldset>
 			@helpers.csrfHiddenInput()
-			@helper.inputText(formCreate("name"), 'class -> "input-xlarge", '_label -> "Name", 'placeholder -> "Vitals", 'required -> true, '_showConstraints -> false)
+			@helper.inputText(formCreate("name"), 'class -> "input-xlarge", '_label -> "Name", 'placeholder -> "Vitals", 'required -> true, '_showConstraints -> false, 'autofocus -> "true")
 			@helper.inputText(formCreate("url"), 'id -> "urlinput", 'class -> "input-xlarge", '_label -> "URL", 'placeholder -> "vitals", 'required -> true, '_showConstraints -> false, 'helpInline -> "abc")
 			<p class="help-block">
 				The dashboard may be accessed at <span id="urlexample"></span>.
