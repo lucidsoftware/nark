@@ -1,0 +1,78 @@
+
+.container,
+.navbar-fixed-top .container,
+.navbar-static-top .container,
+.navbar-fixed-bottom .container { width: 95%; }
+
+.ui_tpicker_timezone select {
+	width: 100px;
+}
+
+.ui-timepicker-div  {
+	font-family: "Helvetica Neue",Helvetica,Arial,sans-serif;
+	font-size: 14px;
+}
+
+.loading-text {
+	font-size: 10px;
+}
+
+.container .form-inline label {
+	width: 100px;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.container .field-container {
+	margin: 12px 0;
+}
+
+.container .field-container {
+	margin: 12px 0;
+}
+
+#info-container {
+	display: none;
+}
+
+#info-container .form-inline .info-group {
+	display: inline-block;
+}
+
+#allgraphs {
+	margin: 0 -10px 0 -12px;
+	position: relative;
+}
+
+#allgraphs.g1 .graph-wrapper { width: 100%; }
+#allgraphs.g2 .graph-wrapper { width: 50%; }
+#allgraphs.g3 .graph-wrapper { width: 33.33%; }
+#allgraphs.g4 .graph-wrapper { width: 25%; }
+#allgraphs.g5 .graph-wrapper { width: 20%; }
+#allgraphs.g6 .graph-wrapper { width: 16.66%; }
+
+.graph-wrapper {
+	overflow: hidden;
+	padding: 10px;
+	box-sizing: border-box;
+}
+.graph-wrapper .well {
+	margin: 0;
+}
+.graph-caption {
+	width: 100%;
+	height: 20px;
+	text-align: center;
+}
+.graph-error {
+	width: 100%;
+	text-align: center;
+}
+svg {
+	width: 100%;
+	height: 100%;
+}
+.small-text {
+	font-size:11px;
+}
