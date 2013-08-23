@@ -638,7 +638,7 @@ function convertToDygraph(data) {
 
 	var minDatapoints = Math.min.apply(Math, lengths);
 
-	for (var i = 0; i < minDatapoints; i++) {
+	for (var i = 0; i < data[0]['d'].length; i++) {
 		var datapoint = [new Date(data[0]['d'][i]['d'] * 1000)];
 		for (var j = 0; j < data.length; j++) {
 			if (data[j]['d'][i] != undefined) {
