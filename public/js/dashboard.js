@@ -16,6 +16,9 @@ $.map(graphs, function(graph) {
 
 var zoomingToSelection = false;
 var lineGraphs = {};
+var initialXRange = null;
+var currentXRange = null;
+var zoomedIn = false;
 function redrawGraph(id) {
 	if (graphData[id]) {
 		var data = graphData[id];
@@ -26,14 +29,27 @@ function redrawGraph(id) {
 
 		var graphOptions = {
 			drawCallback: function(me, initial) {
+				if (initial) {
+					initialXRange = me.xAxisRange();
+					$('.zoom-update').hide(250);
+				}
 				if (zoomingToSelection || initial) { return; }
 				zoomingToSelection = true;
-				var range = me.xAxisRange();
+				currentXRange = me.xAxisRange();
+
+				zoomedIn = !($(currentXRange).not(initialXRange).length == 0 && $(initialXRange).not(currentXRange).length == 0);
+				if (zoomedIn) {
+					$('.zoom-update').show(250);
+				}
+				else {
+					$('.zoom-update').hide(250);
+				}
+
 				$.map(graphs, function(g) {
 					if (g.id == graph.id) { return; }
 					if (lineGraphs.hasOwnProperty(g.id)) {
 						lineGraphs[g.id].updateOptions({
-							dateWindow: range
+							dateWindow: currentXRange
 						});
 					}
 				});
@@ -611,5 +627,22 @@ $(document).ready(function() {
 				updateInput();
 			});
 		}
+
+		$('.zoom-update').click(function(event) {
+			if (zoomedIn) {
+				var start = new Date(currentXRange[0]);
+				$("#custom-daterange-start-input").datepicker("setDate", start);
+				setLocalStorage(localStorageStartDateKeys, start.getTime());
+
+				var end = new Date(currentXRange[1]);
+				$("#custom-daterange-end-input").datepicker("setDate", end);
+				setLocalStorage(localStorageEndDateKeys, end.getTime());
+
+				setLocalStorage(localStorageDateRangeKeys, "custom");
+				setDateRange("custom");
+
+				updateCustomDates();
+			}
+		});
 	});
 });
