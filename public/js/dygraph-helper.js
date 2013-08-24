@@ -12,35 +12,50 @@ function convertToDygraph(data) {
 
 	var dygraph = {};
 	dygraph['datapoints'] = [];
+	dygraph['labels'] = ['Date'];
 	if (data.length == 0) {
 		return [];
 	}
 
-	var lengths = $.map(data, function(val, i) {
-		return val['d'].length
-	});
+	var dataByTime = {};
+	var dataLength = data.length;
+	for (var dataIndex = 0; dataIndex < dataLength; dataIndex++) {
+		var target = data[dataIndex];
+		var targetLength = target['d'].length;
 
-	var minDatapoints = Math.min.apply(Math, lengths);
+		dygraph['labels'].push(target['t']);
 
-	for (var i = 0; i < data[0]['d'].length; i++) {
-		var datapoint = [new Date(data[0]['d'][i]['d'] * 1000)];
-		for (var j = 0; j < data.length; j++) {
-			if (data[j]['d'][i] != undefined) {
-				datapoint.push(data[j]['d'][i]['v']);
+		for (var targetIndex = 0; targetIndex < targetLength; targetIndex++) {
+			var point = target['d'][targetIndex];
+			var date = point['d'];
+			var value = point['v'];
+
+			if (!dataByTime[date]) {
+				dataByTime[date] = {};
 			}
-			else if (i > 0) {
-				datapoint.push(dygraph['datapoints'][i - 1][j]);
-			}
-			else {
-				datapoint.push(0);
+
+			if (value != null && value != undefined) {
+				dataByTime[date][dataIndex] = value;
 			}
 		}
-		dygraph['datapoints'].push(datapoint);
 	}
 
-	dygraph['labels'] = ['Date'];
-	for (var i = 0; i < data.length; i++) {
-		dygraph['labels'].push(data[i]['t']);
+	var times = Object.keys(dataByTime);
+	var timeLength = times.length;
+	times.sort();
+
+	for (var timeIndex = 0; timeIndex < timeLength; timeIndex++) {
+		var time = times[timeIndex];
+		var timeData = dataByTime[time];
+
+		var datapoint = [];
+		datapoint[0] = new Date(time * 1000);
+		for (var dataIndex = 0; dataIndex < dataLength; dataIndex++) {
+			// [dataIndex+1] because [0] is the date
+			datapoint[dataIndex + 1] = timeData[dataIndex];
+		}
+
+		dygraph['datapoints'].push(datapoint);
 	}
 
 	return dygraph;
