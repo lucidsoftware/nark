@@ -10,6 +10,7 @@ import play.api.mvc._
 import play.api.mvc.Results._
 import play.api.Play
 import play.api.Play.current
+import com.lucidchart.open.nark.Global
 
 /**
  * Helper object to create `AlertAction` values.
@@ -21,19 +22,26 @@ object AlertAction extends AlertActionBuilder
 */
 trait AlertActionBuilder {
 	/**
-	 * Verify that the current user can manage the alert
-	 * @param alertId the id of the alert the user wants to access
-	 * @param userId the user's id
+	 * Verify an alert exists, and call the block with it
 	 */
-	def alertManagementAccess(alertId: UUID, userId: UUID)(block: (Alert, User) => EssentialAction): EssentialAction = EssentialAction { requestHeader =>
-		val alert = AlertModel.findAlertByID(alertId)
-		val user = UserModel.findUserByID(userId)
-
-		if (alert.isDefined && user.isDefined && alert.get.userId == user.get.id) {
-			block(alert.get, user.get)(requestHeader)
+	def existingAlert(id: UUID, allowDeleted: Boolean = false)(block: (Alert) => EssentialAction): EssentialAction = EssentialAction { requestHeader =>
+		AlertModel.findAlertByID(id) match {
+			case Some(alert) if (!alert.deleted || allowDeleted) => block(alert)(requestHeader)
+			case _ => Done(Global.error404(requestHeader))
 		}
-		else {
-			Done(Forbidden)
+	}
+
+	/**
+	 * Verify the current user has access to the alert
+	 */
+	def alertManagementAccess(alertId: UUID, userId: UUID, allowDeleted: Boolean = false)(block: (Alert) => EssentialAction): EssentialAction = existingAlert(alertId, allowDeleted) { alert =>
+		EssentialAction { requestHeader =>
+			if (alert.userId == userId) {
+				block(alert)(requestHeader)
+			}
+			else {
+				Done(Forbidden)
+			}
 		}
 	}
 }

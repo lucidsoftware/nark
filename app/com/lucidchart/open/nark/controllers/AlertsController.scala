@@ -119,18 +119,13 @@ object AlertsController extends AppController {
 	 * View a particular alert
 	 * @param id the id of the alert to view
 	 */
-	def view(id: UUID) = AuthAction.maybeAuthenticatedUser { implicit user =>
-		AppAction { implicit request =>
-			val alert = AlertModel.getAlert(id)
-
-			if (alert.isDefined) {
-				val creator = UserModel.findUserByID(alert.get.userId)
-				val tags = AlertTagModel.findTagsForAlert(alert.get.id)
-				val subscriptions = SubscriptionModel.getSubscriptionsByAlert(id)
-				Ok(views.html.alerts.view(alert.get, tags, creator.get, subscriptions))
-			}
-			else {
-				Global.error404(request)
+	def view(alertId: UUID) = AuthAction.maybeAuthenticatedUser { implicit user =>
+		AlertAction.existingAlert(alertId) { alert =>
+			AppAction { implicit request =>
+				val creator = UserModel.findUserByID(alert.userId)
+				val tags = AlertTagModel.findTagsForAlert(alert.id)
+				val subscriptions = SubscriptionModel.getSubscriptionsByAlert(alertId)
+				Ok(views.html.alerts.view(alert, tags, creator, subscriptions))
 			}
 		}
 	}
@@ -139,8 +134,8 @@ object AlertsController extends AppController {
 	 * Edit a particular alert
 	 * @param id the id of the alert to edit
 	 */
-	def edit(id: UUID) = AuthAction.authenticatedUser { implicit user =>
-		AlertAction.alertManagementAccess(id, user.id) { (alert, ignored) =>
+	def edit(alertId: UUID) = AuthAction.authenticatedUser { implicit user =>
+		AlertAction.alertManagementAccess(alertId, user.id) { alert =>
 			AppAction { implicit request =>
 				val form = editAlertForm.fill(EditFormSubmission(
 					alert.name,
@@ -150,9 +145,9 @@ object AlertsController extends AppController {
 					alert.warnThreshold,
 					alert.comparison,
 					alert.frequency,
-					alert.active)
-				)
-				Ok(views.html.alerts.edit(form, id))
+					alert.active
+				))
+				Ok(views.html.alerts.edit(form, alertId))
 			}
 		}
 	}
@@ -161,12 +156,12 @@ object AlertsController extends AppController {
 	 * Edit a particular alert
 	 * @param id the id of the alert to edit
 	 */
-	def editSubmit(id: UUID) = AuthAction.authenticatedUser { implicit user =>
-		AlertAction.alertManagementAccess(id, user.id) { (alert, ignored) =>
+	def editSubmit(alertId: UUID) = AuthAction.authenticatedUser { implicit user =>
+		AlertAction.alertManagementAccess(alertId, user.id) { alert =>
 			AppAction { implicit request =>
 				editAlertForm.bindFromRequest().fold(
 					formWithErrors => {
-						Ok(views.html.alerts.edit(formWithErrors, id))
+						Ok(views.html.alerts.edit(formWithErrors, alertId))
 					},
 					data => {
 						val editedAlert = alert.copy(
@@ -181,7 +176,7 @@ object AlertsController extends AppController {
 						
 						AlertModel.editAlert(editedAlert)
 						AlertTagModel.updateTagsForAlert(editedAlert.id, data.tags)
-						Redirect(routes.AlertsController.view(id)).flashing(AppFlash.success("Changes saved."))
+						Redirect(routes.AlertsController.view(alertId)).flashing(AppFlash.success("Alert was saved successfully."))
 					}
 				)
 			}
@@ -193,7 +188,7 @@ object AlertsController extends AppController {
 	 * @param id the id of the alert to delete
 	 */
 	def delete(id: UUID) =AuthAction.authenticatedUser { implicit user =>
-		AlertAction.alertManagementAccess(id, user.id) { (alert, ignored) =>
+		AlertAction.alertManagementAccess(id, user.id) { alert =>
 			AppAction { implicit request =>
 				AlertModel.deleteAlert(id)
 				Redirect(routes.AlertsController.search("")).flashing(AppFlash.success("Alert was successfully deleted."))
