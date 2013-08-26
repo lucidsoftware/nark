@@ -45,7 +45,7 @@ object AlertsController extends AppController {
 			"error_threshold" -> bigDecimal,
 			"warn_threshold" -> bigDecimal,
 			"comparison" -> number.verifying("Invalid comparison type", x => Comparisons.values.map(_.id).contains(x)).transform[Comparisons.Value](Comparisons(_), _.id),
-			"frequency" -> number.verifying(Constraints.min(10))
+			"frequency" -> number.verifying(Constraints.min(1))
 		)(AlertFormSubmission.apply)(AlertFormSubmission.unapply)
 	)
 
@@ -59,7 +59,7 @@ object AlertsController extends AppController {
 			"error_threshold" -> bigDecimal,
 			"warn_threshold" -> bigDecimal,
 			"comparison" -> number.verifying("Invalid comparison type", x => Comparisons.values.map(_.id).contains(x)).transform[Comparisons.Value](Comparisons(_), _.id),
-			"frequency" -> number.verifying(Constraints.min(10)),
+			"frequency" -> number.verifying(Constraints.min(1)),
 			"active" -> boolean
 		)(EditFormSubmission.apply)(EditFormSubmission.unapply)
 	)
