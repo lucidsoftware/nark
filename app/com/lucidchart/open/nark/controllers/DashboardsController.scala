@@ -80,7 +80,7 @@ class DashboardsController extends AppController {
 				data => {
 					val dashboard = new Dashboard(data.name, data.url, user.id)
 					DashboardModel.createDashboard(dashboard)
-					DashboardTagsModel.addTagsForDashboard(dashboard.id, data.tags)
+					DashboardTagsModel.updateTagsForDashboard(dashboard.id, data.tags)
 					val newHistoryCookie = addDashboardToHistoryCookie(dashboard)
 					Redirect(routes.GraphsController.add(dashboard.id)).flashing(AppFlash.success("Dashboard was created successfully.")).withCookies(newHistoryCookie)
 				}

@@ -16,10 +16,10 @@ ALTER TABLE `graph_targets`
 CREATE TABLE `alert_tags` (
 	`hiddenid` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
 	`alert_id` BINARY(16) NOT NULL,
-	`name` VARCHAR(25),
+	`tag` VARCHAR(25),
 	PRIMARY KEY (`hiddenid`),
-	UNIQUE KEY `app_pk` (`alert_id`, `name`),
-	KEY `name` (`name`)
+	UNIQUE KEY `app_pk` (`alert_id`, `tag`),
+	KEY `tag` (`tag`)
 ) ENGINE=InnoDB CHARSET=utf8 COLLATE=utf8_general_ci;
 
 CREATE TABLE `dynamic_alerts` (

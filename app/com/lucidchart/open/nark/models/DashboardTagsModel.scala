@@ -11,14 +11,13 @@ import play.api.Play.current
 import play.api.Play.configuration
 import play.api.db.DB
 
+object DashboardTagsModel extends DashboardTagsModel
 class DashboardTagsModel extends AppModel {
 	protected val tagsRowParser =  {
 		get[UUID]("dashboard_id") ~
 		get[String]("tag") map {
-			case dashboardId ~ tag =>
-				new DashboardTag(dashboardId, tag)
+			case dashboardId ~ tag => new DashboardTag(dashboardId, tag)
 		}
-
 	}
 
 	/**
@@ -74,10 +73,9 @@ class DashboardTagsModel extends AppModel {
 					SELECT * 
 					FROM `dashboard_tags` 
 					WHERE `tag` in ({tags})
-				""")
-				.onList("tags" -> tags)
-				.toSQL.on("limit" -> configuredLimit)
-				.as(tagsRowParser *)(connection)
+				""").onList(
+					"tags" -> tags
+				).toSQL.as(tagsRowParser *)(connection)
 			}
 		}
 	}
@@ -99,123 +97,85 @@ class DashboardTagsModel extends AppModel {
 	 */
 	def findTagsForDashboard(dashboardIds: List[UUID]) : List[DashboardTag] = {
 		if(dashboardIds.isEmpty) {
-			return List[DashboardTag]();
+			Nil
 		}
-
-		DB.withConnection("main") {connection =>
-			RichSQL("""
-				SELECT * 
-				FROM `dashboard_tags` 
-				WHERE `dashboard_id` IN ({dashboardIds})
-				ORDER BY `dashboard_id`
-				""")
-			.onList("dashboardIds" -> dashboardIds)
-			.toSQL.as(tagsRowParser *)(connection)
-		}
-	}
-
-	/**
-	 * @param dashbaordID
-	 * @param tags
-	 * Updates tags for a dashbaord. Removes any tags associate with the dashbaord 
-	 * that are not in the list list. Adds tags in list to the dashboard, ignoring duplicates.
-	 */
-	def updateTagsForDashboard(dashboardId: UUID, tags:List[String]) {
-		if(tags.isEmpty) {
-			removeAllTagsForDashboard(dashboardId);
-		} else {
-			removeTagsForDashboard(dashboardId, tags, false)
-			addTagsForDashboard(dashboardId, tags)
-		}
-	}
-
-	/**
-	 * @param dashboardId
-	 * @param tags
-	 * Adds these tags for a dashboard, ignoring duplicates.
-	 */
-	def addTagsForDashboard(dashboardId:UUID, tags:List[String]) {
-		if(!tags.isEmpty) {
-			DB.withConnection("main") { connection =>
+		else {
+			DB.withConnection("main") {connection =>
 				RichSQL("""
-
-			 		INSERT IGNORE INTO `dashboard_tags` (`dashboard_id`, `tag`) 
-			 		VALUES ({fields})
-
-			 	""")
-			 	.multiInsert(tags.size, Seq("dashboard_id", "tag"))(
-			      "dashboard_id" -> tags.map(_ => toParameterValue(dashboardId)),
-			      "tag" -> tags.map(x => toParameterValue(x)))
-			 	.toSQL.executeUpdate()(connection)
+					SELECT * 
+					FROM `dashboard_tags` 
+					WHERE `dashboard_id` IN ({dashboardIds})
+					ORDER BY `dashboard_id`
+				""").onList(
+					"dashboardIds" -> dashboardIds
+				).toSQL.as(tagsRowParser *)(connection)
 			}
 		}
 	}
 
 	/**
-	 * Removes these tags from a dashboard.
-	 * @param dashbaordID
-	 * @param tags
-	 * @param inList wheter to remove the tags in the list, or to remove the tags not in the list. By default removes tags in the list.
+	 * Update the tags associated with a dashboard
+	 * @param id the id of the dashboard to update
+	 * @param tags the new tags to associate with the dashboard
 	 */
-	def removeTagsForDashboard(dashboardId:UUID, tags:List[String], inList:Boolean=true) {
-		DB.withConnection("main") { connection =>
-			RichSQL("""
-					DELETE
-					FROM `dashboard_tags`
-					WHERE `dashboard_id` = {dashboard_id} 
-					AND `tag` """ + (if (inList)  "" else "NOT") + """ IN ({tags})
-				""")
-			.onList("tags" -> tags)
-			.toSQL.on("dashboard_id" -> dashboardId)
-			.executeUpdate()(connection)
-		}
-	}
+	def updateTagsForDashboard(id: UUID, tags: List[String]) = {
+		DB.withTransaction("main") { connection =>
+			if (tags.isEmpty) {
+				SQL("""
+					DELETE FROM `dashboard_tags`
+					WHERE `dashboard_id` = {dashboard_id}
+				""").on(
+					"dashboard_id" -> id
+				).executeUpdate()(connection)
+			}
+			else {
+				RichSQL("""
+					DELETE FROM `dashboard_tags`
+					WHERE `dashboard_id` = {dashboard_id} AND `tag` NOT IN ({tags})
+				""").onList(
+					"tags" -> tags
+				).toSQL.on(
+					"dashboard_id" -> id
+				).executeUpdate()(connection)
 
-	/**
-	 * Removes all tags from a dashboard.
-	 * @param dashbaordID
-	 */
-	def removeAllTagsForDashboard(dashboardId:UUID) {
-		DB.withConnection("main") { connection =>
-			SQL("""
-					DELETE
-					FROM `dashboard_tags`
-					WHERE `dashboard_id` = {dashboard_id} 
-				""")
-			.on("dashboard_id" -> dashboardId)
-			.executeUpdate()(connection)
+				RichSQL("""
+					INSERT IGNORE INTO `dashboard_tags` (`dashboard_id`, `tag`)
+					VALUES ({fields})
+				""").multiInsert(tags.size, Seq("dashboard_id", "tag"))(
+					"dashboard_id" -> tags.map(_ => toParameterValue(id)),
+					"tag" -> tags.map(toParameterValue(_))
+				).toSQL.executeUpdate()(connection)
+			}
 		}
 	}
 }
 
-
-object DashboardTagsModel extends DashboardTagsModel
-
 object DashboardTagConverter {
-	def toDashboardMap(tags : List[DashboardTag]) : Map[UUID, List[String]] = {
-		tags.foldLeft[Map[UUID,List[String]]](Map())((ret,dt) =>
-	    	ret + (dt.dashboardId -> 
-	    				(if(ret contains dt.dashboardId)
-	    					(dt.tag :: ret.get(dt.dashboardId).get)
-	    				else 
-	    					List(dt.tag)
-	    				))
-		)
+	/**
+	 * Combine a list of dashboard tags and a list of dashboards into a map
+	 * of tag to list of matching dashboard pairs
+	 */
+	def toTagMap(tags: List[DashboardTag], dashboards: List[Dashboard]): Map[String, List[Dashboard]] = {
+		val dashboardsById = dashboards.map { a => (a.id, a) }.toMap
+		tags.map { tag =>
+			(tag, dashboardsById.get(tag.dashboardId))
+		}.collect {
+			case (tag, dashboardOption) if (dashboardOption.isDefined) => (tag, dashboardOption.get)
+		}.groupBy { case (tag, dashboard) =>
+			tag.tag
+		}.map { case (tag, tuples) =>
+			(tag, tuples.map(_._2))
+		}.toMap
 	}
 
-	def toTagMap(tags : List[DashboardTag], dashboards: List[Dashboard]) : Map[String, List[Dashboard]] = {
-		tags.foldLeft[Map[String,List[Dashboard]]](Map()){(ret,dt) =>
-			val dashboard = dashboards.find(_.id == dt.dashboardId)
-			if(dashboard.isDefined) {
-				ret + (dt.tag -> 
-	    				(if(ret contains dt.tag)
-	    					(dashboard.get :: ret.get(dt.tag).get)
-	    				else 
-	    					List(dashboard.get)
-	    				))
-			} else
-				ret
-			
+	/**
+	 * Find all the tags for each dashboard ID
+	 */
+	def toDashboardMap(tags: List[DashboardTag]): Map[UUID, List[String]] = {
+		tags.groupBy { tag =>
+			tag.dashboardId
+		}.map { case (dashboardId, tags) =>
+			(dashboardId, tags.map(_.tag))
 		}
-	}	
+	}
 }

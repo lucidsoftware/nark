@@ -13,33 +13,33 @@ object AlertTagModel extends AlertTagModel
 class AlertTagModel extends AppModel {
 	protected val tagsRowParser = {
 		get[UUID]("alert_id") ~
-		get[String]("name") map {
+		get[String]("tag") map {
 			case alertId ~ tag => new AlertTag(alertId, tag)
 		}
 	}
 
 	/**
 	 * Find all tags similar to the search term
-	 * @param name the search term
+	 * @param tag the search term
 	 * @return the list of matched tags
 	 */
-	def search(name: String, page: Int) = {
+	def search(tag: String, page: Int) = {
 		DB.withConnection("main") { connection =>
 			val found = SQL("""
-				SELECT COUNT(distinct(`name`)) FROM `alert_tags`
-				WHERE `name` LIKE {name}
+				SELECT COUNT(distinct(`tag`)) FROM `alert_tags`
+				WHERE `tag` LIKE {tag}
 			""").on(
-				"name" -> name
+				"tag" -> tag
 			).as(scalar[Long].single)(connection)
 
 			val matches = SQL("""
 				SELECT * FROM `alert_tags`
-				WHERE `name` LIKE {name}
-				GROUP BY `name`
-				ORDER BY `name` ASC
+				WHERE `tag` LIKE {tag}
+				GROUP BY `tag`
+				ORDER BY `tag` ASC
 				LIMIT {limit} OFFSET {offset}
 			""").on(
-				"name" -> name,
+				"tag" -> tag,
 				"limit" -> configuredLimit,
 				"offset" -> configuredLimit * page
 			).as(tagsRowParser *)(connection)
@@ -101,7 +101,7 @@ class AlertTagModel extends AppModel {
 				RichSQL("""
 					SELECT *
 					FROM `alert_tags`
-					WHERE `name` in ({tags})
+					WHERE `tag` in ({tags})
 				""").onList(
 					"tags" -> tags
 				).toSQL.as(tagsRowParser *)(connection)
@@ -120,12 +120,14 @@ class AlertTagModel extends AppModel {
 				SQL("""
 					DELETE FROM `alert_tags`
 					WHERE `alert_id` = {alert_id}
-				""").executeUpdate()(connection)
+				""").on(
+					"alert_id" -> id
+				).executeUpdate()(connection)
 			}
 			else {
 				RichSQL("""
 					DELETE FROM `alert_tags`
-					WHERE `alert_id` = {alert_id} AND `name` NOT IN ({tags})
+					WHERE `alert_id` = {alert_id} AND `tag` NOT IN ({tags})
 				""").onList(
 					"tags" -> tags
 				).toSQL.on(
@@ -133,11 +135,11 @@ class AlertTagModel extends AppModel {
 				).executeUpdate()(connection)
 
 				RichSQL("""
-					INSERT IGNORE INTO `alert_tags` (`alert_id`, `name`)
+					INSERT IGNORE INTO `alert_tags` (`alert_id`, `tag`)
 					VALUES ({fields})
-				""").multiInsert(tags.size, Seq("alert_id", "name"))(
+				""").multiInsert(tags.size, Seq("alert_id", "tag"))(
 					"alert_id" -> tags.map(_ => toParameterValue(id)),
-					"name" -> tags.map(toParameterValue(_))
+					"tag" -> tags.map(toParameterValue(_))
 				).toSQL.executeUpdate()(connection)
 			}
 		}
@@ -147,7 +149,7 @@ class AlertTagModel extends AppModel {
 object AlertTagConverter {
 	/**
 	 * Combine a list of alert tags and a list of alerts into a map
-	 * of tag name to list of matching alert pairs
+	 * of tag to list of matching alert pairs
 	 */
 	def toTagMap(tags: List[AlertTag], alerts: List[Alert]): Map[String, List[Alert]] = {
 		val alertsById = alerts.map { a => (a.id, a) }.toMap
@@ -157,8 +159,8 @@ object AlertTagConverter {
 			case (tag, alertOption) if (alertOption.isDefined) => (tag, alertOption.get)
 		}.groupBy { case (tag, alert) =>
 			tag.tag
-		}.map { case (name, tuples) =>
-			(name, tuples.map(_._2))
+		}.map { case (tag, tuples) =>
+			(tag, tuples.map(_._2))
 		}.toMap
 	}
 
