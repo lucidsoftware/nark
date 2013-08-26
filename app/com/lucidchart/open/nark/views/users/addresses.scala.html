@@ -1,0 +1,31 @@
+@(
+	formEdit: Form[_]
+)(
+	implicit
+	request: com.lucidchart.open.nark.request.AppRequest[_],
+	user: com.lucidchart.open.nark.models.records.User
+)
+@import com.lucidchart.open.nark.controllers.{routes=>narkRoutes}
+@import com.lucidchart.open.nark.views
+@import com.lucidchart.open.nark.views.html.helpers
+@import helper.twitterBootstrap._
+@import helper._
+
+@com.lucidchart.open.nark.views.html.layouts.main("Edit Addresses", userOption=Some(user)) {
+	<h3>Edit Alert Notification Addresses</h3>
+
+	<br />
+	<div class="row-fluid">
+		@helper.form(action=narkRoutes.UsersController.addressesSubmit()) {
+			<fieldset>
+				@helpers.csrfHiddenInput()
+				<div class="row-fluid">
+				@helper.inputText(formEdit("error_address"), 'class -> "input-xlarge", '_label -> "Error Address", 'required -> true, '_showConstraints -> false)
+				@helper.checkbox(formEdit("error_enable"), 'class -> "input-xlarge", '_label -> "Receive Error Notifications", 'placeholder -> true, '_text -> "", '_help -> "")
+				@helper.inputText(formEdit("warn_address"), 'class -> "input-xlarge", '_label -> "Warn Address", 'required -> true, '_showConstraints -> false)
+				@helper.checkbox(formEdit("warn_enable"), 'class -> "input-xlarge", '_label -> "Receive Warning Notifications", 'placeholder -> true, '_text -> "", '_help -> "")
+				<button class="btn btn-primary">Save</button>
+			</fieldset>
+		}
+	</div>
+}

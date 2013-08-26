@@ -92,6 +92,26 @@ class UserModel extends AppModel {
 			).executeUpdate()(connection)
 		}
 	}
+
+	/**
+	 * Edit a user using the details from the user object
+	 * @param user the edited User to put into the database
+	 */
+	def editUser(user: User) {
+		DB.withConnection("main") { connection =>
+			SQL("""
+				UPDATE `users`
+				SET `error_address`={error_address}, `error_enable`={error_enable}, `warn_address`={warn_address}, `warn_enable`={warn_enable}
+				WHERE `id`={id}
+			""").on(
+				"id" -> user.id,
+				"error_address" -> user.errorAddress,
+				"error_enable" -> user.errorEnable,
+				"warn_address" -> user.warnAddress,
+				"warn_enable" -> user.warnEnable
+			).executeUpdate()(connection)
+		}
+	}
 }
 
 object UserModel extends UserModel

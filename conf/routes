@@ -78,7 +78,8 @@ POST    /tagsubscription/:tag/delete         com.lucidchart.open.nark.controller
 # User Pages
 GET     /user/subscriptions                  com.lucidchart.open.nark.controllers.SubscriptionsController.allSubscriptionsForUser(page: Int ?= 1)
 GET     /user/tagsubscriptions               com.lucidchart.open.nark.controllers.TagSubscriptionsController.allSubscriptionsForUser(page: Int ?= 1)
-
+GET 		/user/addresses 							com.lucidchart.open.nark.controllers.UsersController.addresses()
+POST 		/user/addresses 							com.lucidchart.open.nark.controllers.UsersController.addressesSubmit()
 
 # Hosts
 GET     /hosts/search                        com.lucidchart.open.nark.controllers.HostsController.search(term: String ?= "", page: Int ?= 1)
