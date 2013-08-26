@@ -6,12 +6,16 @@ import AnormImplicits._
 import com.lucidchart.open.nark.models.records.{Alert, AlertState, AlertStatus, Comparisons}
 import java.math.BigDecimal
 import java.util.{Date, UUID}
+import play.api.Logger
 import play.api.Play.current
 import play.api.Play.configuration
 import play.api.db.DB
+import java.sql.Connection
 
 object AlertModel extends AlertModel
 class AlertModel extends AppModel {
+	private val maxConsecutiveFailures = configuration.getInt("alerts.maxConsecutiveFailures").get
+	private val consecutiveFailuresMultiplier = configuration.getInt("alerts.consecutiveFailuresMultiplier").get
 
 	protected val alertsRowParser = {
 		get[UUID]("id") ~ 
@@ -156,6 +160,25 @@ class AlertModel extends AppModel {
 		}
 	}
 
+	private def handleAlertErrors(threadId: UUID, alerts: List[Alert])(implicit connection: Connection) {
+		RichSQL("""
+			UPDATE `alerts`
+			SET
+				`consecutive_failures` = LEAST(`consecutive_failures` + 1, {max_failures}),
+				`thread_id` = NULL,
+				`thread_start` = NULL,
+				`last_checked` = NOW(),
+				`next_check` = DATE_ADD(NOW(), INTERVAL (`frequency` * `consecutive_failures` * {failure_multiplier}) SECOND)
+			WHERE `id` IN ({ids}) AND `thread_id` = {thread_id}
+		""").onList(
+			"ids" -> alerts.map(_.id)
+		).toSQL.on(
+			"thread_id"          -> threadId,
+			"max_failures"       -> maxConsecutiveFailures,
+			"failure_multiplier" -> consecutiveFailuresMultiplier
+		).executeUpdate()(connection)
+	}
+
 	/**
 	 * Used by the alerting job to take the next alert(s) that needs to be checked, check the alert.
 	 * @param threadId the thread of the worker checking the alerts
@@ -163,115 +186,107 @@ class AlertModel extends AppModel {
 	 * @param worker handles the alerts to be checked and returns the status (success or failure)
 	 */
 	def takeNextAlertsToCheck(threadId: UUID, limit: Integer)(worker: (List[Alert]) => Map[Alert, AlertStatus.Value]) = {
-		val alerts = DB.withConnection("main") { connection =>
-			SQL("""
+		val start = new Date()
+		val alertsForWorker = DB.withConnection("main") { connection =>
+			val updated = SQL("""
 				UPDATE `alerts`
 				SET `thread_id` = {thread_id},
-					`thread_start` = NOW()
+					`thread_start` = {thread_start}
 				WHERE `active` = 1
 				AND `deleted` = 0
 				AND `thread_id` IS NULL
 				AND `next_check` <= NOW()
-				ORDER BY `next_check` ASC
+				ORDER BY `next_check` ASC, `id` ASC
 				LIMIT {limit}
 			""").on(
 				"thread_id" -> threadId,
-				"limit" -> limit 
+				"thread_start" -> start,
+				"limit" -> limit
 			).executeUpdate() (connection)
-			SQL("""
-				SELECT * FROM `alerts`
-				WHERE `thread_id` = {thread_id}
-				AND `active` = 1
-				AND `deleted` = 0
-				AND `next_check` <= NOW()
+
+			if (updated == 0) {
+				Nil
+			}
+			else {
+				SQL("""
+					SELECT * FROM `alerts`
+					WHERE `thread_id` = {thread_id}
+					AND `thread_start` = {thread_start}
 				""").on(
-				"thread_id" -> threadId
-			).as(alertsRowParser *)(connection)
+					"thread_id" -> threadId,
+					"thread_start" -> start
+				).as(alertsRowParser *)(connection)
+			}
 		}
 
 		try {
-			val completedAlertStatus = worker(alerts)
-			DB.withConnection("main"){connection =>
-				completedAlertStatus.map{ case(alert, status) =>
-					status match {
-						case AlertStatus.success =>
-							SQL("""
-								UPDATE `alerts` 
-								SET `consecutive_failures` = 0,
-									`worst_state` = {worst_state}
-								WHERE `id` = {id}
-							""").on(
-								"id" -> alert.id,
-								"worst_state" -> alert.worstState.id
-							).executeUpdate()(connection)
-						case AlertStatus.failure =>
-							SQL("""
-								UPDATE `alerts`
-								SET `consecutive_failures` = {consecutive_failures},
-									`next_check` = {next_check}
-								WHERE `id` = {id}
-							""").on(
-								"id" 					-> alert.id,
-								"consecutive_failures"	-> alert.consecutiveFailures,
-								"next_check" 			-> alert.nextCheck
-							).executeUpdate()(connection)
+			val completedAlertStatus = worker(alertsForWorker)
+			require(completedAlertStatus.size == alertsForWorker.size)
+
+			if (!alertsForWorker.isEmpty) {
+				DB.withConnection("main"){ connection =>
+					completedAlertStatus.groupBy { case (alert, status) => status }.map { case (status, records) =>
+						val alerts = records.map(_._1).toList
+						status match {
+							case AlertStatus.success => {
+								alerts.groupBy { alert => alert.worstState }.map { case (worstState, sameAlerts) =>
+									RichSQL("""
+										UPDATE `alerts` 
+										SET
+											`consecutive_failures` = 0,
+											`worst_state` = {worst_state},
+											`thread_id` = NULL,
+											`thread_start` = NULL,
+											`last_checked` = NOW(),
+											`next_check` = DATE_ADD(NOW(), INTERVAL `frequency` SECOND)
+										WHERE `id` IN ({ids}) AND `thread_id` = {thread_id}
+									""").onList(
+										"ids" -> sameAlerts.map(_.id)
+									).toSQL.on(
+										"thread_id"   -> threadId,
+										"worst_state" -> worstState.id
+									).executeUpdate()(connection)
+								}
+							}
+							case AlertStatus.failure => {
+								handleAlertErrors(threadId, alerts)(connection)
+							}
+						}
 					}
 				}
 			}
+
 			completedAlertStatus
 		}
-		finally {
-			DB.withConnection("main") { connection =>
-				val updatedAlerts = SQL("""
-										SELECT * 
-										FROM `alerts`
-										WHERE `thread_id` = {thread_id}
-										AND `active` = 1
-										AND `deleted` = 0
-									""").on("thread_id" -> threadId).as(alertsRowParser *)(connection)
+		catch {
+			case e: Exception => {
+				Logger.error("Error occurred while processing alerts.", e)
 
-				val nextChecks = updatedAlerts.map{ alert => (alert, if(alert.nextCheck.before(new Date())) secondsFromNow(alert.frequency) else alert.nextCheck) }.toMap
-				updatedAlerts.map{ alert =>
-					//release alerts
-					SQL("""
-						UPDATE `alerts` 
-						SET `thread_id` = NULL,
-						`thread_start` = NULL,
-						`last_checked` = NOW(),
-						`next_check` = {next_check}
-						WHERE `thread_id` = {thread_id}
-						AND `id` = {id}
-					""").on(
-						"thread_id" -> threadId,
-						"id" -> alert.id,
-						"next_check" -> nextChecks(alert)
-					).executeUpdate() (connection)
+				if (!alertsForWorker.isEmpty) {
+					DB.withConnection("main"){ connection =>
+						handleAlertErrors(threadId, alertsForWorker)(connection)
+					}
 				}
-			}
 
+				throw e
+			}
 		}
 	}
 
+	/**
+	 * Clean up after broken alert threads
+	 */
 	def cleanAlertThreadsBefore(date: Date) {
 		DB.withConnection("main") { connection =>
-
 			SQL("""
 				UPDATE `alerts` 
 				SET `thread_id` = NULL,
-					`thread_start` = NULL,
-					`next_check` = NOW()
+					`thread_start` = NULL
 				WHERE `thread_id` IS NOT NULL
 				AND `thread_start` < {date}
-				AND `active` = 1
-				AND `deleted` = 0
 			""").on(
 				"date" -> date
 			).executeUpdate() (connection)
-
 		}
-	}
-
-	private def secondsFromNow(seconds: Int) : Date = {
-		new Date(new Date().getTime + (1000 * seconds))
 	}
 }

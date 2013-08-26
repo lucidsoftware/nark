@@ -66,7 +66,7 @@ CREATE TABLE `alerts` (
 	PRIMARY KEY (`hiddenid`),
 	UNIQUE KEY `app_pk` (`id`),
 	KEY `name` (`name`),
-	KEY `worker` (`active`, `deleted`, `thread_id`, `next_check`),
+	KEY `worker` (`active`, `deleted`, `thread_id`, `next_check`, `id`),
 	KEY `worst_state` (`worst_state`, `last_checked`),
 	KEY `deleted` (`deleted`),
 	KEY `active` (`active`)

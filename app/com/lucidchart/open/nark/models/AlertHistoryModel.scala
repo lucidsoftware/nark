@@ -27,20 +27,28 @@ class AlertHistoryModel extends AppModel {
 	 * Create a new alert using all the details from the alert object
 	 * throws an exception on failure
 	 *
-	 * @param alert the Alert to create
+	 * @param alerts the Alert Histories to create
 	 */
-	def createAlertHistory(alert: AlertHistory) {
-		DB.withConnection("main") { connection =>
-			SQL("""
-				INSERT INTO `alert_history` (`alert_id`, `target`, `date`, `state`, `messages_sent`)
-				VALUES ({alert_id}, {target}, {date}, {state}, {messages_sent})
-			""").on(
-				"alert_id"      -> alert.alertId,
-				"target"        -> alert.target,
-				"date"          -> alert.date,
-				"state"         -> alert.state.id,
-				"messages_sent" -> alert.messagesSent
-			).executeUpdate()(connection)
+	def createAlertHistory(alerts: List[AlertHistory]) {
+		if (!alerts.isEmpty) {
+			DB.withConnection("main") { connection =>
+				RichSQL("""
+					INSERT INTO `alert_history` (`alert_id`, `target`, `date`, `state`, `messages_sent`)
+					VALUES ({fields})
+				""").multiInsert(alerts.size, Seq(
+					"alert_id",
+					"target",
+					"date",
+					"state",
+					"messages_sent"
+				))(
+					"alert_id"      -> alerts.map(alert => toParameterValue(alert.alertId)),
+					"target"        -> alerts.map(alert => toParameterValue(alert.target)),
+					"date"          -> alerts.map(alert => toParameterValue(alert.date)),
+					"state"         -> alerts.map(alert => toParameterValue(alert.state.id)),
+					"messages_sent" -> alerts.map(alert => toParameterValue(alert.messagesSent))
+				).toSQL.executeUpdate()(connection)
+			}
 		}
 	}
 }

@@ -4,7 +4,7 @@ import com.lucidchart.open.nark.utils.StatsD
 import com.lucidchart.open.nark.offline.HostDiscoverer
 import com.lucidchart.open.nark.request.KeepFlashFilter
 import com.lucidchart.open.nark.request.AppRequest
-import com.lucidchart.open.nark.jobs.alerts.Master
+import com.lucidchart.open.nark.jobs.alerts.AlertMaster
 
 import play.api._
 import play.api.mvc._
@@ -22,8 +22,6 @@ object Global extends WithFilters(CSRFFilter(), KeepFlashFilter()) with GlobalSe
 	protected def errorStatsKey(request: RequestHeader) = request.path.replaceAll("""[\/]""", ".") + "." + request.method.toLowerCase
 
 	override def onStart(application: Application) {
-		val alertmaster = Akka.system.actorOf(Props[Master], name = "alertmaster")
-		Akka.system.scheduler.scheduleOnce(1.seconds, alertmaster, "start")
 		Akka.system.scheduler.scheduleOnce(1.seconds) {
 			registerBackgroundJobs()
 		}
@@ -32,6 +30,7 @@ object Global extends WithFilters(CSRFFilter(), KeepFlashFilter()) with GlobalSe
 	private def registerBackgroundJobs() {
 		Logger.info("Registering background jobs")
 		HostDiscoverer.schedule()
+		AlertMaster.schedule()
 	}
 	
 	override def onError(request: RequestHeader, e: Throwable) = {

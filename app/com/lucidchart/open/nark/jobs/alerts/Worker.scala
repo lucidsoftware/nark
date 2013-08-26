@@ -5,6 +5,7 @@ import com.lucidchart.open.nark.models.records.{Alert,AlertHistory,AlertState, A
 import com.lucidchart.open.nark.utils.Graphite
 import akka.actor.Actor
 import akka.actor.Props
+import play.api.Logger
 import play.api.Play.current
 import play.api.Play.configuration
 import scala.concurrent.{Future,Await}
@@ -19,40 +20,43 @@ import java.util.{Date, UUID}
 case class CheckAlertMessage(limit: Int)
 case class CleanupMessage(seconds: Int)
 
-class Worker extends Actor {
-	private val threadId = UUID.randomUUID()
-	private val maxConsecutiveFailures = configuration.getInt("alerts.maxConsecutiveFailures").get
-	private val consecutiveFailuresMultiplier = configuration.getInt("alerts.consecutiveFailuresMultiplier").get
-	private val secondsToCheck = configuration.getInt("alerts.secondsToCheckData").get
-	private val url = configuration.getString("application.domain").get
+object AlertWorker {
+	private[alerts] val maxConsecutiveFailures = configuration.getInt("alerts.maxConsecutiveFailures").get
+	private[alerts] val secondsToCheck = configuration.getInt("alerts.secondsToCheckData").get
+	private[alerts] val url = configuration.getString("application.domain").get
 
-	private val smtpHostName = configuration.getString("mailer.smtp.host").get
-	private val smtpAuthUser = configuration.getString("mailer.smtp.user").get
-	private val smtpAuthPwd  = configuration.getString("mailer.smtp.pass").get
-	private val smtpPort  = configuration.getInt("mailer.smtp.port").get
-	private val fromEmail  = configuration.getString("mailer.fromemail").get
-	private val mailerEnabled = configuration.getBoolean("mailer.enabled").get
+	private[alerts] val fromEmail  = configuration.getString("mailer.fromemail").get
+	private[alerts] val mailerEnabled = configuration.getBoolean("mailer.enabled").get
+	private[alerts] val mailerDebug = configuration.getBoolean("mailer.debug").get
 
-	class SMTPAuthenticator extends javax.mail.Authenticator {
+	private[alerts] class SMTPAuthenticator extends javax.mail.Authenticator {
 		override def getPasswordAuthentication() = {
-			val username = smtpAuthUser
-			val password = smtpAuthPwd
+			val username = configuration.getString("mailer.smtp.user").get
+			val password = configuration.getString("mailer.smtp.pass").get
 			new PasswordAuthentication(username, password)
 		}
 	}
 
-	private val port : java.lang.Integer = smtpPort
-	private val props = new Properties()
-	props.put("mail.transport.protocol", "smtp")
-	props.put("mail.smtp.host", smtpHostName)
-	props.put("mail.smtp.port", port)
-	props.put("mail.smtp.auth", "true")
+	private[alerts] val props = {
+		val p = new Properties()
+		val port: java.lang.Integer = configuration.getInt("mailer.smtp.port").get
+		p.put("mail.transport.protocol", "smtp")
+		p.put("mail.smtp.host", configuration.getString("mailer.smtp.host").get)
+		p.put("mail.smtp.port", port)
+		p.put("mail.smtp.auth", "true")
+		p
+	}
 
-	private val auth = new SMTPAuthenticator()
+	private[alerts] val auth = new SMTPAuthenticator()
+}
+
+class Worker extends Actor {
+	private val threadId = UUID.randomUUID()
 
 	def receive = {
 		case m: CheckAlertMessage => checkAlert(m)
 		case m: CleanupMessage => cleanUnfinishedAlerts(m)
+		case _ =>
 	}
 
 	private def cleanUnfinishedAlerts(message: CleanupMessage) = {
@@ -61,95 +65,113 @@ class Worker extends Actor {
 	}
 
 	private def checkAlert(message: CheckAlertMessage) {
+		Logger.trace("AlertWorker: checking up to " + message.limit + " messages")
 		val alerts = AlertModel.takeNextAlertsToCheck(threadId, message.limit)(checkAlerts)
-		val results = alerts.partition(alertStatus => alertStatus._2 == AlertStatus.success)
+		val results = alerts.groupBy { case (alert, status) => status }
 
-		sender ! DoneMessage(results._1.size, results._2.size)
+		sender ! DoneMessage(
+			results.get(AlertStatus.success).map(_.size).getOrElse(0),
+			results.get(AlertStatus.failure).map(_.size).getOrElse(0),
+			message.limit
+		)
 	}
 
 	private def checkAlerts(alertsToCheck : List[Alert]) : Map[Alert, AlertStatus.Value] = {
 		alertsToCheck.map { alert =>
+			Logger.trace("AlertWorker: checking alert named '" + alert.name + "'")
 			try {
 				// get all targets
-				val returnedDataFuture = Graphite.data(List(alert.target), secondsToCheck)
+				val returnedDataFuture = Graphite.data(List(alert.target), AlertWorker.secondsToCheck)
 				val returnedData = Await.result(returnedDataFuture, 4 seconds).filterEmptyTargets()
 
 				// get current target states for this alert
-				val alertTargetStates = AlertTargetStateModel.getTargetStatesByAlertID(alert.id)
-				
+				val alertTargetStatesByTarget = AlertTargetStateModel.getTargetStatesByAlertID(alert.id).map { state => (state.target, state) }.toMap
+
 				// for each target
 				val nonNullTargets = returnedData.targets.filter(_.datapoints.last.value.isDefined)
-				val previousStates = nonNullTargets.map { target => (target, alertTargetStates.find(_.target == target.target).getOrElse(new AlertTargetState(alert.id, target.target, AlertState.normal)).state) }.toMap
+				val previousStates = nonNullTargets.map { target => (target, alertTargetStatesByTarget.get(target.target).map(_.state).getOrElse(AlertState.normal)) }.toMap
 				val currentStates = nonNullTargets.map { target => (target, getState(alert, target.datapoints.last.value.get)) }.toMap
 				val changedStates = nonNullTargets.filter { target => previousStates(target) != currentStates(target) }
-				
+
 				if(!changedStates.isEmpty) {
 					val subscribers = getSubscribers(alert)
 					
 					//send out emails
-					changedStates.foreach { changedState =>
-						val previousState = previousStates(changedState)
-						val currentState = currentStates(changedState)
+					val alertHistories = changedStates.map { currentTarget =>
+						val previousState = previousStates(currentTarget)
+						val currentState = currentStates(currentTarget)
 
 						//filter out subscribers that actually care about this.
-						val emails = subscribers.foldLeft[List[String]](Nil) { (ret, subscriber) =>
+						val emails = subscribers.map { subscriber =>
 							val includeError = (previousState == AlertState.error || currentState == AlertState.error) && subscriber.errorEnable
 							val includeWarn = !includeError && (previousState == AlertState.warn || currentState == AlertState.warn) && subscriber.warnEnable
 							if (includeError) {
-								subscriber.errorAddress  :: ret
+								Some(subscriber.errorAddress)
 							} else if (includeWarn) {
-								subscriber.warnAddress :: ret
+								Some(subscriber.warnAddress)
 							} else {
-								ret
-							}			
-						}.distinct
+								None
+							}
+						}.collect {
+							case Some(email) => email
+						}
 
 						val message = ((currentState) match {
-							case (AlertState.normal) => (changedState.target + " recovered. \n Went from " + previousState.toString + " to " + currentState.toString)
-							case (_) => (currentState + " : " + changedState.target + " went from " + previousState.toString + " to " + currentState.toString) 
-						}) + "\n <a href='" + url + "alert/" + alert.id + "/view'>View Alert</a>"
+							case (AlertState.normal) => (currentTarget.target + " recovered. \n Went from " + previousState.toString + " to " + currentState.toString)
+							case (_) => (currentState + " : " + currentTarget.target + " went from " + previousState.toString + " to " + currentState.toString) 
+						}) + "\n <a href='" + AlertWorker.url + "alert/" + alert.id + "/view'>View Alert</a>"
 
-						val subject = (currentState.toString + " : " + alert.name + " : " + changedState.target)
-
+						val subject = (currentState.toString + " : " + alert.name + " : " + currentTarget.target)
 						val emailsSent = sendEmails(emails, subject, message)
-						AlertHistoryModel.createAlertHistory(new AlertHistory(alert.id, changedState.target, currentState, emailsSent))
+						new AlertHistory(alert.id, currentTarget.target, currentState, emailsSent)
 					}
+
+					AlertHistoryModel.createAlertHistory(alertHistories)
 				}
 
-				val currentAlertTargetStates = nonNullTargets.map{target => new AlertTargetState(alert.id, target.target, currentStates(target)) }
-				AlertTargetStateModel.createAlertTargetStates(currentAlertTargetStates)
-				AlertTargetStateModel.deleteAlertTargetStatesBefore(alert.id, secondsFromNow(-60))
+				val currentAlertTargetStates = currentStates.map{ case (target, state) => new AlertTargetState(alert.id, target.target, state) }.toList
+				AlertTargetStateModel.setAlertTargetStates(alert.id, currentAlertTargetStates)
 
-				(alert.copy(worstState = getWorstState(currentStates.map(_._2).toList), consecutiveFailures = 0), AlertStatus.success)
+				(alert.copy(worstState = getWorstState(currentStates.values.toList)), AlertStatus.success)
 			} catch {
 				case e : Exception => {
-					if((alert.consecutiveFailures + 1) >= maxConsecutiveFailures) {
+					Logger.error("AlertWorker: error processing alert named '" + alert.name + "'", e)
+					if((alert.consecutiveFailures + 1) >= AlertWorker.maxConsecutiveFailures) {
 						val subscribers = getSubscribers(alert)
-						val emails = subscribers.map{ subscriber => if(subscriber.errorEnable) subscriber.errorAddress else if (subscriber.warnEnable) subscriber.warnAddress else "" }.filter(!_.isEmpty)
-						sendEmails(emails, "error: Failed to check alert " + alert.name + " .", "Check for alert " + alert.name + " has failed " + maxConsecutiveFailures + " times.")
-						(alert.copy(nextCheck = secondsFromNow(alert.frequency*consecutiveFailuresMultiplier), consecutiveFailures = 0), AlertStatus.failure)
-					} else {
-						(alert.copy(nextCheck = secondsFromNow(alert.frequency), consecutiveFailures = (alert.consecutiveFailures + 1)), AlertStatus.failure)
+						val emails = subscribers.map{ subscriber =>
+							if(subscriber.errorEnable) {
+								Some(subscriber.errorAddress)
+							}
+							else if (subscriber.warnEnable) {
+								Some(subscriber.warnAddress)
+							}
+							else {
+								None
+							}
+						}.collect {
+							case Some(email) => email
+						}
+						sendEmails(emails, "error: Failed to check alert " + alert.name + " .", "Check for alert " + alert.name + " has failed " + AlertWorker.maxConsecutiveFailures + " times.")
 					}
+					(alert, AlertStatus.failure)
 				}
 			}
 		}.toMap
 	}
 
 	private def sendEmails(toEmails: List[String], subject: String, body: String) : Int = {
-		if(mailerEnabled && !toEmails.isEmpty) {
-			val mailSession = Session.getInstance(props, auth)
+		if(AlertWorker.mailerEnabled && !toEmails.isEmpty) {
+			val mailSession = Session.getInstance(AlertWorker.props, AlertWorker.auth)
 
-			// uncomment for debugging infos to stdout
-			// mailSession.setDebug(true)
+			if (AlertWorker.mailerDebug) {
+				mailSession.setDebug(true)
+			}
 
 			val transport = mailSession.getTransport()
-
 			val message = new MimeMessage(mailSession)
-			
-			message.setFrom(new InternetAddress(fromEmail, "nark"))
-			message.setReplyTo(Array(new InternetAddress(fromEmail, "nark")))
-			
+
+			message.setFrom(new InternetAddress(AlertWorker.fromEmail, "nark"))
+			message.setReplyTo(Array(new InternetAddress(AlertWorker.fromEmail, "nark")))
 			message.setSubject(subject)
 
 			toEmails.map{email => message.addRecipient(Message.RecipientType.TO, new InternetAddress(email, ""))}
@@ -168,30 +190,39 @@ class Worker extends Actor {
 	}
 
 	private def getWorstState(states: List[AlertState.Value]) : AlertState.Value = {
-		if(states.contains(AlertState.error))
+		if(states.contains(AlertState.error)) {
 			AlertState.error
-		else if(states.contains(AlertState.warn))
+		}
+		else if(states.contains(AlertState.warn)) {
 			AlertState.warn
-		else
+		}
+		else {
 			AlertState.normal
+		}
 	}
 
 	private def getSubscribers(alert: Alert) : List[User] = {
-		val alertTags = AlertTagModel.findTagsForAlert(alert.id).map(_.tag)		
-		val alertIds = 	if(alert.dynamicAlertId.isDefined) { List(alert.id, alert.dynamicAlertId.get) } else { List(alert.id) }
+		val alertTags = AlertTagModel.findTagsForAlert(alert.id).map(_.tag)
+		val tagSubscribers = AlertTagSubscriptionModel.getSubscriptionsByTag(alertTags).collect {
+			case s if (s.userOption.isDefined && s.subscription.active) => s.userOption.get
+		}
 
-		(AlertTagSubscriptionModel.getSubscriptionsByTag(alertTags).filter(_.subscription.active).map(_.userOption).filter(_.isDefined).map(_.get)) ++ 
-			(SubscriptionModel.getSubscriptionsByAlerts(alertIds).filter(_.subscription.active).map(_.userOption).filter(_.isDefined).map(_.get))
+		val alertIds = 	if(alert.dynamicAlertId.isDefined) { List(alert.id, alert.dynamicAlertId.get) } else { List(alert.id) }
+		val alertSubscribers = SubscriptionModel.getSubscriptionsByAlerts(alertIds).collect {
+			case s if (s.userOption.isDefined && s.subscription.active) => s.userOption.get
+		}
+
+		(tagSubscribers ++ alertSubscribers).distinct
 	}
 
 	private def crossesThreshold(value: BigDecimal, threshold:BigDecimal, comparison: Comparisons.Value): Boolean = {
 		comparison match {
-			case Comparisons.< 	=> value < threshold
-			case Comparisons.<=	=> value <= threshold
-			case Comparisons.==	=> value == threshold
-			case Comparisons.>	=> value > threshold
-			case Comparisons.>=	=> value >= threshold
-			case Comparisons.!=	=> value != threshold
+			case Comparisons.<  => (value <  threshold)
+			case Comparisons.<= => (value <= threshold)
+			case Comparisons.== => (value == threshold)
+			case Comparisons.>  => (value >  threshold)
+			case Comparisons.>= => (value >= threshold)
+			case Comparisons.!= => (value != threshold)
 		}
 	}
 
@@ -202,9 +233,11 @@ class Worker extends Actor {
 	private def getState(alert:Alert, lastDataPoint:BigDecimal) : AlertState.Value = {
 		if(crossesThreshold(lastDataPoint, alert.errorThreshold, alert.comparison)) {
 			AlertState.error
-		} else if (crossesThreshold(lastDataPoint, alert.warnThreshold, alert.comparison)) {
+		}
+		else if (crossesThreshold(lastDataPoint, alert.warnThreshold, alert.comparison)) {
 			AlertState.warn
-		} else {
+		}
+		else {
 			AlertState.normal
 		}
 	}

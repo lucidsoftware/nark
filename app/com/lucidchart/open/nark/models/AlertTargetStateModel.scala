@@ -23,21 +23,12 @@ class AlertTargetStateModel extends AppModel {
 	}
 
 	/**
-	 * Create a new alert target state using all the details from the alert target state object
-	 *
-	 * @param alert the AlertTargetState to create
+	 * updates ALL existing target states for the alert
 	 */
-	def createAlertTargetState(alertTargetState: AlertTargetState) {
-		createAlertTargetStates(List(alertTargetState))
-	}
-
-	/**
-	 * Creates new alert target states
-	 * @param states
-	 */
-	def createAlertTargetStates(states: List[AlertTargetState]) {
-		if(!states.isEmpty) {
-			DB.withConnection("main") { connection =>
+	def setAlertTargetStates(alertId: UUID, states: List[AlertTargetState]) {
+		val now = new Date()
+		DB.withTransaction("main") { connection =>
+			if(!states.isEmpty) {
 				states.groupBy(_.state).map { case (state, records) =>
 					RichSQL("""
 						INSERT INTO `alert_target_state` (`alert_id`, `target`,`state`,`last_updated`) 
@@ -52,23 +43,14 @@ class AlertTargetStateModel extends AppModel {
 					).executeUpdate()(connection)
 				}
 			}
-		}
-	}
-	/**
-	 * Delete targets not updated within the time period
-	 * @param alertId
-	 * @param boundaryTime . Delete any records for the alertId that were updated before this time
-	 *
-	 */
-	def deleteAlertTargetStatesBefore(alertId: UUID, boundaryTime: Date) = {
-		DB.withConnection("main") { connection =>
+
 			SQL("""
 				DELETE FROM `alert_target_state`
 				WHERE `alert_id` = {alert_id}
 				AND `last_updated` < {boundary_time}
 			""").on (
 				"alert_id"      -> alertId,
-				"boundary_time" -> boundaryTime
+				"boundary_time" -> now
 			).executeUpdate()(connection)
 		}
 	}
