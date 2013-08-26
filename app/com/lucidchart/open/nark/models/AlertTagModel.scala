@@ -145,38 +145,31 @@ class AlertTagModel extends AppModel {
 }
 
 object AlertTagConverter {
+	/**
+	 * Combine a list of alert tags and a list of alerts into a map
+	 * of tag name to list of matching alert pairs
+	 */
 	def toTagMap(tags: List[AlertTag], alerts: List[Alert]): Map[String, List[Alert]] = {
-		tags.foldLeft[Map[String, List[Alert]]](Map()) { (ret, tag) =>
-			val alert = alerts.find(_.id == tag.alertId)
-			if (alert.isDefined) {
-				ret + (tag.tag -> (
-					if (ret contains tag.tag) {
-						alert.get :: ret.get(tag.tag).get
-					}
-					else {
-						List(alert.get)
-					})
-
-				)
-			}
-			else {
-				ret
-			}
-		} 
+		val alertsById = alerts.map { a => (a.id, a) }.toMap
+		tags.map { tag =>
+			(tag, alertsById.get(tag.alertId))
+		}.collect {
+			case (tag, alertOption) if (alertOption.isDefined) => (tag, alertOption.get)
+		}.groupBy { case (tag, alert) =>
+			tag.tag
+		}.map { case (name, tuples) =>
+			(name, tuples.map(_._2))
+		}.toMap
 	}
 
+	/**
+	 * Find all the tags for each alert ID
+	 */
 	def toAlertMap(tags: List[AlertTag]): Map[UUID, List[String]] = {
-		tags.foldLeft[Map[UUID, List[String]]](Map()) { (ret, tag) =>
-			ret + (tag.alertId -> (
-					if (ret contains tag.alertId) {
-						tag.tag :: ret.get(tag.alertId).get
-					}
-					else {
-						List(tag.tag)
-					}
-				)
-			)
+		tags.groupBy { tag =>
+			tag.alertId
+		}.map { case (alertId, tags) =>
+			(alertId, tags.map(_.tag))
 		}
 	}
-
 }
