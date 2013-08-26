@@ -31,8 +31,8 @@ class DashboardsController extends AppController {
 			"url" -> text.verifying(Constraints.pattern("^[a-zA-Z0-9\\.\\-_]*$".r, error = "Only alpha-numberic text and periods (.), dashes (-), and underscores (_) allowed"))
 			             .verifying("A dashboard with that url already exists. Please choose another url.", !DashboardModel.findDashboardByURL(_).isDefined),
 			"tags" -> text.verifying("Max 25 characters per tag.", tags => tags.length == 0 || tags.split(",").filter(_.length > 25).isEmpty)
-						  .verifying(Constraints.pattern("^[a-zA-Z0-9\\.\\-_,]*$".r, error = "Only alpha-numberic text and periods (.), dashes (-), and underscores (_) allowed"))
-						  .transform[List[String]](str => if(str.length == 0) List[String]() else str.split(",").map(_.trim.toLowerCase).toList, _.mkString(","))
+			              .verifying(Constraints.pattern("^[a-zA-Z0-9\\.\\-_,]*$".r, error = "Only alpha-numberic text and periods (.), dashes (-), and underscores (_) allowed"))
+			              .transform[List[String]](str => if(str.length == 0) List[String]() else str.split(",").map(_.trim.toLowerCase).toList, _.mkString(","))
 		)(DashboardFormSubmission.apply)(DashboardFormSubmission.unapply)
 	)
 	private def editDashboardForm(id: UUID) = {
@@ -45,8 +45,8 @@ class DashboardsController extends AppController {
 				                 !dashboard.isDefined || dashboard.get.id == id
 				             }),
 				"tags" -> text.verifying("Max 25 characters per tag.", tags => tags.length == 0 || tags.split(",").filter(_.length > 25).isEmpty)
-						  .verifying(Constraints.pattern("^[a-zA-Z0-9\\.\\-_,]*$".r, error = "Only alpha-numberic text and periods (.), dashes (-), and underscores (_) allowed"))
-						  .transform[List[String]](str => if(str.length == 0) List[String]() else str.split(",").map(_.trim.toLowerCase).toList, _.mkString(","))
+				              .verifying(Constraints.pattern("^[a-zA-Z0-9\\.\\-_,]*$".r, error = "Only alpha-numberic text and periods (.), dashes (-), and underscores (_) allowed"))
+				              .transform[List[String]](str => if(str.length == 0) List[String]() else str.split(",").map(_.trim.toLowerCase).toList, _.mkString(","))
 			)(DashboardFormSubmission.apply)(DashboardFormSubmission.unapply)
 		)
 	}
@@ -95,8 +95,9 @@ class DashboardsController extends AppController {
 		DashboardAction.dashboardManagementAccess(dashboardId, user.id) { dashboard =>
 			AppAction { implicit request =>
 				val form = editDashboardForm(dashboardId).fill(DashboardFormSubmission(dashboard.name, 
-																					   dashboard.url, 
-																					   DashboardTagsModel.findTagsForDashboard(dashboardId).map(_.tag)))
+					dashboard.url,
+					DashboardTagsModel.findTagsForDashboard(dashboardId).map(_.tag)
+				))
 
 				Ok(views.html.dashboards.edit(form, dashboard))
 			}
