@@ -11,30 +11,10 @@ import play.api.Play.configuration
 
 object AlertTagModel extends AlertTagModel
 class AlertTagModel extends AppModel {
-
 	protected val tagsRowParser = {
 		get[UUID]("alert_id") ~
 		get[String]("name") map {
 			case alertId ~ tag => new AlertTag(alertId, tag)
-		}
-	}
-
-	/**
-	 * Add tags to an alert, ignores duplicates
-	 * @param alertId the id of the alert to add tags to
-	 * @param tags a list of tags to add to the alert
-	 */
-	def addTagsToAlert(alertId: UUID, tags: List[String]) = {
-		if (!tags.isEmpty){
-			DB.withConnection("main") { connection =>
-				RichSQL("""
-					INSERT IGNORE INTO `alert_tags` (`alert_id`, `name`)
-					VALUES ({fields})
-				""").multiInsert(tags.size, Seq("alert_id", "name"))(
-					"alert_id" -> tags.map(_ => toParameterValue(alertId)),
-					"name" -> tags.map(toParameterValue(_))
-				).toSQL.executeUpdate()(connection)
-			}
 		}
 	}
 
@@ -104,33 +84,28 @@ class AlertTagModel extends AppModel {
 	 * @return the AlertTags
 	 */
 	def findAlertsByTag(tag: String): List[AlertTag] = {
-		DB.withConnection("main") { connection =>
-			SQL("""
-				SELECT *
-				FROM `alert_tags`
-				WHERE `name`={tag}
-			""").on(
-				"tag" -> tag
-			).as(tagsRowParser *)(connection)
-		}
+		findAlertsByTag(List(tag))
 	}
 
 	/**
 	 * Search for all alerts associated with tags
-	 * @param tag the tag to search for
+	 * @param tags the tags to search for
 	 * @return the AlertTags
 	 */
 	def findAlertsByTag(tags: List[String]): List[AlertTag] = {
-		if(tags.isEmpty)
-			return Nil
-		DB.withConnection("main") { connection =>
-			RichSQL("""
-				SELECT *
-				FROM `alert_tags`
-				WHERE `name` in ({tags})
-			""").onList(
-				"tags" -> tags
-			).toSQL.as(tagsRowParser *)(connection)
+		if(tags.isEmpty) {
+			Nil
+		}
+		else {
+			DB.withConnection("main") { connection =>
+				RichSQL("""
+					SELECT *
+					FROM `alert_tags`
+					WHERE `name` in ({tags})
+				""").onList(
+					"tags" -> tags
+				).toSQL.as(tagsRowParser *)(connection)
+			}
 		}
 	}
 
@@ -140,24 +115,31 @@ class AlertTagModel extends AppModel {
 	 * @param tags the new tags to associate with the alert
 	 */
 	def updateTagsForAlert(id: UUID, tags: List[String]) = {
-		removeAllTagsFromAlert(id)
-		if (!tags.isEmpty) {
-			addTagsToAlert(id, tags)
-		}
-	}
+		DB.withTransaction("main") { connection =>
+			if (tags.isEmpty) {
+				SQL("""
+					DELETE FROM `alert_tags`
+					WHERE `alert_id` = {alert_id}
+				""").executeUpdate()(connection)
+			}
+			else {
+				RichSQL("""
+					DELETE FROM `alert_tags`
+					WHERE `alert_id` = {alert_id} AND `name` NOT IN ({tags})
+				""").onList(
+					"tags" -> tags
+				).toSQL.on(
+					"alert_id" -> id
+				).executeUpdate()(connection)
 
-	/**
-	 * Delete all tags for a particular alert
-	 * @param id the id of the alert from which to delete tags
-	 */
-	def removeAllTagsFromAlert(id: UUID) = {
-		DB.withConnection("main") { connection =>
-			SQL("""
-				DELETE FROM `alert_tags`
-				WHERE `alert_id`={id}
-			""").on(
-				"id" -> id
-			).executeUpdate()(connection)
+				RichSQL("""
+					INSERT IGNORE INTO `alert_tags` (`alert_id`, `name`)
+					VALUES ({fields})
+				""").multiInsert(tags.size, Seq("alert_id", "name"))(
+					"alert_id" -> tags.map(_ => toParameterValue(id)),
+					"name" -> tags.map(toParameterValue(_))
+				).toSQL.executeUpdate()(connection)
+			}
 		}
 	}
 }

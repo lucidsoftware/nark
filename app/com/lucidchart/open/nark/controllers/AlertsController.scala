@@ -95,7 +95,7 @@ object AlertsController extends AppController {
 					)
 
 					AlertModel.createAlert(alert)
-					AlertTagModel.addTagsToAlert(alert.id, data.tags)
+					AlertTagModel.updateTagsForAlert(alert.id, data.tags)
 					Redirect(routes.AlertsController.view(alert.id)).flashing(AppFlash.success("Alert was successfully created."))
 				}
 			)
