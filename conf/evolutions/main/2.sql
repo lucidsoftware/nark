@@ -102,8 +102,7 @@ CREATE TABLE `alert_history` (
 	`messages_sent` INT NOT NULL,
 	PRIMARY KEY (`hiddenid`),
 	UNIQUE KEY `app_pk` (`alert_id`, `target`, `date`),
-	KEY `alert_date_lookup` (`alert_id`, `date`),
-	KEY `date_lookup` (`date`)
+	KEY `alert_date_lookup` (`alert_id`, `date`)
 ) ENGINE=InnoDB CHARSET=utf8 COLLATE=utf8_general_ci;
 
 CREATE TABLE `alert_target_state` (
