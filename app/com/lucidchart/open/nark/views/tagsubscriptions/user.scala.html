@@ -20,53 +20,48 @@
 			margin-left: 10px;
 		}
 	</style>
-	<table>
-		<tr>
-			<td><h3>Tag Subscriptions</h3></td>
-			<td><a href="@narkRoutes.SubscriptionsController.allSubscriptionsForUser()" class="btn btn-info">View Alert Subscriptions</a></td>
-		</tr>
-	</table>
+	<h3>Alert Tag Subscriptions</h3>
 	@helpers.paginationMaxPage(found, limit) { maxPage =>
-	<div>
-		<div class="row">
-			<div class="span1" />
-			<div class="span11">
-				<div class="well">
-					@if(tagSubscriptions.size == 0){
-						<p class="lead text-info">You have no tag subscriptions.</p>
-					} else {
-						<table class="table">
-							<thead>
-								<tr>
-									<th>Tag</th>
-									<th>Alerts</th>
-									<th>Active</th>
-								</tr>
-							</thead>
-							<tbody>
-								@tagSubscriptions.map {subscription =>
+		<div>
+			<div class="row">
+				<div class="span1" />
+				<div class="span11">
+					<div class="well">
+						@if(tagSubscriptions.size == 0){
+							<p class="lead text-info">You have no tag subscriptions.</p>
+						} else {
+							<table class="table">
+								<thead>
 									<tr>
-										@helper.form(action=narkRoutes.TagSubscriptionsController.edit(subscription.subscription.tag, page)) {
-										@helpers.csrfHiddenInput()
-										<input type="hidden" name="active" value="@(subscription.subscription.active == false)" />
-											<td><a href="@narkRoutes.AlertTagsController.tag(subscription.subscription.tag)" class="btn btn-mini">@subscription.subscription.tag</a></td>
-											<td>
-												@tagAlerts(subscription.subscription.tag).map { alert =>
-													<a href="@narkRoutes.AlertsController.view(alert.id)" class="btn btn-mini btn-info">@alert.name</a>
-												}
-											</td>
-											<td><input class="btn" type="submit" value="@if(subscription.subscription.active){Deactivate Subscription} else {Reactivate Subscription}" /></td>
-										}
+										<th>Tag</th>
+										<th>Alerts</th>
+										<th>Active</th>
 									</tr>
-								}
-							</tbody>
-						</table>
-					}
+								</thead>
+								<tbody>
+									@tagSubscriptions.map {subscription =>
+										<tr>
+											@helper.form(action=narkRoutes.TagSubscriptionsController.edit(subscription.subscription.tag, page)) {
+											@helpers.csrfHiddenInput()
+											<input type="hidden" name="active" value="@(subscription.subscription.active == false)" />
+												<td><a href="@narkRoutes.AlertTagsController.tag(subscription.subscription.tag)" class="btn btn-mini">@subscription.subscription.tag</a></td>
+												<td>
+													@tagAlerts(subscription.subscription.tag).map { alert =>
+														<a href="@narkRoutes.AlertsController.view(alert.id)" class="btn btn-mini btn-info">@alert.name</a>
+													}
+												</td>
+												<td><input class="btn" type="submit" value="@if(subscription.subscription.active){Deactivate Subscription} else {Reactivate Subscription}" /></td>
+											}
+										</tr>
+									}
+								</tbody>
+							</table>
+						}
+					</div>
 				</div>
 			</div>
 		</div>
-	</div>
-	@{ helpers.paginationLinks(page, maxPage) { i => narkRoutes.TagSubscriptionsController.allSubscriptionsForUser(i).toString } }
+		@{ helpers.paginationLinks(page, maxPage) { i => narkRoutes.TagSubscriptionsController.allSubscriptionsForUser(i).toString } }
 	}
 
 }

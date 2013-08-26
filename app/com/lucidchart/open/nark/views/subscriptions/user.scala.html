@@ -20,57 +20,52 @@
 			margin-left: 10px;
 		}
 	</style>
-	<table>
-		<tr>
-			<td><h3>Alert Subscriptions</h3></td>
-			<td><a href="@narkRoutes.TagSubscriptionsController.allSubscriptionsForUser()" class="btn btn-info">View Tag Subscriptions</a></td>
-		</tr>
-	</table>
+	<h3>Alert Subscriptions</h3>
 	@helpers.paginationMaxPage(found, limit) { maxPage =>
-	<div>
-		<div class="row">
-			<div class="span1" />
-			<div class="span11">
-				<div class="well">
-					@if(subscriptions.size == 0){
-						<p class="lead text-info">You have no alert subscriptions.</p>
-					} else {
-						<table class="table">
-							<thead>
-								<tr>
-									<th>Alert Name</th>
-									<th>Target</th>
-									<th>Error</th>
-									<th>Warn</th>
-									<th>Comparison</th>
-									<th>Worst State</th>
-									<th>Active</th>
-								</tr>
-							</thead>
-							<tbody>
-								@subscriptions.map { subscription =>
+		<div>
+			<div class="row">
+				<div class="span1" />
+				<div class="span11">
+					<div class="well">
+						@if(subscriptions.size == 0){
+							<p class="lead text-info">You have no alert subscriptions.</p>
+						} else {
+							<table class="table">
+								<thead>
 									<tr>
-										@helper.form(action=narkRoutes.SubscriptionsController.edit(subscription.alertOption.get.id, page)) {
-										@helpers.csrfHiddenInput()
-										<input type="hidden" name="alert_type" value="@subscription.subscription.alertType.id" />
-										<input type="hidden" name="active" value="@(subscription.subscription.active == false)" />
-											<td><a href="@narkRoutes.AlertsController.view(subscription.alertOption.get.id)">@subscription.alertOption.get.name</a></td>
-											<td>@subscription.alertOption.get.target</td>
-											<td>@subscription.alertOption.get.errorThreshold</td>
-											<td>@subscription.alertOption.get.warnThreshold</td>
-											<td>@subscription.alertOption.get.comparison</td>
-											<td>@subscription.alertOption.get.worstState.toString</td>
-											<td><input class="btn" type="submit" value="@if(subscription.subscription.active){Deactivate Subscription} else {Reactivate Subscription}" /></td>
-										}
+										<th>Alert Name</th>
+										<th>Target</th>
+										<th>Error</th>
+										<th>Warn</th>
+										<th>Comparison</th>
+										<th>Worst State</th>
+										<th>Active</th>
 									</tr>
-								}
-							</tbody>
-						</table>
-					}
+								</thead>
+								<tbody>
+									@subscriptions.map { subscription =>
+										<tr>
+											@helper.form(action=narkRoutes.SubscriptionsController.edit(subscription.alertOption.get.id, page)) {
+											@helpers.csrfHiddenInput()
+											<input type="hidden" name="alert_type" value="@subscription.subscription.alertType.id" />
+											<input type="hidden" name="active" value="@(subscription.subscription.active == false)" />
+												<td><a href="@narkRoutes.AlertsController.view(subscription.alertOption.get.id)">@subscription.alertOption.get.name</a></td>
+												<td>@subscription.alertOption.get.target</td>
+												<td>@subscription.alertOption.get.errorThreshold</td>
+												<td>@subscription.alertOption.get.warnThreshold</td>
+												<td>@subscription.alertOption.get.comparison</td>
+												<td>@subscription.alertOption.get.worstState.toString</td>
+												<td><input class="btn" type="submit" value="@if(subscription.subscription.active){Deactivate Subscription} else {Reactivate Subscription}" /></td>
+											}
+										</tr>
+									}
+								</tbody>
+							</table>
+						}
+					</div>
 				</div>
 			</div>
 		</div>
-	</div>
-	@{ helpers.paginationLinks(page, maxPage) { i => narkRoutes.SubscriptionsController.allSubscriptionsForUser(i).toString } }
+		@{ helpers.paginationLinks(page, maxPage) { i => narkRoutes.SubscriptionsController.allSubscriptionsForUser(i).toString } }
 	}
 }
