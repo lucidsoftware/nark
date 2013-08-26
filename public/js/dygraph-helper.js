@@ -83,23 +83,75 @@ function plotGraph(element, data, graphOptions) {
 	graphOptions['labelsDiv'] = document.getElementById('legend');
 
 	$('#' + element.split(' ')[0]).html('');
-	return new Dygraph(
+	var g = new Dygraph(
 		document.getElementById(element.split(' ')[0]),
 		dygraph['datapoints'],
 		graphOptions
 	);
+	var onclick = function(ev) {
+		if (g.isSeriesLocked()) {
+			g.clearSelection();
+		} 
+		else {
+			g.setSelection(g.getSelection(), g.getHighlightSeries(), true);
+		}
+	};
+	g.updateOptions({clickCallback: onclick}, true);
+	return g;
 }
 
-$(document).mousemove(function(event) {
-	var legend = $('#legend');
-	var xOffset = 20;
-	if (event.pageX + legend.width() + 40 > $(window).width()){
-		xOffset = -40 - legend.width();
-	}
-	var padding = legend.is(':empty') ? 0 : 10;
-	legend.css({
-		left: event.pageX + xOffset,
-		top: event.pageY - legend.height() / 2,
-		padding: padding
+$(document).ready(function(event) {
+	$('#legend').css({
+		display: 'none'
 	});
-});
+
+	$('.graph-container').mouseover(function() {
+		$('#legend').css({
+			display: 'inherit',
+			padding: 5
+		});
+		if (typeof currentColumnCount != 'undefined' && currentColumnCount > 1) {
+			var g = $(this);
+			var showLegend = function() {
+				var left = g.parent().offset().left;
+				if (g.parent().offset().left + $('#legend').width() > $(window).width()) {
+					left = $(window).width() - $('#legend').width() - 50;
+				}
+				$('#legend').css({
+					left: left,
+					top: g.parent().offset().top - $('#legend').height()
+				});
+			};
+
+			setTimeout(showLegend, 50);
+		}
+		else {
+			mouseLegend();
+		}
+	});
+
+	$('.graph-container').mouseout(function() {
+		$(document).unbind('mousemove');
+		$('#legend').css({
+			display: 'none',
+			padding: 0
+		});
+	});
+})
+
+function mouseLegend() {
+	$(document).mousemove(function(event) {
+		var legend = $('#legend');
+
+		var xOffset = 20;
+		if (event.pageX + legend.width() + 40 > $(window).width()){
+			xOffset = -40 - legend.width();
+		}
+		var padding = legend.is(':empty') ? 0 : 10;
+		legend.css({
+			left: event.pageX + xOffset,
+			top: event.pageY + 40,
+			padding: padding
+		});
+	});
+}

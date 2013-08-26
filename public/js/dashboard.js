@@ -54,6 +54,13 @@ function redrawGraph(id) {
 					}
 				});
 				zoomingToSelection = false;
+			},
+			highlightCircleSize: 2,
+			strokeWidth: 1,
+			highlightSeriesOpts: {
+				strokeWidth: 3,
+				strokeBorderWidth: 1,
+				highlightCircleSize: 5
 			}
 		};
 

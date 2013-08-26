@@ -93,4 +93,8 @@ $(document).ready(function() {
 			}
 		});
 	}
+
+	if ($('#target-input').val() != '') {
+		graphPreview();
+	}
 });
