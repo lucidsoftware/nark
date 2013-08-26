@@ -115,7 +115,7 @@ object SubscriptionsController extends AppController {
 	def allSubscriptionsForUser(page: Int) = AuthAction.authenticatedUser { implicit user =>
 		AppAction { implicit request =>
 			val realPage = page.max(1)
-			val (found, subscriptions) = SubscriptionModel.getSubscriptionsByUser(user.id, realPage - 1)
+			val (found, subscriptions) = SubscriptionModel.getSubscriptionsByUser(user, realPage - 1)
 			Ok(views.html.subscriptions.user(realPage, SubscriptionModel.configuredLimit, found, subscriptions))
 		}
 	}

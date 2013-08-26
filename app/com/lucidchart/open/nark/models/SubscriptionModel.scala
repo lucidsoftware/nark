@@ -11,7 +11,6 @@ import play.api.db.DB
 
 object SubscriptionModel extends SubscriptionModel
 class SubscriptionModel extends AppModel {
-
 	protected val subscriptionsRowParser = {
 		get[UUID]("user_id") ~
 		get[UUID]("alert_id") ~
@@ -93,8 +92,8 @@ class SubscriptionModel extends AppModel {
 	def getSubscriptionsByAlerts(ids: List[UUID]): List[SubscriptionRecord] = {
 		if(ids.isEmpty) {
 			Nil
-			
-		} else {
+		}
+		else {
 			val subscriptions: List[Subscription] = DB.withConnection("main") { connection =>
 				RichSQL("""
 					SELECT *
@@ -109,14 +108,14 @@ class SubscriptionModel extends AppModel {
 				Nil
 			}
 			else {
-				val userIds = subscriptions.map( _.userId ).distinct
-				val users = UserModel.findUsersByID(userIds).map { user =>
-					(user.id, user)
-				}.toMap
-
-				val alerts = AlertModel.findAlertByID(ids)
+				val users = UserModel.findUsersByID(subscriptions.map(_.userId)).map { user => (user.id, user) }.toMap
+				val alerts = AlertModel.findAlertByID(ids).map { alert => (alert.id, alert) }.toMap
 				subscriptions.map { subscription =>
-					SubscriptionRecord(subscription, alerts.find(alert => alert.id == subscription.alertId).get, users.get(subscription.userId))
+					SubscriptionRecord(
+						subscription,
+						alerts.get(subscription.alertId),
+						users.get(subscription.userId)
+					)
 				}
 			}
 		}
@@ -126,44 +125,43 @@ class SubscriptionModel extends AppModel {
 	 * Get all subscriptions for a certain user
 	 * @param id the id of the User for which to find subscriptions
 	 */
-	def getSubscriptionsByUser(id: UUID, page:Int) = {
+	def getSubscriptionsByUser(user: User, page:Int) = {
 		DB.withConnection("main") { connection =>
 			val found = SQL("""
 				SELECT COUNT(1) FROM `alert_subscriptions`
 				WHERE `user_id` = {user_id}
 			""").on(
-				"user_id" -> id
+				"user_id" -> user.id
 			).as(scalar[Long].single)(connection)
 
 
 			val subscriptions = SQL("""
-					SELECT *
-					FROM `alert_subscriptions`
-					WHERE `user_id` = {user_id}
-					ORDER BY `alert_id` ASC
-					LIMIT {limit} OFFSET {offset}
-				""").on(
-					"user_id" -> id,
-					"limit" -> configuredLimit,
-					"offset" -> configuredLimit * page
-				).as(subscriptionsRowParser *)(connection)
+				SELECT *
+				FROM `alert_subscriptions`
+				WHERE `user_id` = {user_id}
+				ORDER BY `alert_id` ASC
+				LIMIT {limit} OFFSET {offset}
+			""").on(
+				"user_id" -> user.id,
+				"limit" -> configuredLimit,
+				"offset" -> configuredLimit * page
+			).as(subscriptionsRowParser *)(connection)
 
 			if (subscriptions.size == 0) {
 				(found, Nil)
 			}
 			else {
-				val user = UserModel.findUserByID(id).get
-
-				val alertIds = subscriptions.map { _.alertId }
-				val alerts = AlertModel.findAlertByID(alertIds).map { alert =>
-					(alert.id, alert)
-				}.toMap
-
-				(found, (subscriptions.map { subscription =>
-					SubscriptionRecord(subscription, alerts.get(subscription.alertId).get, Some(user))
-				}))
+				val alertIds = subscriptions.map(_.alertId)
+				val alerts = AlertModel.findAlertByID(alertIds).map { alert => (alert.id, alert) }.toMap
+				val subscriptionRecords = subscriptions.map { subscription =>
+					SubscriptionRecord(
+						subscription,
+						alerts.get(subscription.alertId),
+						Some(user)
+					)
+				}
+				(found, subscriptionRecords)
 			}
 		}
-
 	}
 }

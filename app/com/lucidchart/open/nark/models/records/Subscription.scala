@@ -16,6 +16,6 @@ case class Subscription (
 
 case class SubscriptionRecord (
 	subscription: Subscription,
-	alert: Alert,
+	alertOption: Option[Alert],
 	userOption: Option[User]
 ) extends AppRecord

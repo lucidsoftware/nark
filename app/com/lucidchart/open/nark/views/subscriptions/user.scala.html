@@ -50,16 +50,16 @@
 							<tbody>
 								@subscriptions.map { subscription =>
 									<tr>
-										@helper.form(action=narkRoutes.SubscriptionsController.edit(subscription.alert.id, page)) {
+										@helper.form(action=narkRoutes.SubscriptionsController.edit(subscription.alertOption.get.id, page)) {
 										@helpers.csrfHiddenInput()
 										<input type="hidden" name="alert_type" value="@subscription.subscription.alertType.id" />
 										<input type="hidden" name="active" value="@(subscription.subscription.active == false)" />
-											<td><a href="@narkRoutes.AlertsController.view(subscription.alert.id)">@subscription.alert.name</a></td>
-											<td>@subscription.alert.target</td>
-											<td>@subscription.alert.errorThreshold</td>
-											<td>@subscription.alert.warnThreshold</td>
-											<td>@subscription.alert.comparison</td>
-											<td>@subscription.alert.worstState.toString</td>
+											<td><a href="@narkRoutes.AlertsController.view(subscription.alertOption.get.id)">@subscription.alertOption.get.name</a></td>
+											<td>@subscription.alertOption.get.target</td>
+											<td>@subscription.alertOption.get.errorThreshold</td>
+											<td>@subscription.alertOption.get.warnThreshold</td>
+											<td>@subscription.alertOption.get.comparison</td>
+											<td>@subscription.alertOption.get.worstState.toString</td>
 											<td><input class="btn" type="submit" value="@if(subscription.subscription.active){Deactivate Subscription} else {Reactivate Subscription}" /></td>
 										}
 									</tr>
