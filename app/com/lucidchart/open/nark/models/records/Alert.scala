@@ -50,6 +50,6 @@ case class Alert (
 ) extends AppRecord {
 	/**
 	 * Create a new Alert record for inserting into the database
-	*/
+	 */
 	def this(name: String, userId: UUID, target: String, comparison: Comparisons.Value, frequency: Int, warnThreshold: BigDecimal, errorThreshold: BigDecimal) = this(UUID.randomUUID(), name, userId, target, comparison, None, true, false, new Date(), None, None, new Date(), new Date(), frequency, warnThreshold, errorThreshold, AlertState.normal, 0)
 }

@@ -7,4 +7,4 @@ import play.api.libs.functional.syntax._
 case class DashboardTag (
 	dashboardId: UUID,
 	tag: String
-) extends AppRecord { }
+) extends AppRecord

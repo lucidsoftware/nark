@@ -12,7 +12,6 @@ import play.api.db.DB
 
 object AlertHistoryModel extends AlertHistoryModel
 class AlertHistoryModel extends AppModel {
-
 	protected val alertHistoryRowParser = {
 		get[UUID]("alert_id") ~ 
 		get[String]("target") ~
@@ -36,11 +35,11 @@ class AlertHistoryModel extends AppModel {
 				INSERT INTO `alert_history` (`alert_id`, `target`, `date`, `state`, `messages_sent`)
 				VALUES ({alert_id}, {target}, {date}, {state}, {messages_sent})
 			""").on(
-				"alert_id"			-> alert.alertId,
-				"target"			-> alert.target,
-				"date"				-> alert.date,
-				"state"				-> alert.state.id,
-				"messages_sent"		-> alert.messagesSent
+				"alert_id"      -> alert.alertId,
+				"target"        -> alert.target,
+				"date"          -> alert.date,
+				"state"         -> alert.state.id,
+				"messages_sent" -> alert.messagesSent
 			).executeUpdate()(connection)
 		}
 	}
