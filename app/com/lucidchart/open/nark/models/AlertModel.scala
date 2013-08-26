@@ -157,21 +157,6 @@ class AlertModel extends AppModel {
 	}
 
 	/**
-	 * Delete an alert from the database
-	 * @param id the id of the alert to delete
-	 */
-	def deleteAlert(id: UUID) = {
-		DB.withConnection("main") { connection =>
-			SQL("""
-				DELETE FROM `alerts`
-				WHERE id={id}
-			""").on(
-				"id" -> id
-			).executeUpdate()(connection)
-		}
-	}
-
-	/**
 	 * Used by the alerting job to take the next alert(s) that needs to be checked, check the alert.
 	 * @param threadId the thread of the worker checking the alerts
 	 * @param limit the max number of alerts to take

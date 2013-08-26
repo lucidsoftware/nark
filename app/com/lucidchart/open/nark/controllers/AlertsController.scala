@@ -184,14 +184,25 @@ object AlertsController extends AppController {
 	}
 
 	/**
-	 * Delete a specific alert from the database
-	 * @param id the id of the alert to delete
+	 * Activate an alert
 	 */
-	def delete(id: UUID) =AuthAction.authenticatedUser { implicit user =>
-		AlertAction.alertManagementAccess(id, user.id) { alert =>
+	def activate(alertId: UUID) = AuthAction.authenticatedUser { implicit user =>
+		AlertAction.alertManagementAccess(alertId, user.id, allowDeleted = true) { alert =>
 			AppAction { implicit request =>
-				AlertModel.deleteAlert(id)
-				Redirect(routes.AlertsController.search("")).flashing(AppFlash.success("Alert was successfully deleted."))
+				AlertModel.editAlert(alert.copy(deleted = false))
+				Redirect(routes.AlertsController.view(alertId)).flashing(AppFlash.success("Alert was activated successfully."))
+			}
+		}
+	}
+
+	/**
+	 * Deactivate an alert
+	 */
+	def deactivate(alertId: UUID) = AuthAction.authenticatedUser { implicit user =>
+		AlertAction.alertManagementAccess(alertId, user.id) { alert =>
+			AppAction { implicit request =>
+				AlertModel.editAlert(alert.copy(deleted = true))
+				Redirect(routes.HomeController.index()).flashing(AppFlash.success("Alert was deactivated successfully."))
 			}
 		}
 	}

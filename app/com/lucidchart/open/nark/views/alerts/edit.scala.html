@@ -26,8 +26,8 @@
 				$('#save_form').submit();
 			});
 
-			$('#delete').click(function() {
-				$('#delete_form').submit();
+			$('#deactivate').click(function() {
+				$('#deactivate_form').submit();
 			});
 
 			$(function() {
@@ -67,11 +67,11 @@
 					<br />
 				</fieldset>
 			}
-			@helper.form(action=narkRoutes.AlertsController.delete(id), 'id -> "delete_form") {
+			@helper.form(action=narkRoutes.AlertsController.deactivate(id), 'id -> "deactivate_form") {
 				@helpers.csrfHiddenInput()
 			}
 			<button id="save" name="save" class="btn btn-primary">Save Changes</button>
-			<button id="delete" name="delete" class="btn btn-danger">Delete Alert</button>
+			<button id="deactivate" name="deactivate" class="btn btn-danger">Deactivate Alert</button>
 		</div>
 		<div class="span6">
 			<div class="well">
