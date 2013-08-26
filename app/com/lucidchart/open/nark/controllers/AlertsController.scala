@@ -45,7 +45,7 @@ object AlertsController extends AppController {
 			"error_threshold" -> bigDecimal,
 			"warn_threshold" -> bigDecimal,
 			"comparison" -> number.verifying("Invalid comparison type", x => Comparisons.values.map(_.id).contains(x)).transform[Comparisons.Value](Comparisons(_), _.id),
-			"frequency" -> number
+			"frequency" -> number.verifying(Constraints.min(10))
 		)(AlertFormSubmission.apply)(AlertFormSubmission.unapply)
 	)
 
@@ -59,7 +59,7 @@ object AlertsController extends AppController {
 			"error_threshold" -> bigDecimal,
 			"warn_threshold" -> bigDecimal,
 			"comparison" -> number.verifying("Invalid comparison type", x => Comparisons.values.map(_.id).contains(x)).transform[Comparisons.Value](Comparisons(_), _.id),
-			"frequency" -> number,
+			"frequency" -> number.verifying(Constraints.min(10)),
 			"active" -> boolean
 		)(EditFormSubmission.apply)(EditFormSubmission.unapply)
 	)
@@ -69,7 +69,7 @@ object AlertsController extends AppController {
 	 */
 	def create = AuthAction.authenticatedUser { implicit user =>
 		AppAction { implicit request =>
-			val form = createAlertForm.fill(AlertFormSubmission("", Nil, "", 0, 0, Comparisons.<, 0))
+			val form = createAlertForm.fill(AlertFormSubmission("", Nil, "", 0, 0, Comparisons.<, 60))
 			Ok(views.html.alerts.create(form))
 		}
 	}
