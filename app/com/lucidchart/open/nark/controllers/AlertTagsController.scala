@@ -1,7 +1,7 @@
 package com.lucidchart.open.nark.controllers
 
 import com.lucidchart.open.nark.request.{AppAction, AuthAction}
-import com.lucidchart.open.nark.models.{AlertModel, AlertTagModel, TagSubscriptionModel}
+import com.lucidchart.open.nark.models.{AlertModel, AlertTagModel, AlertTagSubscriptionModel}
 import com.lucidchart.open.nark.models.AlertTagConverter
 import com.lucidchart.open.nark.views
 import play.api.libs.json.Json
@@ -17,7 +17,7 @@ class AlertTagsController extends AppController {
 		AppAction { implicit request =>
 			val alertIds = AlertTagModel.findAlertsByTag(tag).map(_.alertId)
 			val alerts = AlertModel.findAlertByID(alertIds)
-			val subscriptions = TagSubscriptionModel.getSubscriptionsByTag(tag)
+			val subscriptions = AlertTagSubscriptionModel.getSubscriptionsByTag(tag)
 			Ok(views.html.alerttags.tag(tag, alerts, subscriptions))
 		}
 	}

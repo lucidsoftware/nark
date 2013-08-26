@@ -2,7 +2,7 @@ package com.lucidchart.open.nark.models.records
 
 import java.util.UUID
 
-case class TagSubscription (
+case class AlertTagSubscription (
 	userId: UUID,
 	tag: String,
 	active: Boolean
@@ -13,7 +13,7 @@ case class TagSubscription (
 	def this(userId: UUID, tag: String) = this(userId, tag, true)
 }
 
-case class TagSubscriptionRecord (
-	subscription: TagSubscription,
+case class AlertTagSubscriptionRecord (
+	subscription: AlertTagSubscription,
 	userOption: Option[User]
 ) extends AppRecord

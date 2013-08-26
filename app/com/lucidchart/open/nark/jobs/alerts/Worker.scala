@@ -1,6 +1,6 @@
 package com.lucidchart.open.nark.jobs.alerts
 
-import com.lucidchart.open.nark.models.{AlertModel, AlertTagModel, AlertHistoryModel, SubscriptionModel, TagSubscriptionModel, AlertTargetStateModel}
+import com.lucidchart.open.nark.models.{AlertModel, AlertTagModel, AlertHistoryModel, SubscriptionModel, AlertTagSubscriptionModel, AlertTargetStateModel}
 import com.lucidchart.open.nark.models.records.{Alert,AlertHistory,AlertState, AlertStatus, AlertType,Comparisons, AlertTargetState, User}
 import com.lucidchart.open.nark.utils.Graphite
 import akka.actor.Actor
@@ -180,7 +180,7 @@ class Worker extends Actor {
 		val alertTags = AlertTagModel.findTagsForAlert(alert.id).map(_.tag)		
 		val alertIds = 	if(alert.dynamicAlertId.isDefined) { List(alert.id, alert.dynamicAlertId.get) } else { List(alert.id) }
 
-		(TagSubscriptionModel.getSubscriptionsByTag(alertTags).filter(_.subscription.active).map(_.userOption).filter(_.isDefined).map(_.get)) ++ 
+		(AlertTagSubscriptionModel.getSubscriptionsByTag(alertTags).filter(_.subscription.active).map(_.userOption).filter(_.isDefined).map(_.get)) ++ 
 			(SubscriptionModel.getSubscriptionsByAlerts(alertIds).filter(_.subscription.active).map(_.userOption).filter(_.isDefined).map(_.get))
 	}
 

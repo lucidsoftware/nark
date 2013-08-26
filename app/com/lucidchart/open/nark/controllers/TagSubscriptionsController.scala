@@ -1,7 +1,7 @@
 package com.lucidchart.open.nark.controllers
 
-import com.lucidchart.open.nark.models.{TagSubscriptionModel, AlertTagModel, AlertModel, AlertTagConverter}
-import com.lucidchart.open.nark.models.records.{TagSubscription, TagSubscriptionRecord}
+import com.lucidchart.open.nark.models.{AlertTagSubscriptionModel, AlertTagModel, AlertModel, AlertTagConverter}
+import com.lucidchart.open.nark.models.records.AlertTagSubscription
 import com.lucidchart.open.nark.request.{AppFlash, AppAction, AuthAction}
 import com.lucidchart.open.nark.views
 import java.util.UUID
@@ -36,8 +36,8 @@ object TagSubscriptionsController extends AppController {
 	 */
 	def subscribe(tag: String) = AuthAction.authenticatedUser { implicit user =>
 		AppAction { implicit request =>
-			val subscription = new TagSubscription(user.id, tag)
-			TagSubscriptionModel.createSubscription(subscription)
+			val subscription = new AlertTagSubscription(user.id, tag)
+			AlertTagSubscriptionModel.createSubscription(subscription)
 
 			Redirect(routes.AlertTagsController.tag(tag)).flashing(AppFlash.success("Successfully subscribed to this alert."))
 		}
@@ -59,8 +59,8 @@ object TagSubscriptionsController extends AppController {
 	 				}
 	 			},
 	 			data => {
-	 				val subscription = new TagSubscription(user.id, tag, data.active)
-	 				TagSubscriptionModel.editSubscription(subscription)
+	 				val subscription = new AlertTagSubscription(user.id, tag, data.active)
+	 				AlertTagSubscriptionModel.editSubscription(subscription)
 	 				if(mySubscriptionsPage < 1) {
 	 					Redirect(routes.AlertTagsController.tag(tag)).flashing(AppFlash.success("Successfully saved changes."))
  					} else {
@@ -82,7 +82,7 @@ object TagSubscriptionsController extends AppController {
 	 				Redirect(routes.AlertTagsController.tag(tag)).flashing(AppFlash.error("Unable to delete subscription."))
 	 			},
 	 			data => {
-	 				TagSubscriptionModel.deleteSubscription(tag, user.id)
+	 				AlertTagSubscriptionModel.deleteSubscription(tag, user.id)
 	 				Redirect(routes.AlertTagsController.tag(tag)).flashing(AppFlash.success("Successfully deleted subscription."))
 	 			}
 	 		)
@@ -95,10 +95,10 @@ object TagSubscriptionsController extends AppController {
 	def allSubscriptionsForUser(page: Int) = AuthAction.authenticatedUser { implicit user =>
 		AppAction { implicit request =>
 			val realPage = page.max(1)
-			val (found, tagSubscriptions) = TagSubscriptionModel.getSubscriptionsByUser(user, realPage - 1)
+			val (found, tagSubscriptions) = AlertTagSubscriptionModel.getSubscriptionsByUser(user, realPage - 1)
 			val tags = AlertTagModel.findAlertsByTag(tagSubscriptions.map{ts => ts.subscription.tag})
 			val alerts = AlertModel.findAlertByID(tags.map{tag => tag.alertId}.distinct)
-			Ok(views.html.tagsubscriptions.user(realPage, TagSubscriptionModel.configuredLimit, found, tagSubscriptions, AlertTagConverter.toTagMap(tags, alerts)))
+			Ok(views.html.tagsubscriptions.user(realPage, AlertTagSubscriptionModel.configuredLimit, found, tagSubscriptions, AlertTagConverter.toTagMap(tags, alerts)))
 		}
 	}
 

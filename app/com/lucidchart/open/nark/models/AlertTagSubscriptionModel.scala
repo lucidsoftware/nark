@@ -3,19 +3,19 @@ package com.lucidchart.open.nark.models
 import anorm._
 import anorm.SqlParser._
 import AnormImplicits._
-import com.lucidchart.open.nark.models.records.{TagSubscription, TagSubscriptionRecord, AlertType, User}
+import com.lucidchart.open.nark.models.records.{AlertTagSubscription, AlertTagSubscriptionRecord, AlertType, User}
 import java.util.UUID
 import play.api.Play.current
 import play.api.Play.configuration
 import play.api.db.DB
 
-object TagSubscriptionModel extends TagSubscriptionModel
-class TagSubscriptionModel extends AppModel {
+object AlertTagSubscriptionModel extends AlertTagSubscriptionModel
+class AlertTagSubscriptionModel extends AppModel {
 	protected val tagSubscriptionRowParser = {
 		get[UUID]("user_id") ~
 		get[String]("tag") ~
 		get[Boolean]("active") map {
-			case user_id ~ tag ~ active => new TagSubscription(user_id, tag, active)
+			case user_id ~ tag ~ active => new AlertTagSubscription(user_id, tag, active)
 		}
 	}
 
@@ -25,7 +25,7 @@ class TagSubscriptionModel extends AppModel {
 	 *
 	 * @param subscription the Subscription to create
 	 */
-	def createSubscription(subscription: TagSubscription) {
+	def createSubscription(subscription: AlertTagSubscription) {
 		DB.withConnection("main") { connection =>
 			SQL("""
 				INSERT INTO `alert_tag_subscriptions` (`user_id`, `tag`, `active`)
@@ -42,7 +42,7 @@ class TagSubscriptionModel extends AppModel {
 	 * Edit a user's subscription to an alert
 	 * @param subscription the new subscription values
 	 */
-	def editSubscription(subscription: TagSubscription) {
+	def editSubscription(subscription: AlertTagSubscription) {
 		DB.withConnection("main") { connection =>
 			SQL("""
 				UPDATE `alert_tag_subscriptions`
@@ -77,7 +77,7 @@ class TagSubscriptionModel extends AppModel {
 	 * Get all subscriptions for a certain tag
 	 * @param id the id of the Alert for which to find subscriptions
 	 */
-	def getSubscriptionsByTag(tag: String): List[TagSubscriptionRecord] = {
+	def getSubscriptionsByTag(tag: String): List[AlertTagSubscriptionRecord] = {
 		getSubscriptionsByTag(List(tag))
 	}
 
@@ -85,7 +85,7 @@ class TagSubscriptionModel extends AppModel {
 	 * Get all subscriptions for specified tags
 	 * @param id the id of the Alert for which to find subscriptions
 	 */
-	def getSubscriptionsByTag(tags: List[String]): List[TagSubscriptionRecord] = {
+	def getSubscriptionsByTag(tags: List[String]): List[AlertTagSubscriptionRecord] = {
 		if(tags.isEmpty) {
 			Nil
 		}
@@ -110,7 +110,7 @@ class TagSubscriptionModel extends AppModel {
 				}.toMap
 
 				subscriptions.map { subscription =>
-					TagSubscriptionRecord(subscription, users.get(subscription.userId))
+					AlertTagSubscriptionRecord(subscription, users.get(subscription.userId))
 				}
 			}
 		}
@@ -145,7 +145,7 @@ class TagSubscriptionModel extends AppModel {
 			}
 			else {
 				val subscriptionRecords = subscriptions.map { subscription =>
-					TagSubscriptionRecord(subscription, Some(user))
+					AlertTagSubscriptionRecord(subscription, Some(user))
 				}
 				(found, subscriptionRecords)
 			}
