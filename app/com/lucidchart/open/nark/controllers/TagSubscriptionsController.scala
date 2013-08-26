@@ -60,7 +60,7 @@ object TagSubscriptionsController extends AppController {
 	 			},
 	 			data => {
 	 				val subscription = new TagSubscription(user.id, tag, data.active)
-	 				TagSubscriptionModel.editSubscription(tag, user.id, subscription)
+	 				TagSubscriptionModel.editSubscription(subscription)
 	 				if(mySubscriptionsPage < 1) {
 	 					Redirect(routes.AlertTagsController.tag(tag)).flashing(AppFlash.success("Successfully saved changes."))
  					} else {
@@ -95,7 +95,7 @@ object TagSubscriptionsController extends AppController {
 	def allSubscriptionsForUser(page: Int) = AuthAction.authenticatedUser { implicit user =>
 		AppAction { implicit request =>
 			val realPage = page.max(1)
-			val (found, tagSubscriptions) = TagSubscriptionModel.getSubscriptionsByUser(user.id, realPage - 1)
+			val (found, tagSubscriptions) = TagSubscriptionModel.getSubscriptionsByUser(user, realPage - 1)
 			val tags = AlertTagModel.findAlertsByTag(tagSubscriptions.map{ts => ts.subscription.tag})
 			val alerts = AlertModel.findAlertByID(tags.map{tag => tag.alertId}.distinct)
 			Ok(views.html.tagsubscriptions.user(realPage, TagSubscriptionModel.configuredLimit, found, tagSubscriptions, AlertTagConverter.toTagMap(tags, alerts)))
