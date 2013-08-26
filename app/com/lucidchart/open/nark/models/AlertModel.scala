@@ -76,8 +76,8 @@ class AlertModel extends AppModel {
 	 * @param id the uuid of the alert to get
 	 * @return the requested alert
 	 */
-	def getAlert(id: UUID): Option[Alert] = {
-		getAlerts(List(id)).headOption
+	def findAlertByID(id: UUID): Option[Alert] = {
+		findAlertByID(List(id)).headOption
 	}
 
 	/**
@@ -85,7 +85,7 @@ class AlertModel extends AppModel {
 	 * @param ids the ids of the alerts to get
 	 * @return the requested alerts
 	 */
-	def getAlerts(ids: List[UUID]): List[Alert] = {
+	def findAlertByID(ids: List[UUID]): List[Alert] = {
 		if (ids.isEmpty) {
 			Nil
 		}

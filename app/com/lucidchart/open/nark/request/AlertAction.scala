@@ -26,7 +26,7 @@ trait AlertActionBuilder {
 	 * @param userId the user's id
 	 */
 	def alertManagementAccess(alertId: UUID, userId: UUID)(block: (Alert, User) => EssentialAction): EssentialAction = EssentialAction { requestHeader =>
-		val alert = AlertModel.getAlert(alertId)
+		val alert = AlertModel.findAlertByID(alertId)
 		val user = UserModel.findUserByID(userId)
 
 		if (alert.isDefined && user.isDefined && alert.get.userId == user.get.id) {

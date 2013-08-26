@@ -102,7 +102,7 @@ object TagSubscriptionsController extends AppController {
 				val realPage = page.max(1)
 				val (found, tagSubscriptions) = TagSubscriptionModel.getSubscriptionsByUser(id, realPage - 1)
 				val tags = AlertTagModel.findAlertsByTag(tagSubscriptions.map{ts => ts.subscription.tag})
-				val alerts = AlertModel.getAlerts(tags.map{tag => tag.alertId}.distinct)
+				val alerts = AlertModel.findAlertByID(tags.map{tag => tag.alertId}.distinct)
 				Ok(views.html.tagsubscriptions.user(realPage, TagSubscriptionModel.configuredLimit, found, tagSubscriptions, AlertTagConverter.toTagMap(tags, alerts))(request, Some(user)))
 			}
 		}

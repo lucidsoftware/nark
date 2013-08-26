@@ -16,7 +16,7 @@ class AlertTagsController extends AppController {
 	def tag(tag: String) = AuthAction.maybeAuthenticatedUser { implicit user =>
 		AppAction { implicit request =>
 			val alertIds = AlertTagModel.findAlertsByTag(tag).map(_.alertId)
-			val alerts = AlertModel.getAlerts(alertIds)
+			val alerts = AlertModel.findAlertByID(alertIds)
 			val subscriptions = TagSubscriptionModel.getSubscriptionsByTag(tag)
 			Ok(views.html.alerttags.tag(tag, alerts, subscriptions))
 		}
@@ -31,7 +31,7 @@ class AlertTagsController extends AppController {
 			val realPage = page.max(1)
 			val (found, tags) = AlertTagModel.search(term, realPage - 1)
 			val alertTags = AlertTagModel.findAlertsByTag(tags.map{_.tag})
-			val alerts = AlertModel.getAlerts(alertTags.map(_.alertId).distinct).filter(!_.deleted)
+			val alerts = AlertModel.findAlertByID(alertTags.map(_.alertId).distinct).filter(!_.deleted)
 			Ok(views.html.alerttags.search(term, realPage, AlertTagModel.configuredLimit, found, AlertTagConverter.toTagMap(alertTags, alerts)))
 		}
 	}
