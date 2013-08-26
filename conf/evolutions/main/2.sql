@@ -113,9 +113,8 @@ CREATE TABLE `alert_target_state` (
 	`state` TINYINT UNSIGNED NOT NULL,
 	`last_updated` DATETIME NOT NULL,
 	PRIMARY KEY (`hiddenid`),
-	KEY `alert_date_lookup` (`alert_id`, `last_updated`),
 	UNIQUE KEY `app_pk` (`alert_id`, `target`),
-	KEY `date_lookup` (`last_updated`)
+	KEY `alert_date_lookup` (`alert_id`, `last_updated`)
 ) ENGINE=InnoDB CHARSET=utf8 COLLATE=utf8_general_ci;
 
 CREATE TABLE `dashboard_tags` (

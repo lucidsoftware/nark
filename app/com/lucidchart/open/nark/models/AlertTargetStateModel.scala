@@ -12,7 +12,6 @@ import play.api.db.DB
 
 object AlertTargetStateModel extends AlertTargetStateModel
 class AlertTargetStateModel extends AppModel {
-
 	protected val AlertTargetStateRowParser = {
 		get[UUID]("alert_id") ~ 
 		get[String]("target") ~
@@ -32,32 +31,25 @@ class AlertTargetStateModel extends AppModel {
 		createAlertTargetStates(List(alertTargetState))
 	}
 
-
 	/**
 	 * Creates new alert target states
 	 * @param states
 	 */
-	def createAlertTargetStates(states: List[AlertTargetState]) = {
-		if(!states.isEmpty){
+	def createAlertTargetStates(states: List[AlertTargetState]) {
+		if(!states.isEmpty) {
 			DB.withConnection("main") { connection =>
-				AlertState.values.foreach{state =>
-					val groupedByState = states.filter(_.state == state)
-					if(groupedByState.size > 0) {
-
-						RichSQL("""
-
-					 		INSERT INTO `alert_target_state` (`alert_id`, `target`,`state`,`last_updated`) 
-					 		VALUES ({fields}) ON DUPLICATE KEY UPDATE `state` = {update_state}, `last_updated` = NOW()
-
-					 	""").multiInsert(groupedByState.size, Seq("alert_id", "target", "state", "last_updated"))(
-					      "alert_id"		-> groupedByState.map(s => toParameterValue(s.alertId)),
-					      "target"			-> groupedByState.map(s => toParameterValue(s.target)),
-					      "state"			-> groupedByState.map(s => toParameterValue(s.state.id)),
-					      "last_updated"	-> groupedByState.map(s => toParameterValue(s.lastUpdated)))
-					 	.toSQL.on(
-					 		"update_state" -> state.id
-				 		).executeUpdate()(connection)
-					}
+				states.groupBy(_.state).map { case (state, records) =>
+					RichSQL("""
+						INSERT INTO `alert_target_state` (`alert_id`, `target`,`state`,`last_updated`) 
+						VALUES ({fields}) ON DUPLICATE KEY UPDATE `state` = {update_state}, `last_updated` = NOW()
+					""").multiInsert(records.size, Seq("alert_id", "target", "state", "last_updated"))(
+						"alert_id"      -> records.map(s => toParameterValue(s.alertId)),
+						"target"        -> records.map(s => toParameterValue(s.target)),
+						"state"         -> records.map(s => toParameterValue(s.state.id)),
+						"last_updated"  -> records.map(s => toParameterValue(s.lastUpdated)))
+					.toSQL.on(
+						"update_state" -> state.id
+					).executeUpdate()(connection)
 				}
 			}
 		}
@@ -75,10 +67,9 @@ class AlertTargetStateModel extends AppModel {
 				WHERE `alert_id` = {alert_id}
 				AND `last_updated` < {boundary_time}
 			""").on (
-				"alert_id" 		-> alertId,
+				"alert_id"      -> alertId,
 				"boundary_time" -> boundaryTime
 			).executeUpdate()(connection)
-
 		}
 	}
 
@@ -86,19 +77,15 @@ class AlertTargetStateModel extends AppModel {
 	 * Get all target states for the alert
 	 * @param alertId the alert to get the target states for.
 	 */
-
-	def getTargetStatesByAlertID(alertId: UUID) : List[AlertTargetState] = {
+	def getTargetStatesByAlertID(alertId: UUID): List[AlertTargetState] = {
 		DB.withConnection("main") { connection =>
 			SQL("""
 				SELECT * 
 				FROM `alert_target_state`
 				WHERE `alert_id` = {alert_id}
-				""")
-			.on("alert_id" -> alertId)
-			.as(AlertTargetStateRowParser * )(connection)
+			""").on(
+				"alert_id" -> alertId
+			).as(AlertTargetStateRowParser * )(connection)
 		}
 	}
-
-
-
 }
