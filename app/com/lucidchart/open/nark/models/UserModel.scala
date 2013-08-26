@@ -19,7 +19,7 @@ class UserModel extends AppModel {
 		get[String]("name") ~
 		get[String]("warn_address") ~
 		get[Boolean]("warn_enable") ~
-		get[String] ("error_address") ~
+		get[String]("error_address") ~
 		get[Boolean]("error_enable") map {
 			case id ~ email ~ created ~ name ~ warn_address ~ warn_enable ~ error_address ~ error_enable=>
 				new User(id, email, created, name, warn_address, warn_enable, error_address, error_enable)
