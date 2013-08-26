@@ -133,7 +133,6 @@ class DashboardModel extends AppModel {
 		}
 	}
 
-
 	/**
 	 * Create a new dashboard using all the details from the dashboard object.
 	 * Throws an exception on failure

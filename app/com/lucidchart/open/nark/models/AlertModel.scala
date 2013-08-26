@@ -49,24 +49,24 @@ class AlertModel extends AppModel {
 				INSERT INTO `alerts` (`id`, `name`, `user_id`, `target`, `comparison`, `dynamic_alert_id`, `active`, `deleted`, `created`, `thread_id`, `thread_start`, `last_checked`, `next_check`, `frequency`, `warn_threshold`, `error_threshold`, `worst_state`, `consecutive_failures`)
 				VALUES ({id}, {name}, {user_id}, {target}, {comparison}, {dynamic_alert_id}, {active}, {deleted}, {created}, {thread_id}, {thread_start}, {last_checked}, {next_check}, {frequency}, {warn_threshold}, {error_threshold}, {worst_state}, {consecutive_failures})
 			""").on(
-				"id"						-> alert.id,
-				"name"					-> alert.name,
-				"user_id"				-> alert.userId,
-				"target"				-> alert.target,
-				"comparison"			-> alert.comparison.id,
-				"dynamic_alert_id"		-> alert.dynamicAlertId,
-				"active"				-> alert.active,
-				"deleted"				-> alert.deleted,
-				"created"				-> alert.created,
-				"thread_id"				-> alert.threadId,
-				"thread_start"			-> alert.threadStart,
-				"last_checked"			-> alert.lastChecked,
-				"next_check"			-> alert.nextCheck,
-				"frequency"				-> alert.frequency,
-				"warn_threshold"		-> alert.warnThreshold,
-				"error_threshold"		-> alert.errorThreshold,
-				"worst_state"			-> alert.worstState.id,
-				"consecutive_failures"	-> alert.consecutiveFailures
+				"id"                    -> alert.id,
+				"name"                  -> alert.name,
+				"user_id"               -> alert.userId,
+				"target"                -> alert.target,
+				"comparison"            -> alert.comparison.id,
+				"dynamic_alert_id"      -> alert.dynamicAlertId,
+				"active"                -> alert.active,
+				"deleted"               -> alert.deleted,
+				"created"               -> alert.created,
+				"thread_id"             -> alert.threadId,
+				"thread_start"          -> alert.threadStart,
+				"last_checked"          -> alert.lastChecked,
+				"next_check"            -> alert.nextCheck,
+				"frequency"             -> alert.frequency,
+				"warn_threshold"        -> alert.warnThreshold,
+				"error_threshold"       -> alert.errorThreshold,
+				"worst_state"           -> alert.worstState.id,
+				"consecutive_failures"  -> alert.consecutiveFailures
 			).executeUpdate()(connection)
 		}
 	}
@@ -143,15 +143,15 @@ class AlertModel extends AppModel {
 					frequency={frequency}, error_threshold={error_threshold}, warn_threshold={warn_threshold}
 				WHERE id={id}
 			""").on(
-				"id"					-> alert.id,
-				"name"					-> alert.name,
-				"target"				-> alert.target,
-				"comparison"			-> alert.comparison.id,
-				"active"				-> alert.active,
-				"deleted"				-> alert.deleted,
-				"frequency"				-> alert.frequency,
-				"warn_threshold"		-> alert.warnThreshold,
-				"error_threshold"		-> alert.errorThreshold
+				"id"                    -> alert.id,
+				"name"                  -> alert.name,
+				"target"                -> alert.target,
+				"comparison"            -> alert.comparison.id,
+				"active"                -> alert.active,
+				"deleted"               -> alert.deleted,
+				"frequency"             -> alert.frequency,
+				"warn_threshold"        -> alert.warnThreshold,
+				"error_threshold"       -> alert.errorThreshold
 			).executeUpdate()(connection)
 		}
 	}
