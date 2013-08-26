@@ -7,10 +7,14 @@
 @import com.lucidchart.open.nark.controllers.{routes=>narkRoutes}
 @import com.lucidchart.open.nark.views
 
-@com.lucidchart.open.nark.views.html.layouts.main("Home", userOption = userOption) {
-	<h3>Welcome to <a href="https://github.com/matthew-lucidchart/nark">Nark</a>!</h3>
+@com.lucidchart.open.nark.views.html.layouts.main("", userOption = userOption) {
+	<div class="clearfix" style="text-align: center; margin: 15px 0;">
+		<img src="@routes.Assets.at("img/nark-welcome.png")">
+	</div>
 	<div class="well">
-		Nark was originally created by <a href="https://www.lucidchart.com/" target="_blank">Lucid Software Inc.</a>
+		<a href="https://github.com/matthew-lucidchart/nark">Nark</a>
+		was originally created by
+		<a href="https://www.lucidchart.com/" target="_blank">Lucid Software Inc.</a>
 		in reponse to a lack of alerting and dynamic dashboard options in the graphite ecosystem.
 	</div>
 }

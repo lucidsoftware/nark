@@ -14,7 +14,7 @@
 <!DOCTYPE HTML>
 <html>
 	<head>
-		<title>@title | Nark</title>
+		<title>@if(!title.isEmpty){ @title | } Nark</title>
 		<meta charset="utf-8">
 		<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
@@ -75,7 +75,9 @@
 		<div class="navbar navbar-inverse navbar-fixed-top">
 			<div class="navbar-inner">
 				<div class="container">
-					<a class="brand" href="@narkRoutes.HomeController.index()">Nark</a>
+					<a class="brand" href="@narkRoutes.HomeController.index()">
+						<img src="@routes.Assets.at("img/nark-brand.png")" alt="Nark" title="Nark">
+					</a>
 					<div class="nav-collapse collapse">
 						<ul class="nav">
 							<li class="dropdown">
