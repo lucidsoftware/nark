@@ -7,14 +7,14 @@
 )(
 	implicit
 	request: com.lucidchart.open.nark.request.AppRequest[_],
-	userOption: Option[com.lucidchart.open.nark.models.records.User]
+	user: com.lucidchart.open.nark.models.records.User
 )
 @import com.lucidchart.open.nark.controllers.{routes=>narkRoutes}
 @import com.lucidchart.open.nark.models.records.AlertType
 @import com.lucidchart.open.nark.views.html.helpers
 @import helper._
 
-@com.lucidchart.open.nark.views.html.layouts.main("Subscriptions", userOption = userOption) {
+@com.lucidchart.open.nark.views.html.layouts.main("Subscriptions", userOption = Some(user)) {
 	<style type="text/css">
 		a.btn {
 			margin-left: 10px;
@@ -23,7 +23,7 @@
 	<table>
 		<tr>
 			<td><h3>Tag Subscriptions</h3></td>
-			<td><a href="@narkRoutes.SubscriptionsController.allSubscriptionsForUser(userOption.get.id)" class="btn btn-info">View Alert Subscriptions</a></td>
+			<td><a href="@narkRoutes.SubscriptionsController.allSubscriptionsForUser()" class="btn btn-info">View Alert Subscriptions</a></td>
 		</tr>
 	</table>
 	@helpers.paginationMaxPage(found, limit) { maxPage =>
@@ -66,7 +66,7 @@
 			</div>
 		</div>
 	</div>
-	@{ helpers.paginationLinks(page, maxPage) { i => narkRoutes.TagSubscriptionsController.allSubscriptionsForUser(userOption.get.id, i).toString } }
+	@{ helpers.paginationLinks(page, maxPage) { i => narkRoutes.TagSubscriptionsController.allSubscriptionsForUser(i).toString } }
 	}
 
 }

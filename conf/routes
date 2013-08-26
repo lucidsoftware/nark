@@ -30,20 +30,20 @@ POST    /dashboard/activate/:uuid            com.lucidchart.open.nark.controller
 GET     /d/:url                              com.lucidchart.open.nark.controllers.DashboardsController.dashboard(url: String)
 
 # Graphs
-GET     /graph/:dashboardId/add              com.lucidchart.open.nark.controllers.GraphsController.add(dashboardId: java.util.UUID)
-POST    /graph/:dashboardId/add              com.lucidchart.open.nark.controllers.GraphsController.addSubmit(dashboardId: java.util.UUID)
 GET     /graph/edit/:uuid                    com.lucidchart.open.nark.controllers.GraphsController.edit(uuid: java.util.UUID)
 POST    /graph/edit/:uuid                    com.lucidchart.open.nark.controllers.GraphsController.editSubmit(uuid: java.util.UUID)
 POST    /graph/activate/:uuid                com.lucidchart.open.nark.controllers.GraphsController.activate(uuid: java.util.UUID)
 POST    /graph/deactivate/:uuid              com.lucidchart.open.nark.controllers.GraphsController.deactivate(uuid: java.util.UUID)
+GET     /graph/:dashboardId/add              com.lucidchart.open.nark.controllers.GraphsController.add(dashboardId: java.util.UUID)
+POST    /graph/:dashboardId/add              com.lucidchart.open.nark.controllers.GraphsController.addSubmit(dashboardId: java.util.UUID)
 
 # Targets
-GET     /target/:graphId/add                 com.lucidchart.open.nark.controllers.TargetsController.add(graphId: java.util.UUID)
-POST    /target/:graphId/add                 com.lucidchart.open.nark.controllers.TargetsController.addSubmit(graphId: java.util.UUID)
 GET     /target/edit/:uuid                   com.lucidchart.open.nark.controllers.TargetsController.edit(uuid: java.util.UUID)
 POST    /target/edit/:uuid                   com.lucidchart.open.nark.controllers.TargetsController.editSubmit(uuid: java.util.UUID)
 POST    /target/activate/:uuid               com.lucidchart.open.nark.controllers.TargetsController.activate(uuid: java.util.UUID)
 POST    /target/deactivate/:uuid             com.lucidchart.open.nark.controllers.TargetsController.deactivate(uuid: java.util.UUID)
+GET     /target/:graphId/add                 com.lucidchart.open.nark.controllers.TargetsController.add(graphId: java.util.UUID)
+POST    /target/:graphId/add                 com.lucidchart.open.nark.controllers.TargetsController.addSubmit(graphId: java.util.UUID)
 
 # Dashboard Tags
 GET     /dashboard/tags/searchjson           com.lucidchart.open.nark.controllers.DashboardTagsController.searchToJson(q: String ?= "")
@@ -69,13 +69,15 @@ GET     /at/:tag                             com.lucidchart.open.nark.controller
 POST    /subscription/:id/subscribe          com.lucidchart.open.nark.controllers.SubscriptionsController.subscribe(id: java.util.UUID)
 POST    /subscription/:id/edit               com.lucidchart.open.nark.controllers.SubscriptionsController.edit(id: java.util.UUID, mySubscriptionsPage : Int ?= -1)
 POST    /subscription/:id/delete             com.lucidchart.open.nark.controllers.SubscriptionsController.delete(id: java.util.UUID)
-GET     /user/:id/subscriptions              com.lucidchart.open.nark.controllers.SubscriptionsController.allSubscriptionsForUser(id: java.util.UUID, page: Int ?= 1)
 
 # Tag Subscriptions
-POST	/tagsubscription/:tag/subscribe		com.lucidchart.open.nark.controllers.TagSubscriptionsController.subscribe(tag: String)
-POST	/tagsubscription/:tag/edit			com.lucidchart.open.nark.controllers.TagSubscriptionsController.edit(tag: String, mySubscriptionsPage : Int ?= -1)
-POST	/tagsubscription/:tag/delete		com.lucidchart.open.nark.controllers.TagSubscriptionsController.delete(tag: String)
-GET     /user/:id/tagsubscriptions 			com.lucidchart.open.nark.controllers.TagSubscriptionsController.allSubscriptionsForUser(id: java.util.UUID, page: Int ?= 1)
+POST    /tagsubscription/:tag/subscribe      com.lucidchart.open.nark.controllers.TagSubscriptionsController.subscribe(tag: String)
+POST    /tagsubscription/:tag/edit           com.lucidchart.open.nark.controllers.TagSubscriptionsController.edit(tag: String, mySubscriptionsPage : Int ?= -1)
+POST    /tagsubscription/:tag/delete         com.lucidchart.open.nark.controllers.TagSubscriptionsController.delete(tag: String)
+
+# User Pages
+GET     /user/subscriptions                  com.lucidchart.open.nark.controllers.SubscriptionsController.allSubscriptionsForUser(page: Int ?= 1)
+GET     /user/tagsubscriptions               com.lucidchart.open.nark.controllers.TagSubscriptionsController.allSubscriptionsForUser(page: Int ?= 1)
 
 
 # Hosts

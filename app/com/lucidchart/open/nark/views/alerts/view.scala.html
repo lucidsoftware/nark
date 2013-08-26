@@ -1,7 +1,7 @@
 @(
 	alert: com.lucidchart.open.nark.models.records.Alert,
 	tags: List[com.lucidchart.open.nark.models.records.AlertTag],
-	owner: com.lucidchart.open.nark.models.records.User,
+	ownerOption: Option[com.lucidchart.open.nark.models.records.User],
 	subscriptions: List[com.lucidchart.open.nark.models.records.SubscriptionRecord]
 )(
 	implicit
@@ -127,7 +127,7 @@
 					<td>
 						@helper.form(action=narkRoutes.AlertsController.edit(alert.id)) {
 							@helpers.csrfHiddenInput()
-							<input class="btn @if(userOption.get.id != owner.id){ disabled }" type="submit" @if(userOption.get.id != owner.id){ disabled } value='Manage Alert' />
+							<input class="btn @if(ownerOption.isDefined && userOption.get.id != ownerOption.get.id){ disabled }" type="submit" @if(ownerOption.isDefined && userOption.get.id != ownerOption.get.id){ disabled } value='Manage Alert' />
 						}
 					</td>
 					@if(subscription.isDefined) {
@@ -184,8 +184,12 @@
 										<div class="form-inline">
 											<label><strong>Owner</strong></label>
 											<div class="info-group">
-												@owner.name
-												<a href="mailto:@owner.email">@owner.email</a>
+												@if(ownerOption.isDefined) {
+													@ownerOption.get.name
+													<a href="mailto:@ownerOption.get.email">@ownerOption.get.email</a>
+												} else {
+													Owner information is unavailable. The owner was probably deleted.
+												}
 											</div>
 										</div>
 									</div>
