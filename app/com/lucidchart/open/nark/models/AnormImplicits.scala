@@ -82,6 +82,13 @@ object AnormImplicits {
 		def set(s: java.sql.PreparedStatement, index: Int, aValue: UUID): Unit = s.setObject(index, UUIDHelper.toByteArray(aValue))
 	}
 	
+	/**
+	 * Implicit conversion from scala BigDecimal to anorm statement value
+	 */
+	implicit def scalaBigDecimalToStatement = new ToStatement[scala.math.BigDecimal] {
+		def set(s: java.sql.PreparedStatement, index: Int, aValue: scala.math.BigDecimal): Unit = s.setBigDecimal(index, aValue.underlying)
+	}
+	
 	class RichSQL(val query: String, val parameterValues: (Any, ParameterValue[Any])*) {
 		/**
 		 * Convert this object into an anorm.SqlQuery

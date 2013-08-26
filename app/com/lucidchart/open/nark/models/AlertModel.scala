@@ -63,8 +63,8 @@ class AlertModel extends AppModel {
 				"last_checked"			-> alert.lastChecked,
 				"next_check"			-> alert.nextCheck,
 				"frequency"				-> alert.frequency,
-				"warn_threshold"		-> alert.warnThreshold.underlying,
-				"error_threshold"		-> alert.errorThreshold.underlying,
+				"warn_threshold"		-> alert.warnThreshold,
+				"error_threshold"		-> alert.errorThreshold,
 				"worst_state"			-> alert.worstState.id,
 				"consecutive_failures"	-> alert.consecutiveFailures
 			).executeUpdate()(connection)
@@ -150,8 +150,8 @@ class AlertModel extends AppModel {
 				"active"				-> alert.active,
 				"deleted"				-> alert.deleted,
 				"frequency"				-> alert.frequency,
-				"warn_threshold"		-> alert.warnThreshold.underlying,
-				"error_threshold"		-> alert.errorThreshold.underlying
+				"warn_threshold"		-> alert.warnThreshold,
+				"error_threshold"		-> alert.errorThreshold
 			).executeUpdate()(connection)
 		}
 	}
