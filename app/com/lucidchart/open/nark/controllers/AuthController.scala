@@ -103,7 +103,15 @@ class AuthController extends AppController {
 			authRequest.addExtension(fetch)
 			
 			// Because of the 2kiB limit on urls, this may need to be an auto-submitted form in the future
-			Redirect(authRequest.getDestinationUrl(true)).withCookies(discoveredCookie)
+			val simpleRedirect = Redirect(authRequest.getDestinationUrl(true)).withCookies(discoveredCookie)
+
+			val referer = request.headers.get("Referer").getOrElse("")
+			if (!referer.isEmpty && request.cookies.get("origdest").isEmpty) {
+				simpleRedirect.withCookies(Cookie("origdest", referer))
+			}
+			else {
+				simpleRedirect
+			}
 		}
 	}
 	
