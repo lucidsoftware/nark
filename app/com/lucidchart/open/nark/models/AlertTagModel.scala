@@ -10,7 +10,9 @@ import play.api.Play.current
 import play.api.Play.configuration
 
 object AlertTagModel extends AlertTagModel
-class AlertTagModel extends AppModel {
+trait AlertTagModel extends AppModel {
+	protected val table = "alert_tags"
+
 	protected val tagsRowParser = {
 		get[UUID]("alert_id") ~
 		get[String]("tag") map {
@@ -26,20 +28,20 @@ class AlertTagModel extends AppModel {
 	def search(tag: String, page: Int) = {
 		DB.withConnection("main") { connection =>
 			val found = SQL("""
-				SELECT COUNT(distinct(`tag`)) FROM `alert_tags`
+				SELECT COUNT(distinct(`tag`)) FROM `""" + table + """`
 				WHERE `tag` LIKE {tag}
 			""").on(
-				"tag" -> tag
+				"tag" -> (tag + "%")
 			).as(scalar[Long].single)(connection)
 
 			val matches = SQL("""
-				SELECT * FROM `alert_tags`
+				SELECT * FROM `""" + table + """`
 				WHERE `tag` LIKE {tag}
 				GROUP BY `tag`
 				ORDER BY `tag` ASC
 				LIMIT {limit} OFFSET {offset}
 			""").on(
-				"tag" -> tag,
+				"tag" -> (tag + "%"),
 				"limit" -> configuredLimit,
 				"offset" -> configuredLimit * page
 			).as(tagsRowParser *)(connection)
@@ -69,7 +71,7 @@ class AlertTagModel extends AppModel {
 			DB.withConnection("main") { connection =>
 				RichSQL("""
 					SELECT *
-					FROM `alert_tags`
+					FROM `""" + table + """`
 					WHERE `alert_id` IN ({ids})
 				""").onList(
 					"ids" -> ids
@@ -100,7 +102,7 @@ class AlertTagModel extends AppModel {
 			DB.withConnection("main") { connection =>
 				RichSQL("""
 					SELECT *
-					FROM `alert_tags`
+					FROM `""" + table + """`
 					WHERE `tag` in ({tags})
 				""").onList(
 					"tags" -> tags
@@ -118,7 +120,7 @@ class AlertTagModel extends AppModel {
 		DB.withTransaction("main") { connection =>
 			if (tags.isEmpty) {
 				SQL("""
-					DELETE FROM `alert_tags`
+					DELETE FROM `""" + table + """`
 					WHERE `alert_id` = {alert_id}
 				""").on(
 					"alert_id" -> id
@@ -126,7 +128,7 @@ class AlertTagModel extends AppModel {
 			}
 			else {
 				RichSQL("""
-					DELETE FROM `alert_tags`
+					DELETE FROM `""" + table + """`
 					WHERE `alert_id` = {alert_id} AND `tag` NOT IN ({tags})
 				""").onList(
 					"tags" -> tags
@@ -135,7 +137,7 @@ class AlertTagModel extends AppModel {
 				).executeUpdate()(connection)
 
 				RichSQL("""
-					INSERT IGNORE INTO `alert_tags` (`alert_id`, `tag`)
+					INSERT IGNORE INTO `""" + table + """` (`alert_id`, `tag`)
 					VALUES ({fields})
 				""").multiInsert(tags.size, Seq("alert_id", "tag"))(
 					"alert_id" -> tags.map(_ => toParameterValue(id)),

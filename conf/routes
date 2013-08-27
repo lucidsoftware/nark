@@ -65,6 +65,13 @@ GET     /alert/tags/searchjson               com.lucidchart.open.nark.controller
 GET     /alert/tags/search                   com.lucidchart.open.nark.controllers.AlertTagsController.search(term: String ?= "", page: Int ?= 1)
 GET     /at/:tag                             com.lucidchart.open.nark.controllers.AlertTagsController.tag(tag:String)
 
+# Dynamic Alerts
+GET 		/dynamicalert/create 					com.lucidchart.open.nark.controllers.DynamicAlertsController.create()
+POST 		/dynamicalert/create 					com.lucidchart.open.nark.controllers.DynamicAlertsController.createSubmit()
+
+# Dynamic Alert Tags
+GET 		/dynamicalert/tags/searchjson 		com.lucidchart.open.nark.controllers.DynamicAlertTagsController.searchToJson(q: String ?= "")
+
 # Subscription
 POST    /subscription/:id/subscribe          com.lucidchart.open.nark.controllers.SubscriptionsController.subscribe(id: java.util.UUID)
 POST    /subscription/:id/edit               com.lucidchart.open.nark.controllers.SubscriptionsController.edit(id: java.util.UUID, mySubscriptionsPage : Int ?= -1)

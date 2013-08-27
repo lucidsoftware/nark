@@ -13,7 +13,7 @@ ALTER TABLE `users`
 ALTER TABLE `graph_targets`
 	ADD COLUMN `summarizer` TINYINT UNSIGNED NOT NULL DEFAULT 0;
 
-CREATE TABLE `alert_tags` (
+CREATE TABLE `dynamic_alert_tags` (
 	`hiddenid` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
 	`alert_id` BINARY(16) NOT NULL,
 	`tag` VARCHAR(25),
@@ -41,6 +41,15 @@ CREATE TABLE `dynamic_alerts` (
 	KEY `name` (`name`),
 	KEY `active` (`active`),
 	KEY `deleted` (`deleted`)
+) ENGINE=InnoDB CHARSET=utf8 COLLATE=utf8_general_ci;
+
+CREATE TABLE `alert_tags` (
+	`hiddenid` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+	`alert_id` BINARY(16) NOT NULL,
+	`tag` VARCHAR(25),
+	PRIMARY KEY (`hiddenid`),
+	UNIQUE KEY `app_pk` (`alert_id`, `tag`),
+	KEY `tag` (`tag`)
 ) ENGINE=InnoDB CHARSET=utf8 COLLATE=utf8_general_ci;
 
 CREATE TABLE `alerts` (
