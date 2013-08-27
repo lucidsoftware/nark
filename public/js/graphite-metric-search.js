@@ -60,7 +60,7 @@ $(document).ready(function() {
 	var currentPreviewRequest = null;
 	function graphPreview() {
 		var target = $('#target-input').val();
-		if (target.length == 0 || target[target.length - 1] == "." || target.indexOf("%") >= 0) {
+		if (typeof target == 'undefined' || target.length == 0 || target[target.length - 1] == "." || target.indexOf("%") >= 0) {
 			return;
 		}
 
