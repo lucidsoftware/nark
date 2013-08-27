@@ -68,6 +68,7 @@ GET     /at/:tag                             com.lucidchart.open.nark.controller
 # Dynamic Alerts
 GET 		/dynamicalert/create 					com.lucidchart.open.nark.controllers.DynamicAlertsController.create()
 POST 		/dynamicalert/create 					com.lucidchart.open.nark.controllers.DynamicAlertsController.createSubmit()
+GET 		/dynamicalert/search 					com.lucidchart.open.nark.controllers.DynamicAlertsController.search(term: String ?= "term", page: Int ?= 1)
 
 # Dynamic Alert Tags
 GET 		/dynamicalert/tags/searchjson 		com.lucidchart.open.nark.controllers.DynamicAlertTagsController.searchToJson(q: String ?= "")

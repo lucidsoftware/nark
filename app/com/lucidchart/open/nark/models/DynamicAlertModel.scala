@@ -14,6 +14,25 @@ import play.api.db.DB
 object DynamicAlertModel extends DynamicAlertModel
 class DynamicAlertModel extends AppModel {
 
+	protected val dynamicAlertsRowParser = {
+		get[UUID]("id") ~
+		get[String]("name") ~
+		get[UUID]("user_id") ~
+		get[Date]("created") ~
+		get[String]("search_target") ~
+		get[String]("match") ~
+		get[String]("build_target") ~
+		get[BigDecimal]("error_threshold") ~
+		get[BigDecimal]("warn_threshold") ~
+		get[Int]("comparison") ~
+		get[Boolean]("active") ~
+		get[Boolean]("deleted") ~
+		get[Int]("frequency") map {
+			case id ~ name ~ userId ~ created ~ searchTarget ~ matchExpr ~ buildTarget ~ errorThreshold ~ warnThreshold ~ comparison ~ active ~ deleted ~ frequency =>
+				new DynamicAlert(id, name, userId, searchTarget, matchExpr, buildTarget, Comparisons(comparison), active, deleted, created, frequency, warnThreshold, errorThreshold)
+		}
+	}
+
 	/**
 	 * Create a new dynamic alert using the details in the DynamicAlert object
 	 * throws an exception on failure
@@ -39,6 +58,36 @@ class DynamicAlertModel extends AppModel {
 				"deleted" -> alert.deleted,
 				"frequency" -> alert.frequency
 			).executeUpdate()(connection)
+		}
+	}
+
+	/**
+	 * Search for dynamic alert records by a search term
+	 * @param name the search term to search by
+	 * @param page the page of search results to return
+	 * @return a List of DynamicAlert records
+	 */
+	def search(name: String, page: Int) = {
+		DB.withConnection("main") { connection =>
+			val found = SQL("""
+				SELECT COUNT(1) FROM `dynamic_alerts`
+				WHERE `name` LIKE {name} AND `deleted` = FALSE
+			""").on(
+				"name" -> name
+			).as(scalar[Long].single)(connection)
+
+			val matches = SQL("""
+				SELECT * FROM `dynamic_alerts`
+				WHERE `name` LIKE {name} AND `deleted` = FALSE
+				ORDER BY `name` ASC
+				LIMIT {limit} OFFSET {offset}
+			""").on(
+				"name" -> name,
+				"limit" -> configuredLimit,
+				"offset" -> configuredLimit * page
+			).as(dynamicAlertsRowParser *)(connection)
+
+			(found, matches)
 		}
 	}
 }

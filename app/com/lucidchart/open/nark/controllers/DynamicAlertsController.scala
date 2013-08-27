@@ -1,8 +1,8 @@
 package com.lucidchart.open.nark.controllers
 
 import com.lucidchart.open.nark.Global
-import com.lucidchart.open.nark.models.{DynamicAlertModel, DynamicAlertTagModel}
-import com.lucidchart.open.nark.models.records.{Comparisons, DynamicAlert}
+import com.lucidchart.open.nark.models.{AlertTagConverter, DynamicAlertModel, DynamicAlertTagModel}
+import com.lucidchart.open.nark.models.records.{Comparisons, DynamicAlert, Pagination}
 import com.lucidchart.open.nark.request.{AppAction, AppFlash, AuthAction}
 import com.lucidchart.open.nark.views
 
@@ -80,6 +80,20 @@ class DynamicAlertsController extends AppController {
 					Redirect(routes.DynamicAlertsController.create()).flashing(AppFlash.success("Dynamic Alert created successfully."))
 				}
 			)
+		}
+	}
+
+	/**
+	 * Search for a particular dynamic alert
+	 * @param term the search term to use when looking for alerts
+	 * @param page the page number of results to show
+	 */
+	def search(term: String, page: Int) = AuthAction.maybeAuthenticatedUser { implicit user =>
+		AppAction { implicit request =>
+			val realPage = page.max(1)
+			val (found, matches) = DynamicAlertModel.search(term, realPage - 1)
+			val tags = AlertTagConverter.toAlertMap(DynamicAlertTagModel.findTagsForAlert(matches.map{_.id}))
+			Ok(views.html.dynamicalerts.search(term, Pagination[DynamicAlert](realPage, found, DynamicAlertModel.configuredLimit, matches), tags))
 		}
 	}
 }

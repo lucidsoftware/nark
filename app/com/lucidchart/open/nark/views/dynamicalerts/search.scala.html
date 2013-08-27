@@ -1,0 +1,69 @@
+@(
+	term: String,
+	pagination: com.lucidchart.open.nark.models.records.Pagination[com.lucidchart.open.nark.models.records.DynamicAlert],
+	tags: Map[java.util.UUID, List[String]]
+)(
+	implicit
+	request: com.lucidchart.open.nark.request.AppRequest[_],
+	userOption: Option[com.lucidchart.open.nark.models.records.User]
+)
+@import com.lucidchart.open.nark.controllers.{routes=>narkRoutes}
+@import com.lucidchart.open.nark.views
+@import com.lucidchart.open.nark.views.html.helpers
+@import helper.twitterBootstrap._
+@import helper._
+
+@com.lucidchart.open.nark.views.html.layouts.main("Dynamic Alert Search", userOption = userOption) {
+	<h3>Dynamic Alert Search</h3>
+	<br>
+	@helper.form(action=narkRoutes.DynamicAlertsController.search()) {
+		<fieldset>
+			<div class="clearfix" id="search_field">
+				<label for="term">Search</label>
+				<div class="input">
+					<input id="term" type="text" name="term" class="input-xlarge" placeholder="Vitals" value="@term" autofocus="true">
+					<span class="help-block">Use '%' as a wildcard.</span>
+				</div>
+			</div>
+			<button id="search" class="btn btn-primary">Search</button>
+		</fieldset>
+	}
+	<h3>Search Results</h3>
+	@helpers.paginationMaxPage(pagination.found, pagination.limit) { maxPage =>
+		@if(pagination.matches.isEmpty) {
+			<div class="alert alert-info">No dynamic alerts were found using your search term.</div>
+		} else {
+			<div class="results">
+				<table class="table table-bordered table-hover">
+					<thead>
+						<tr>
+							<th>Alert Name</th>
+							<th>Search Target</th>
+							<th>Error</th>
+							<th>Warn</th>
+							<th>Comparison</th>
+							<th>Tags</th>
+						</tr>
+					</thead>
+					<tbody>
+						@pagination.matches.sortWith(_.name.toLowerCase < _.name.toLowerCase).map { alert =>
+							<tr>
+								<td><a href="">@alert.name</a></td>
+								<td>@alert.searchTarget</td>
+								<td>@alert.errorThreshold</td>
+								<td>@alert.warnThreshold</td>
+								<td>@alert.comparison</td>
+								<td>
+									@tags.get(alert.id).get.map { tag =>
+										<a href="" class="btn btn-mini">@tag</a>
+									}
+								</td>
+							</tr>
+						}
+					</tbody>
+				</table>
+				@{ helpers.paginationLinks(pagination.page, maxPage) { i => narkRoutes.DynamicAlertsController.search(term, i).toString } }
+			</div>
+		}
+	}
+}
