@@ -56,7 +56,7 @@ POST    /alert/createSubmit                  com.lucidchart.open.nark.controller
 GET     /alert/search                        com.lucidchart.open.nark.controllers.AlertsController.search(term: String ?= "", page: Int ?= 1)
 POST    /alert/activate/:uuid                com.lucidchart.open.nark.controllers.AlertsController.activate(uuid: java.util.UUID)
 POST    /alert/deactivate/:uuid              com.lucidchart.open.nark.controllers.AlertsController.deactivate(uuid: java.util.UUID)
-GET     /alert/:uuid/view                    com.lucidchart.open.nark.controllers.AlertsController.view(uuid: java.util.UUID)
+GET     /alert/:uuid/view                    com.lucidchart.open.nark.controllers.AlertsController.view(uuid: java.util.UUID, page: Int ?= 1)
 GET     /alert/:uuid/edit                    com.lucidchart.open.nark.controllers.AlertsController.edit(uuid: java.util.UUID)
 POST    /alert/:uuid/edit                    com.lucidchart.open.nark.controllers.AlertsController.editSubmit(uuid: java.util.UUID)
 

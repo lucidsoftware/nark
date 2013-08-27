@@ -1,6 +1,6 @@
 package com.lucidchart.open.nark.controllers
 
-import com.lucidchart.open.nark.models.{AlertModel, AlertTagModel, SubscriptionModel, UserModel}
+import com.lucidchart.open.nark.models.{AlertModel, AlertHistoryModel, AlertTagModel, SubscriptionModel, UserModel}
 import com.lucidchart.open.nark.models.AlertTagConverter
 import com.lucidchart.open.nark.models.records.{Alert, Comparisons, AlertState}
 import com.lucidchart.open.nark.request.{AlertAction, AppFlash, AppAction, AuthAction}
@@ -118,14 +118,17 @@ object AlertsController extends AppController {
 	/**
 	 * View a particular alert
 	 * @param id the id of the alert to view
+	 * @param page the page of alert histories to view
 	 */
-	def view(alertId: UUID) = AuthAction.maybeAuthenticatedUser { implicit user =>
+	def view(alertId: UUID, page: Int) = AuthAction.maybeAuthenticatedUser { implicit user =>
 		AlertAction.existingAlert(alertId) { alert =>
 			AppAction { implicit request =>
 				val creator = UserModel.findUserByID(alert.userId)
 				val tags = AlertTagModel.findTagsForAlert(alert.id)
 				val subscriptions = SubscriptionModel.getSubscriptionsByAlert(alertId)
-				Ok(views.html.alerts.view(alert, tags, creator, subscriptions))
+				val realPage = page.max(1)
+				val (found, histories) = AlertHistoryModel.getAlertHistory(alertId, realPage - 1)
+				Ok(views.html.alerts.view(alert, tags, creator, subscriptions, histories, realPage, AlertHistoryModel.configuredLimit, found))
 			}
 		}
 	}

@@ -51,4 +51,36 @@ class AlertHistoryModel extends AppModel {
 			}
 		}
 	}
+
+	/**
+	 * Get the alert history for a particular alert
+	 *
+	 * @param alertId the id of the alert to look up
+	 * @param page the page of alert histories to get
+	 * @return a list of alert histories
+	 */
+	 def getAlertHistory(alertId: UUID, page: Int): (Long, List[AlertHistory]) = {
+	 	DB.withConnection("main") { connection =>
+	 		val found = SQL("""
+				SELECT COUNT(1) FROM `alert_history`
+				WHERE `alert_id`={alert_id}
+			""").on(
+				"alert_id" -> alertId
+			).as(scalar[Long].single)(connection)
+
+	 		val matches = SQL("""
+	 			SELECT *
+	 			FROM `alert_history`
+	 			WHERE `alert_id`={alert_id}
+	 			ORDER BY `date`
+	 			LIMIT {limit} OFFSET {offset}
+	 		""").on(
+	 			"alert_id" -> alertId,
+	 			"limit" -> configuredLimit,
+	 			"offset" -> configuredLimit * page
+	 		).as(alertHistoryRowParser *)(connection)
+
+	 		(found, matches)
+	 	}
+	 }
 }
