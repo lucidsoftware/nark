@@ -13,7 +13,7 @@ class DynamicAlertTagsController extends AppController {
 	 */
 	def searchToJson(term: String) = AuthAction.maybeAuthenticatedUser { implicit user =>
 		AppAction { implicit request =>
-			val (found, matches) = DynamicAlertTagModel.search(term, 0)
+			val (found, matches) = DynamicAlertTagModel.search(term + "%", 0)
 			Ok(Json.toJson(matches.map{ m =>
 				Json.obj("id" -> m.alertId.toString, "name" -> m.tag)
 			}))

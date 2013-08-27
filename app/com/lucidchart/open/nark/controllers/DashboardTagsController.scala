@@ -44,7 +44,7 @@ class DashboardTagsController extends AppController {
 	 */
 	def searchToJson(term: String) = AuthAction.maybeAuthenticatedUser { implicit userOption =>
 		AppAction { implicit request =>
-			val (found, matches) = DashboardTagsModel.search(term, 1)
+			val (found, matches) = DashboardTagsModel.search(term + "%", 0)
 			Ok(Json.toJson(matches.map{ m =>
 				Json.obj("id" -> m, "name" -> m)
 			}))

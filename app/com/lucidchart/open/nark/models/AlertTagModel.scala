@@ -31,7 +31,7 @@ trait AlertTagModel extends AppModel {
 				SELECT COUNT(distinct(`tag`)) FROM `""" + table + """`
 				WHERE `tag` LIKE {tag}
 			""").on(
-				"tag" -> (tag + "%")
+				"tag" -> tag
 			).as(scalar[Long].single)(connection)
 
 			val matches = SQL("""
@@ -41,7 +41,7 @@ trait AlertTagModel extends AppModel {
 				ORDER BY `tag` ASC
 				LIMIT {limit} OFFSET {offset}
 			""").on(
-				"tag" -> (tag + "%"),
+				"tag" -> tag,
 				"limit" -> configuredLimit,
 				"offset" -> configuredLimit * page
 			).as(tagsRowParser *)(connection)
