@@ -3,6 +3,7 @@ package com.lucidchart.open.nark.controllers
 import com.lucidchart.open.nark.request.{AppAction, AuthAction}
 import com.lucidchart.open.nark.models.{AlertModel, AlertTagModel, AlertTagSubscriptionModel}
 import com.lucidchart.open.nark.models.AlertTagConverter
+import com.lucidchart.open.nark.models.records.{AlertTagMap, Pagination}
 import com.lucidchart.open.nark.views
 import play.api.libs.json.Json
 
@@ -29,7 +30,7 @@ class AlertTagsController extends AppController {
 			val (found, tags) = AlertTagModel.search(term, realPage - 1)
 			val alertTags = AlertTagModel.findAlertsByTag(tags.map{_.tag})
 			val alerts = AlertModel.findAlertByID(alertTags.map(_.alertId).distinct).filter(!_.deleted)
-			Ok(views.html.alerttags.search(term, realPage, AlertTagModel.configuredLimit, found, AlertTagConverter.toTagMap(alertTags, alerts)))
+			Ok(views.html.alerttags.search(term, Pagination[AlertTagMap](realPage, found, AlertTagModel.configuredLimit, List(AlertTagConverter.toTagMap(alertTags, alerts)))))
 		}
 	}
 

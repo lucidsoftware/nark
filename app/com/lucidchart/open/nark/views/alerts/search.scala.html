@@ -1,9 +1,6 @@
 @(
 	term: String,
-	page: Int,
-	limit: Int,
-	found: Long,
-	matches: List[com.lucidchart.open.nark.models.records.Alert],
+	pagination: com.lucidchart.open.nark.models.records.Pagination[com.lucidchart.open.nark.models.records.Alert],
 	tags: Map[java.util.UUID, List[String]]
 )(
 	implicit
@@ -32,8 +29,8 @@
 		</fieldset>
 	}
 	<h3>Search Results</h3>
-	@helpers.paginationMaxPage(found, limit) { maxPage =>
-		@if(matches.isEmpty) {
+	@helpers.paginationMaxPage(pagination.found, pagination.limit) { maxPage =>
+		@if(pagination.matches.isEmpty) {
 			<div class="alert alert-info">No alerts were found using your search term.</div>
 		} else {
 			<div class="results">
@@ -50,7 +47,7 @@
 						</tr>
 					</thead>
 					<tbody>
-						@matches.sortWith(_.name.toLowerCase < _.name.toLowerCase).map { alert =>
+						@pagination.matches.sortWith(_.name.toLowerCase < _.name.toLowerCase).map { alert =>
 							<tr>
 								<td><a href="@narkRoutes.AlertsController.view(alert.id)">@alert.name</a></td>
 								<td>@alert.target</td>
@@ -67,7 +64,7 @@
 						}
 					</tbody>
 				</table>
-				@{ helpers.paginationLinks(page, maxPage) { i => narkRoutes.AlertsController.search(term, i).toString } }
+				@{ helpers.paginationLinks(pagination.page, maxPage) { i => narkRoutes.AlertsController.search(term, i).toString } }
 			</div>
 		}
 	}

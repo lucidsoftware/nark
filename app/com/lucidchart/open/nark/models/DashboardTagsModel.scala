@@ -1,6 +1,6 @@
 package com.lucidchart.open.nark.models
 
-import com.lucidchart.open.nark.models.records.DashboardTag
+import com.lucidchart.open.nark.models.records.{DashboardTag, DashboardTagMap}
 import com.lucidchart.open.nark.models.records.Dashboard
 
 import java.util.UUID
@@ -155,17 +155,19 @@ object DashboardTagConverter {
 	 * Combine a list of dashboard tags and a list of dashboards into a map
 	 * of tag to list of matching dashboard pairs
 	 */
-	def toTagMap(tags: List[DashboardTag], dashboards: List[Dashboard]): Map[String, List[Dashboard]] = {
+	def toTagMap(tags: List[DashboardTag], dashboards: List[Dashboard]): DashboardTagMap = {
 		val dashboardsById = dashboards.map { a => (a.id, a) }.toMap
-		tags.map { tag =>
-			(tag, dashboardsById.get(tag.dashboardId))
-		}.collect {
-			case (tag, dashboardOption) if (dashboardOption.isDefined) => (tag, dashboardOption.get)
-		}.groupBy { case (tag, dashboard) =>
-			tag.tag
-		}.map { case (tag, tuples) =>
-			(tag, tuples.map(_._2))
-		}.toMap
+		DashboardTagMap(
+			tags.map { tag =>
+				(tag, dashboardsById.get(tag.dashboardId))
+			}.collect {
+				case (tag, dashboardOption) if (dashboardOption.isDefined) => (tag, dashboardOption.get)
+			}.groupBy { case (tag, dashboard) =>
+				tag.tag
+			}.map { case (tag, tuples) =>
+				(tag, tuples.map(_._2))
+			}.toMap
+		)
 	}
 
 	/**

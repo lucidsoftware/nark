@@ -1,9 +1,6 @@
 @(
 	term: String,
-	page: Int,
-	limit: Int,
-	found: Long,
-	matches: Map[String, List[com.lucidchart.open.nark.models.records.Alert]]
+	pagination: com.lucidchart.open.nark.models.records.Pagination[com.lucidchart.open.nark.models.records.AlertTagMap]
 )(
 	implicit
 	request: com.lucidchart.open.nark.request.AppRequest[_],
@@ -33,8 +30,8 @@
 	}
 
 	<h3>Search Results</h3>
-	@helpers.paginationMaxPage(found, limit) { maxPage =>
-		@if(matches.isEmpty) {
+	@helpers.paginationMaxPage(pagination.found, pagination.limit) { maxPage =>
+		@if(pagination.matches(0).tagMap.isEmpty) {
 			<div class="alert alert-info">No tags were found using your search term.</div>
 		} else {
 			<table class="table table-bordered table-hover">
@@ -45,19 +42,21 @@
 					</tr>
 				</thead>
 				<tbody>
-					@matches.map { tag =>
-						<tr>
-							<td><a href="@narkRoutes.AlertTagsController.tag(tag._1)" class="btn btn-mini">@tag._1</a></td>
-							<td>
-								@tag._2.map { alert =>
-									<a href="@narkRoutes.AlertsController.view(alert.id)" class="btn btn-mini btn-info">@alert.name</a>
-								}
-							</td>
-						</tr>
+					@pagination.matches.map { tagMap =>
+						@tagMap.tagMap.map { tag =>
+							<tr>
+								<td><a href="@narkRoutes.AlertTagsController.tag(tag._1)" class="btn btn-mini">@tag._1</a></td>
+								<td>
+									@tag._2.map { alert =>
+										<a href="@narkRoutes.AlertsController.view(alert.id)" class="btn btn-mini btn-info">@alert.name</a>
+									}
+								</td>
+							</tr>
+						}
 					}
 				</tbody>
 			</table>
-			@{ helpers.paginationLinks(page, maxPage) { i => narkRoutes.AlertTagsController.search(term, i).toString } }
+			@{ helpers.paginationLinks(pagination.page, maxPage) { i => narkRoutes.AlertTagsController.search(term, i).toString } }
 		}
 	}
 }

@@ -3,7 +3,7 @@ package com.lucidchart.open.nark.controllers
 import com.lucidchart.open.nark.request.{AppFlash, AppAction, AuthAction, DashboardAction}
 import com.lucidchart.open.nark.views
 import com.lucidchart.open.nark.models.HostModel
-import com.lucidchart.open.nark.models.records.Host
+import com.lucidchart.open.nark.models.records.{Host, Pagination}
 
 class HostsController extends AppController {
 	/**
@@ -13,7 +13,7 @@ class HostsController extends AppController {
 		AppAction { implicit request =>
 			val realPage = page.max(1)
 			val (found, matches) = HostModel.search(term, realPage - 1)
-			Ok(views.html.hosts.search(term, realPage, HostModel.configuredLimit, found, matches))
+			Ok(views.html.hosts.search(term, Pagination[Host](realPage, found, HostModel.configuredLimit, matches)))
 		}
 	}
 }

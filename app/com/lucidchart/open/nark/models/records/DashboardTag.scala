@@ -8,3 +8,7 @@ case class DashboardTag (
 	dashboardId: UUID,
 	tag: String
 ) extends AppRecord
+
+case class DashboardTagMap(
+	tagMap: Map[String, List[Dashboard]]
+) extends AppRecord

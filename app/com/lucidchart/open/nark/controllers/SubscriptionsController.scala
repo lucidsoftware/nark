@@ -2,7 +2,7 @@ package com.lucidchart.open.nark.controllers
 
 import com.lucidchart.open.nark.models.SubscriptionModel
 import com.lucidchart.open.nark.models.AlertTagSubscriptionModel
-import com.lucidchart.open.nark.models.records.{AlertType, Subscription}
+import com.lucidchart.open.nark.models.records.{AlertType, Pagination, Subscription, SubscriptionRecord}
 import com.lucidchart.open.nark.request.{AppFlash, AppAction, AuthAction}
 import com.lucidchart.open.nark.views
 import java.util.UUID
@@ -116,7 +116,7 @@ object SubscriptionsController extends AppController {
 		AppAction { implicit request =>
 			val realPage = page.max(1)
 			val (found, subscriptions) = SubscriptionModel.getSubscriptionsByUser(user, realPage - 1)
-			Ok(views.html.subscriptions.user(realPage, SubscriptionModel.configuredLimit, found, subscriptions))
+			Ok(views.html.subscriptions.user(Pagination[SubscriptionRecord](realPage, found, SubscriptionModel.configuredLimit, subscriptions)))
 		}
 	}
 

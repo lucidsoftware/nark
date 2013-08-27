@@ -1,9 +1,6 @@
 @(
-	page: Int,
-	limit: Int,
-	found: Long,
-	tagSubscriptions: List[com.lucidchart.open.nark.models.records.AlertTagSubscriptionRecord],
-	tagAlerts: Map[String, List[com.lucidchart.open.nark.models.records.Alert]]
+	pagination: com.lucidchart.open.nark.models.records.Pagination[com.lucidchart.open.nark.models.records.AlertTagSubscriptionRecord],
+	tagAlerts: com.lucidchart.open.nark.models.records.AlertTagMap
 )(
 	implicit
 	request: com.lucidchart.open.nark.request.AppRequest[_],
@@ -21,13 +18,13 @@
 		}
 	</style>
 	<h3>Alert Tag Subscriptions</h3>
-	@helpers.paginationMaxPage(found, limit) { maxPage =>
+	@helpers.paginationMaxPage(pagination.found, pagination.limit) { maxPage =>
 		<div>
 			<div class="row">
 				<div class="span1" />
 				<div class="span11">
 					<div class="well">
-						@if(tagSubscriptions.size == 0){
+						@if(pagination.matches.size == 0){
 							<p class="lead text-info">You have no tag subscriptions.</p>
 						} else {
 							<table class="table">
@@ -39,14 +36,14 @@
 									</tr>
 								</thead>
 								<tbody>
-									@tagSubscriptions.map {subscription =>
+									@pagination.matches.map {subscription =>
 										<tr>
-											@helper.form(action=narkRoutes.TagSubscriptionsController.edit(subscription.subscription.tag, page)) {
+											@helper.form(action=narkRoutes.TagSubscriptionsController.edit(subscription.subscription.tag, pagination.page)) {
 											@helpers.csrfHiddenInput()
 											<input type="hidden" name="active" value="@(subscription.subscription.active == false)" />
 												<td><a href="@narkRoutes.AlertTagsController.tag(subscription.subscription.tag)" class="btn btn-mini">@subscription.subscription.tag</a></td>
 												<td>
-													@tagAlerts(subscription.subscription.tag).map { alert =>
+													@tagAlerts.tagMap(subscription.subscription.tag).map { alert =>
 														<a href="@narkRoutes.AlertsController.view(alert.id)" class="btn btn-mini btn-info">@alert.name</a>
 													}
 												</td>
@@ -61,7 +58,7 @@
 				</div>
 			</div>
 		</div>
-		@{ helpers.paginationLinks(page, maxPage) { i => narkRoutes.TagSubscriptionsController.allSubscriptionsForUser(i).toString } }
+		@{ helpers.paginationLinks(pagination.page, maxPage) { i => narkRoutes.TagSubscriptionsController.allSubscriptionsForUser(i).toString } }
 	}
 
 }

@@ -3,10 +3,7 @@
 	tags: List[com.lucidchart.open.nark.models.records.AlertTag],
 	ownerOption: Option[com.lucidchart.open.nark.models.records.User],
 	subscriptions: List[com.lucidchart.open.nark.models.records.SubscriptionRecord],
-	histories: List[com.lucidchart.open.nark.models.records.AlertHistory],
-	page: Int,
-	limit: Int,
-	found: Long
+	pagination: com.lucidchart.open.nark.models.records.Pagination[com.lucidchart.open.nark.models.records.AlertHistory]
 )(
 	implicit
 	request: com.lucidchart.open.nark.request.AppRequest[_],
@@ -292,10 +289,10 @@
 			<div class="span1" />
 			<div class="span11">
 				<div class="well">
- 					@if(histories.size == 0){
+ 					@if(pagination.matches.size == 0){
  						<p class="lead text-info">This alert does not have any history yet.</p>
  					} else {
-	 					@helpers.paginationMaxPage(found, limit) { maxPage =>
+	 					@helpers.paginationMaxPage(pagination.found, pagination.limit) { maxPage =>
 		 					<table class="table">
 		 						<thead>
 		 							<tr>
@@ -305,7 +302,7 @@
 		 							</tr>
 		 						</thead>
 		 						<tbody>
-		 							@histories.map { history =>
+		 							@pagination.matches.map { history =>
 		 								<tr>
 		 									<td>@history.date</td>
 		 									<td>@history.state.toString</td>
@@ -314,7 +311,7 @@
 		 							}
 		 						</tbody>
 		 					</table>
-		 					@{ helpers.paginationLinks(page, maxPage) { i => narkRoutes.AlertsController.view(alert.id, i).toString } }
+		 					@{ helpers.paginationLinks(pagination.page, maxPage) { i => narkRoutes.AlertsController.view(alert.id, i).toString } }
 		 				}
 	 				}
  				</div>

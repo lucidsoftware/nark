@@ -1,9 +1,6 @@
 @(
 	term: String,
-	page: Int,
-	limit: Int,
-	found: Long,
-	matches: List[com.lucidchart.open.nark.models.records.Dashboard],
+	pagination: com.lucidchart.open.nark.models.records.Pagination[com.lucidchart.open.nark.models.records.Dashboard],
 	tags: Map[java.util.UUID, List[String]]
 )(
 	implicit
@@ -42,8 +39,8 @@
 	}
 
 	<h3>Search Results</h3>
-	@helpers.paginationMaxPage(found, limit) { maxPage =>
-		@if(matches.isEmpty) {
+	@helpers.paginationMaxPage(pagination.found, pagination.limit) { maxPage =>
+		@if(pagination.matches.isEmpty) {
 			<div class="alert alert-info">No dashboards were found using your search term.</div>
 		} else {
 			<div class="results">
@@ -56,7 +53,7 @@
 						</tr>
 					</thead>
 					<tbody>
-						@matches.sortWith(_.name.toLowerCase < _.name.toLowerCase).map { dashboard =>
+						@pagination.matches.sortWith(_.name.toLowerCase < _.name.toLowerCase).map { dashboard =>
 							<tr>
 								<td>@dashboard.name</td>
 								<td>
@@ -76,7 +73,7 @@
 						}
 					</tbody>
 				</table>
-				@{ helpers.paginationLinks(page, maxPage) { i => narkRoutes.DashboardsController.deleted(term, i).toString } }
+				@{ helpers.paginationLinks(pagination.page, maxPage) { i => narkRoutes.DashboardsController.deleted(term, i).toString } }
 			</div>
 			<p>These graphs are currently <span class="label label-important">deactivated</span>. They will not show up on the dashboard page. </p>
 		}

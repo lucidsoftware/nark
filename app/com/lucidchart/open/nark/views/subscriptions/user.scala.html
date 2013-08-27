@@ -1,8 +1,5 @@
 @(
-	page: Int,
-	limit: Int,
-	found: Long,
-	subscriptions: List[com.lucidchart.open.nark.models.records.SubscriptionRecord]
+	pagination: com.lucidchart.open.nark.models.records.Pagination[com.lucidchart.open.nark.models.records.SubscriptionRecord]
 )(
 	implicit
 	request: com.lucidchart.open.nark.request.AppRequest[_],
@@ -21,13 +18,13 @@
 		}
 	</style>
 	<h3>Alert Subscriptions</h3>
-	@helpers.paginationMaxPage(found, limit) { maxPage =>
+	@helpers.paginationMaxPage(pagination.found, pagination.limit) { maxPage =>
 		<div>
 			<div class="row">
 				<div class="span1" />
 				<div class="span11">
 					<div class="well">
-						@if(subscriptions.size == 0){
+						@if(pagination.matches.size == 0){
 							<p class="lead text-info">You have no alert subscriptions.</p>
 						} else {
 							<table class="table">
@@ -43,9 +40,9 @@
 									</tr>
 								</thead>
 								<tbody>
-									@subscriptions.map { subscription =>
+									@pagination.matches.map { subscription =>
 										<tr>
-											@helper.form(action=narkRoutes.SubscriptionsController.edit(subscription.alertOption.get.id, page)) {
+											@helper.form(action=narkRoutes.SubscriptionsController.edit(subscription.alertOption.get.id, pagination.page)) {
 											@helpers.csrfHiddenInput()
 											<input type="hidden" name="alert_type" value="@subscription.subscription.alertType.id" />
 											<input type="hidden" name="active" value="@(subscription.subscription.active == false)" />
@@ -66,6 +63,6 @@
 				</div>
 			</div>
 		</div>
-		@{ helpers.paginationLinks(page, maxPage) { i => narkRoutes.SubscriptionsController.allSubscriptionsForUser(i).toString } }
+		@{ helpers.paginationLinks(pagination.page, maxPage) { i => narkRoutes.SubscriptionsController.allSubscriptionsForUser(i).toString } }
 	}
 }

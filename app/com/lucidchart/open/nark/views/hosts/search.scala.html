@@ -1,9 +1,6 @@
 @(
 	term: String,
-	page: Int,
-	limit: Int,
-	found: Long,
-	matches: List[com.lucidchart.open.nark.models.records.Host]
+	pagination: com.lucidchart.open.nark.models.records.Pagination[com.lucidchart.open.nark.models.records.Host]
 )(
 	implicit
 	request: com.lucidchart.open.nark.request.AppRequest[_],
@@ -31,8 +28,8 @@
 	}
 
 	<h3>Search Results</h3>
-	@helpers.paginationMaxPage(found, limit) { maxPage =>
-		@if(matches.isEmpty) {
+	@helpers.paginationMaxPage(pagination.found, pagination.limit) { maxPage =>
+		@if(pagination.matches.isEmpty) {
 			<div class="alert alert-info">No hosts were found using your search term.</div>
 		} else {
 			<div class="results">
@@ -44,7 +41,7 @@
 						</tr>
 					</thead>
 					<tbody>
-						@matches.map { host =>
+						@pagination.matches.map { host =>
 							<tr>
 								<td>@host.name</td>
 								<td>@host.state.toString</td>
@@ -52,7 +49,7 @@
 						}
 					</tbody>
 				</table>
-				@{ helpers.paginationLinks(page, maxPage) { i => narkRoutes.HostsController.search(term, i).toString } }
+				@{ helpers.paginationLinks(pagination.page, maxPage) { i => narkRoutes.HostsController.search(term, i).toString } }
 	 		</div>
 		}
 	}

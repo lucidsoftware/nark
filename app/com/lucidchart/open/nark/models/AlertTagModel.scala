@@ -3,7 +3,7 @@ package com.lucidchart.open.nark.models
 import anorm._
 import anorm.SqlParser._
 import AnormImplicits._
-import com.lucidchart.open.nark.models.records.{Alert, AlertTag}
+import com.lucidchart.open.nark.models.records.{Alert, AlertTag, AlertTagMap}
 import java.util.UUID
 import play.api.db.DB
 import play.api.Play.current
@@ -151,17 +151,19 @@ object AlertTagConverter {
 	 * Combine a list of alert tags and a list of alerts into a map
 	 * of tag to list of matching alert pairs
 	 */
-	def toTagMap(tags: List[AlertTag], alerts: List[Alert]): Map[String, List[Alert]] = {
+	def toTagMap(tags: List[AlertTag], alerts: List[Alert]): AlertTagMap = {
 		val alertsById = alerts.map { a => (a.id, a) }.toMap
-		tags.map { tag =>
-			(tag, alertsById.get(tag.alertId))
-		}.collect {
-			case (tag, alertOption) if (alertOption.isDefined) => (tag, alertOption.get)
-		}.groupBy { case (tag, alert) =>
-			tag.tag
-		}.map { case (tag, tuples) =>
-			(tag, tuples.map(_._2))
-		}.toMap
+		AlertTagMap(
+			tags.map { tag =>
+				(tag, alertsById.get(tag.alertId))
+			}.collect {
+				case (tag, alertOption) if (alertOption.isDefined) => (tag, alertOption.get)
+			}.groupBy { case (tag, alert) =>
+				tag.tag
+			}.map { case (tag, tuples) =>
+				(tag, tuples.map(_._2))
+			}.toMap
+		)
 	}
 
 	/**

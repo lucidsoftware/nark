@@ -1,7 +1,7 @@
 package com.lucidchart.open.nark.controllers
 
 import com.lucidchart.open.nark.models.{AlertTagSubscriptionModel, AlertTagModel, AlertModel, AlertTagConverter}
-import com.lucidchart.open.nark.models.records.AlertTagSubscription
+import com.lucidchart.open.nark.models.records.{AlertTagSubscription, AlertTagSubscriptionRecord, Pagination}
 import com.lucidchart.open.nark.request.{AppFlash, AppAction, AuthAction}
 import com.lucidchart.open.nark.views
 import java.util.UUID
@@ -98,7 +98,7 @@ object TagSubscriptionsController extends AppController {
 			val (found, tagSubscriptions) = AlertTagSubscriptionModel.getSubscriptionsByUser(user, realPage - 1)
 			val tags = AlertTagModel.findAlertsByTag(tagSubscriptions.map{ts => ts.subscription.tag})
 			val alerts = AlertModel.findAlertByID(tags.map{tag => tag.alertId}.distinct)
-			Ok(views.html.tagsubscriptions.user(realPage, AlertTagSubscriptionModel.configuredLimit, found, tagSubscriptions, AlertTagConverter.toTagMap(tags, alerts)))
+			Ok(views.html.tagsubscriptions.user(Pagination[AlertTagSubscriptionRecord](realPage, found, AlertTagSubscriptionModel.configuredLimit, tagSubscriptions), AlertTagConverter.toTagMap(tags, alerts)))
 		}
 	}
 

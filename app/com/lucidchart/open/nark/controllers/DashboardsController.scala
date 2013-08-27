@@ -10,7 +10,7 @@ import com.lucidchart.open.nark.models.DashboardTagConverter
 import com.lucidchart.open.nark.models.GraphModel
 import com.lucidchart.open.nark.models.TargetModel
 import com.lucidchart.open.nark.models.UserModel
-import com.lucidchart.open.nark.models.records.Dashboard
+import com.lucidchart.open.nark.models.records.{Dashboard, Pagination}
 import com.lucidchart.open.nark.utils.StatsD
 import java.util.UUID
 import play.api.mvc.Cookie
@@ -233,7 +233,7 @@ class DashboardsController extends AppController {
 			val realPage = page.max(1)
 			val (found, matches) = DashboardModel.search(term, realPage - 1)
 			val tags = DashboardTagConverter.toDashboardMap(DashboardTagsModel.findTagsForDashboard(matches.map(_.id)))
-			Ok(views.html.dashboards.search(term, realPage, DashboardModel.configuredLimit, found, matches, tags))
+			Ok(views.html.dashboards.search(term, Pagination[Dashboard](realPage, found, DashboardModel.configuredLimit, matches), tags))
 		}
 	}
 
@@ -245,7 +245,7 @@ class DashboardsController extends AppController {
 			val realPage = page.max(1)
 			val (found, matches) = DashboardModel.searchDeleted(user.id, term, realPage - 1)
 			val tags = DashboardTagConverter.toDashboardMap(DashboardTagsModel.findTagsForDashboard(matches.map(_.id)))
-			Ok(views.html.dashboards.deleted(term, realPage, DashboardModel.configuredLimit, found, matches, tags))
+			Ok(views.html.dashboards.deleted(term, Pagination[Dashboard](realPage, found, DashboardModel.configuredLimit, matches), tags))
 		}
 	}
 }
