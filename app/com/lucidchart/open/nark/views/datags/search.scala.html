@@ -45,7 +45,7 @@
 					@pagination.matches.map { tagMap =>
 						@tagMap.contents.map { tag =>
 							<tr>
-								<td><a href="" class="btn btn-mini">@tag._1</a></td>
+								<td><a href="@narkRoutes.DynamicAlertTagsController.tag(tag._1)" class="btn btn-mini">@tag._1</a></td>
 								<td>
 									@tag._2.map { alert =>
 										<a href="@narkRoutes.DynamicAlertsController.view(alert.id)" class="btn btn-mini btn-info">@alert.name</a>

@@ -10,6 +10,19 @@ import play.api.libs.json.Json
 object DynamicAlertTagsController extends DynamicAlertTagsController
 class DynamicAlertTagsController extends AppController {
 	
+	/*
+	 * Get tag and all the dynamic alerts it is associated with.
+	 * @param tag the tag to look for
+	 */
+	def tag(tag: String) = AuthAction.maybeAuthenticatedUser { implicit user =>
+		AppAction { implicit request =>
+			val alertIds = DynamicAlertTagModel.findAlertsByTag(tag).map(_.recordId)
+			val alerts = DynamicAlertModel.findDynamicAlertByID(alertIds)
+			//val subscriptions = AlertTagSubscriptionModel.getSubscriptionsByTag(tag)
+			Ok(views.html.datags.tag(tag, alerts))
+		}
+	}
+
 	/**
 	 * Search for a specific tag
 	 * @param term the search term

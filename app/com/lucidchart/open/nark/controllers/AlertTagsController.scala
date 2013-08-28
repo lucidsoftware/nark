@@ -9,7 +9,7 @@ import play.api.libs.json.Json
 object AlertTagsController extends AlertTagsController
 class AlertTagsController extends AppController {
 	/*
-	 * Get tag and all the dashboards it is associated with.
+	 * Get tag and all the alerts it is associated with.
 	 */
 	def tag(tag: String) = AuthAction.maybeAuthenticatedUser { implicit user =>
 		AppAction { implicit request =>
