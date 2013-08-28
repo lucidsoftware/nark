@@ -21,6 +21,14 @@
 	</style>
 	<script type="text/javascript">
 		$(function() {
+			$('#save').click(function() {
+				$('#save_form').submit();
+			});
+
+			$('#delete').click(function() {
+				$('#delete_form').submit();
+			});
+
 			var prevTags = [];
 			if($("#tags").val().length > 0) {
 				prevTags = $.map($("#tags").val().split(","), function (e, i) {
@@ -42,7 +50,7 @@
 	<br />
 	<div class='row-fluid'>
 		<div class="span6">
-			@helper.form(action=narkRoutes.DynamicAlertsController.editSubmit(id)) {
+			@helper.form(action=narkRoutes.DynamicAlertsController.editSubmit(id), 'id -> "save_form") {
 				<fieldset>
 					@helpers.csrfHiddenInput()
 					@helper.inputText(formEdit("name"), 'class -> "input-xlarge", '_label -> "Name", 'placeholder -> "CPU High", 'required -> true, '_showConstraints -> false, 'autofocus->"true")
@@ -54,11 +62,15 @@
 					@helper.inputText(formEdit("warn_threshold"), 'class -> "input-xlarge", '_label -> "Warn Threshold", 'placeholder -> "0.0", 'required -> true, '_showConstraints -> false)
 					@helper.select(formEdit("comparison"), com.lucidchart.open.nark.models.records.Comparisons.values.map(m => m.id.toString -> m.toString).toSeq, '_label -> "Comparison Type", '_showConstraints -> false)
 					@helper.inputText(formEdit("frequency"), 'class -> "input-xlarge", '_label -> "Frequency in Seconds", 'placeholder -> "0", 'required -> true, '_showConstraints -> false)
+					@helper.checkbox(formEdit("active"), 'class -> "input-xlarge", '_label -> "Active", 'placeholder -> true, '_text -> "", '_help -> "")
 					<br />
-					<br />
-					<button id="edit" name="edit" class="btn btn-primary">Save</button>
 				</fieldset>
 			}
+			@helper.form(action=narkRoutes.DynamicAlertsController.delete(id), 'id -> "delete_form") {
+				@helpers.csrfHiddenInput()
+			}
+			<button id="save" name="save" class="btn btn-primary">Save Changes</button>
+			<button id="delete" name="delete" class="btn btn-danger">Delete Dynamic Alert</button>
 		</div>
 		<div class="span6">
 			<div class="well">

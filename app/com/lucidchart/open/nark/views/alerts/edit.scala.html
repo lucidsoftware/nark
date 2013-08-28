@@ -1,5 +1,5 @@
 @(
-	formCreate:Form[_],
+	formEdit:Form[_],
 	id: java.util.UUID
 )(
 	implicit
@@ -26,8 +26,8 @@
 				$('#save_form').submit();
 			});
 
-			$('#deactivate').click(function() {
-				$('#deactivate_form').submit();
+			$('#delete').click(function() {
+				$('#delete_form').submit();
 			});
 
 			$(function() {
@@ -56,22 +56,22 @@
 			@helper.form(action=narkRoutes.AlertsController.editSubmit(id), 'id -> "save_form") {
 				<fieldset>
 					@helpers.csrfHiddenInput()
-					@helper.inputText(formCreate("name"), 'class -> "input-xlarge", '_label -> "Name", 'placeholder -> "CPU High", 'required -> true, '_showConstraints -> false,  'autofocus -> "true")
-					@helper.inputText(formCreate("tags"), 'id -> "tags", 'class -> "input-xlarge", '_label -> "Tags (separate by comma)", 'placeholder -> "ops", '_showConstraints -> false)
-					@helper.inputText(formCreate("target"), 'id -> "target-input", 'class -> "input-xlarge", '_label -> "Target", 'placeholder -> "stats.gauges.servers.*.*.*.cpu.count", 'required -> true, '_showConstraints -> false)
-					@helper.inputText(formCreate("error_threshold"), 'class -> "input-xlarge", '_label -> "Error Threshold", 'placeholder -> "0.0", 'required -> true, '_showConstraints -> false)
-					@helper.inputText(formCreate("warn_threshold"), 'class -> "input-xlarge", '_label -> "Warn Threshold", 'placeholder -> "0.0", 'required -> true, '_showConstraints -> false)
-					@helper.select(formCreate("comparison"), com.lucidchart.open.nark.models.records.Comparisons.values.map(m => m.id.toString -> m.toString).toSeq, '_label -> "Comparison Type", '_showConstraints -> false)
-					@helper.inputText(formCreate("frequency"), 'class -> "input-xlarge", '_label -> "Frequency in Seconds", 'placeholder -> "0", 'required -> true, '_showConstraints -> false)
-					@helper.checkbox(formCreate("active"), 'class -> "input-xlarge", '_label -> "Active", 'placeholder -> true, '_text -> "", '_help -> "")
+					@helper.inputText(formEdit("name"), 'class -> "input-xlarge", '_label -> "Name", 'placeholder -> "CPU High", 'required -> true, '_showConstraints -> false,  'autofocus -> "true")
+					@helper.inputText(formEdit("tags"), 'id -> "tags", 'class -> "input-xlarge", '_label -> "Tags (separate by comma)", 'placeholder -> "ops", '_showConstraints -> false)
+					@helper.inputText(formEdit("target"), 'id -> "target-input", 'class -> "input-xlarge", '_label -> "Target", 'placeholder -> "stats.gauges.servers.*.*.*.cpu.count", 'required -> true, '_showConstraints -> false)
+					@helper.inputText(formEdit("error_threshold"), 'class -> "input-xlarge", '_label -> "Error Threshold", 'placeholder -> "0.0", 'required -> true, '_showConstraints -> false)
+					@helper.inputText(formEdit("warn_threshold"), 'class -> "input-xlarge", '_label -> "Warn Threshold", 'placeholder -> "0.0", 'required -> true, '_showConstraints -> false)
+					@helper.select(formEdit("comparison"), com.lucidchart.open.nark.models.records.Comparisons.values.map(m => m.id.toString -> m.toString).toSeq, '_label -> "Comparison Type", '_showConstraints -> false)
+					@helper.inputText(formEdit("frequency"), 'class -> "input-xlarge", '_label -> "Frequency in Seconds", 'placeholder -> "0", 'required -> true, '_showConstraints -> false)
+					@helper.checkbox(formEdit("active"), 'class -> "input-xlarge", '_label -> "Active", 'placeholder -> true, '_text -> "", '_help -> "")
 					<br />
 				</fieldset>
 			}
-			@helper.form(action=narkRoutes.AlertsController.deactivate(id), 'id -> "deactivate_form") {
+			@helper.form(action=narkRoutes.AlertsController.delete(id), 'id -> "delete_form") {
 				@helpers.csrfHiddenInput()
 			}
 			<button id="save" name="save" class="btn btn-primary">Save Changes</button>
-			<button id="deactivate" name="deactivate" class="btn btn-danger">Deactivate Alert</button>
+			<button id="delete" name="delete" class="btn btn-danger">Delete Alert</button>
 		</div>
 		<div class="span6">
 			<div class="well">

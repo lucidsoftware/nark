@@ -108,7 +108,7 @@ class DynamicAlertsController extends AppController {
 					DynamicAlertModel.createDynamicAlert(alert)
 					DynamicAlertTagModel.updateTagsForAlert(alert.id, data.tags)
 
-					Redirect(routes.DynamicAlertsController.create()).flashing(AppFlash.success("Dynamic Alert created successfully."))
+					Redirect(routes.DynamicAlertsController.view(alert.id)).flashing(AppFlash.success("Dynamic Alert created successfully."))
 				}
 			)
 		}
@@ -197,6 +197,30 @@ class DynamicAlertsController extends AppController {
 						Redirect(routes.DynamicAlertsController.view(alertId)).flashing(AppFlash.success("Changes saved."))
 					}
 				)
+			}
+		}
+	}
+
+	/**
+	 * Recover a dynamic alert
+	 */
+	def recover(alertId: UUID) = AuthAction.authenticatedUser { implicit user =>
+		DynamicAlertAction.alertManagementAccess(alertId, user.id, allowDeleted = true) { alert =>
+			AppAction { implicit request =>
+				DynamicAlertModel.editDynamicAlert(alert.copy(deleted = false))
+				Redirect(routes.DynamicAlertsController.view(alertId)).flashing(AppFlash.success("Dynamic alert was recovered successfully."))
+			}
+		}
+	}
+
+	/**
+	 * Delete a dynamic alert
+	 */
+	def delete(alertId: UUID) = AuthAction.authenticatedUser { implicit user =>
+		DynamicAlertAction.alertManagementAccess(alertId, user.id) { alert =>
+			AppAction { implicit request =>
+				DynamicAlertModel.editDynamicAlert(alert.copy(deleted = true))
+				Redirect(routes.HomeController.index()).flashing(AppFlash.success("Dynamic alert was deleted successfully."))
 			}
 		}
 	}
