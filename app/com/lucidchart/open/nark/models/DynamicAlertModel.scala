@@ -121,4 +121,30 @@ class DynamicAlertModel extends AppModel {
 			}
 		}
 	}
+
+	/**
+	 * Edit a particular dynamic alert
+	 * @param alert the edited alert
+	 */
+	def editDynamicAlert(alert: DynamicAlert) = {
+		DB.withConnection("main") { connection =>
+			SQL("""
+				UPDATE `dynamic_alerts`
+				SET `name`={name}, `search_target`={search_target}, `match`={match_expr}, `build_target`={build_target}, `error_threshold`={error_threshold}, `warn_threshold`={warn_threshold}, `comparison`={comparison}, `active`={active}, `deleted`={deleted}, `frequency`={frequency}
+				WHERE `id`={id}
+			""").on(
+				"name" -> alert.name,
+				"search_target" -> alert.searchTarget,
+				"match_expr" -> alert.matchExpr,
+				"build_target" -> alert.buildTarget,
+				"error_threshold" -> alert.errorThreshold,
+				"warn_threshold" -> alert.warnThreshold,
+				"comparison" -> alert.comparison.id,
+				"active" -> alert.active,
+				"deleted" -> alert.deleted,
+				"frequency" -> alert.frequency,
+				"id" -> alert.id
+			).executeUpdate()(connection)
+		}
+	}
 }

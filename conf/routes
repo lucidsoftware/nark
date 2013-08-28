@@ -70,7 +70,8 @@ GET 		/dynamicalert/create 					com.lucidchart.open.nark.controllers.DynamicAler
 POST 		/dynamicalert/create 					com.lucidchart.open.nark.controllers.DynamicAlertsController.createSubmit()
 GET 		/dynamicalert/search 					com.lucidchart.open.nark.controllers.DynamicAlertsController.search(term: String ?= "term", page: Int ?= 1)
 GET 		/dynamicalert/:id/view 					com.lucidchart.open.nark.controllers.DynamicAlertsController.view(id: java.util.UUID)
-POST 		/dynamicalert/:id/edit 					com.lucidchart.open.nark.controllers.DynamicAlertsController.edit(id: java.util.UUID)
+GET 		/dynamicalert/:id/edit 					com.lucidchart.open.nark.controllers.DynamicAlertsController.edit(id: java.util.UUID)
+POST 		/dynamicalert/:id/edit 					com.lucidchart.open.nark.controllers.DynamicAlertsController.editSubmit(id: java.util.UUID)
 
 # Dynamic Alert Tags
 GET 		/dynamicalert/tags/searchjson 		com.lucidchart.open.nark.controllers.DynamicAlertTagsController.searchToJson(q: String ?= "")

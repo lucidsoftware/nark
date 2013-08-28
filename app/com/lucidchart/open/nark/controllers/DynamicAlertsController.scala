@@ -28,6 +28,19 @@ class DynamicAlertsController extends AppController {
 		frequency: Int
 	)
 
+	private case class EditFormSubmission(
+		name: String,
+		tags: List[String],
+		searchTarget: String,
+		matchExpr: String,
+		buildTarget: String,
+		errorThreshold: BigDecimal,
+		warnThreshold: BigDecimal,
+		comparison: Comparisons.Value,
+		frequency: Int,
+		active: Boolean
+	)
+
 	private val createAlertForm = Form(
 		mapping(
 			"name" -> text.verifying(Constraints.minLength(1)),
@@ -42,6 +55,23 @@ class DynamicAlertsController extends AppController {
 			"comparison" -> number.verifying("Invalid comparison type", x => Comparisons.values.map(_.id).contains(x)).transform[Comparisons.Value](Comparisons(_), _.id),
 			"frequency" -> number.verifying(Constraints.min(1))
 		)(CreateFormSubmission.apply)(CreateFormSubmission.unapply)
+	)
+
+	private val editAlertForm = Form(
+		mapping(
+			"name" -> text.verifying(Constraints.minLength(1)),
+			"tags" -> text.verifying("Max 25 characters per tag.", tags => tags.length == 0 || tags.split(",").filter(_.length > 25).isEmpty)
+			              .verifying(Constraints.pattern("^[a-zA-Z0-9\\.\\-_,]*$".r, error = "Only alpha-numberic text and periods (.), dashes (-), and underscores (_) allowed"))
+			              .transform[List[String]](str => if(str.length == 0) List[String]() else str.split(",").map(_.trim.toLowerCase).toList, _.mkString(",")),
+			"search_target" -> text,
+			"match_expr" -> text,
+			"build_target" -> text,
+			"error_threshold" -> bigDecimal,
+			"warn_threshold" -> bigDecimal,
+			"comparison" -> number.verifying("Invalid comparison type", x => Comparisons.values.map(_.id).contains(x)).transform[Comparisons.Value](Comparisons(_), _.id),
+			"frequency" -> number.verifying(Constraints.min(1)),
+			"active" -> boolean
+		)(EditFormSubmission.apply)(EditFormSubmission.unapply)
 	)
 
 	/**
@@ -118,9 +148,56 @@ class DynamicAlertsController extends AppController {
 	 * Edit a dynamic alert
 	 * @param id the id of the dynamic alert to edit
 	 */
-	def edit(id: UUID) = AuthAction.maybeAuthenticatedUser { implicit user =>
-		AppAction { implicit request =>
-			Redirect(routes.DynamicAlertsController.view(id)).flashing(AppFlash.error("Not yet implemented. Also, do the security thing"))
+	def edit(id: UUID) = AuthAction.authenticatedUser { implicit user =>
+		DynamicAlertAction.alertManagementAccess(id, user.id) { alert =>
+			AppAction { implicit request =>
+				val form = editAlertForm.fill(EditFormSubmission(
+					alert.name,
+					DynamicAlertTagModel.findTagsForAlert(alert.id).map(_.tag),
+					alert.searchTarget,
+					alert.matchExpr,
+					alert.buildTarget,
+					alert.errorThreshold,
+					alert.warnThreshold,
+					alert.comparison,
+					alert.frequency,
+					alert.active
+				))
+				Ok(views.html.dynamicalerts.edit(form, id))
+			}
+		}
+	}
+
+	/**
+	 * Edit a particular dynamic alert
+	 * @param id the id of the alert to edit
+	 */
+	def editSubmit(alertId: UUID) = AuthAction.authenticatedUser { implicit user =>
+		DynamicAlertAction.alertManagementAccess(alertId, user.id) { alert =>
+			AppAction { implicit request =>
+				editAlertForm.bindFromRequest().fold(
+					formWithErrors => {
+						Ok(views.html.dynamicalerts.edit(formWithErrors, alertId))
+					},
+					data => {
+						val editedAlert = alert.copy(
+							name = data.name,
+							searchTarget = data.searchTarget,
+							matchExpr = data.matchExpr,
+							buildTarget = data.buildTarget,
+							errorThreshold = data.errorThreshold,
+							warnThreshold = data.warnThreshold,
+							comparison = data.comparison,
+							frequency = data.frequency,
+							active = data.active
+						)
+						
+						DynamicAlertModel.editDynamicAlert(editedAlert)
+						DynamicAlertTagModel.updateTagsForAlert(editedAlert.id, data.tags)
+						Redirect(routes.DynamicAlertsController.view(alertId)).flashing(AppFlash.success("Changes saved."))
+					}
+				)
+			}
 		}
 	}
 }
