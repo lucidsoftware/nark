@@ -1,6 +1,7 @@
 @(
 	tag: String,
-	alerts: List[com.lucidchart.open.nark.models.records.DynamicAlert]
+	alerts: List[com.lucidchart.open.nark.models.records.DynamicAlert],
+	subscriptions: List[com.lucidchart.open.nark.models.records.AlertTagSubscriptionRecord]
 )(
 	implicit
 	request: com.lucidchart.open.nark.request.AppRequest[_],
@@ -22,46 +23,99 @@
 	<table>
 		<tr>
 			<td><h3>Dynamic Alert Tag "@tag"</h3></td>
+			@if(userOption.isDefined) {
+				@defining(subscriptions.find {subscription => subscription.userOption.get.id == userOption.get.id }) {subscription =>
+					@if(subscription.isDefined) {
+						<td>
+							@helper.form(action=narkRoutes.DynamicAlertTagSubscriptionsController.edit(tag)) {
+									@helpers.csrfHiddenInput()
+									<input name="active" type="hidden" value="@(subscription.get.subscription.active == false)" />
+									<input class="btn" type="submit" value='@if(subscription.get.subscription.active) {Deactivate Subscription} else {Reactivate Subscription}' />
+								}
+						</td>
+						<td>
+							@helper.form(action=narkRoutes.DynamicAlertTagSubscriptionsController.delete(tag)) {
+								@helpers.csrfHiddenInput()
+								<input class="btn btn-danger" name="ignored" type="submit" value="Delete Subscription" />
+							}
+						</td>
+					} else {
+						<td>
+							@helper.form(action=narkRoutes.DynamicAlertTagSubscriptionsController.subscribe(tag)) {
+								@helpers.csrfHiddenInput()
+								<input class="btn" type="submit" value="Subscribe to this Tag" />
+							}
+						</td>
+					}
+				}
+			}
 		</tr>
 	</table>
-	<h4>Alerts with tag</h4>
-
-	@if(alerts.isEmpty) {
-		<p class="lead text-info">There are no dynamic alerts with this tag.</p>
-	} else {
-		<table class="table table-bordered table-hover">
-			<thead>
-				<tr>
-					<th>Name</th>
-					<th>Target</th>
-					<th>Error</th>
-					<th>Warn</th>
-					<th>Comparison</th>
-					<th>Active</th>
-				</tr>
-			</thead>
-			<tbody>
-				@alerts.sortWith(_.name < _.name).map { alert =>
-					<tr>
-						<td><a href="@narkRoutes.DynamicAlertsController.view(alert.id)">@alert.name</a></td>
-						<td>@alert.searchTarget</td>
-						<td>@alert.errorThreshold</td>
-						<td>@alert.warnThreshold</td>
-						<td>@alert.comparison</td>
-						<td>@alert.active</td>
-					</tr>
+	<h4>Alerts with Tag</h4>
+	<div>
+		<div class="row">
+			<div class="span1" />
+			<div class="span11" />
+				@if(alerts.isEmpty) {
+					<p class="lead text-info">There are no dynamic alerts with this tag.</p>
+				} else {
+					<table class="table table-bordered table-hover">
+						<thead>
+							<tr>
+								<th>Name</th>
+								<th>Target</th>
+								<th>Error</th>
+								<th>Warn</th>
+								<th>Comparison</th>
+								<th>Active</th>
+							</tr>
+						</thead>
+						<tbody>
+							@alerts.sortWith(_.name < _.name).map { alert =>
+								<tr>
+									<td><a href="@narkRoutes.DynamicAlertsController.view(alert.id)">@alert.name</a></td>
+									<td>@alert.searchTarget</td>
+									<td>@alert.errorThreshold</td>
+									<td>@alert.warnThreshold</td>
+									<td>@alert.comparison</td>
+									<td>@alert.active</td>
+								</tr>
+							}
+						</tbody>
+					</table>
 				}
-			</tbody>
-		</table>
-	}
-	<br/>
+			</div>
+		</div>
+	</div>
+
 	<h4>Tag Subscriptions</h4>
 	<div>
 		<div class="row">
 			<div class="span1" />
 			<div class="span11">
 				<div class="well">
-					<p class="lead text-info">Not implemented yet.</p>
+					@if(subscriptions.size == 0){
+						<p class="lead text-info">There are no subscriptions for this tag.</p>
+					} else {
+						<table class="table">
+							<thead>
+								<tr>
+									<th>User</th>
+									<th>Email</th>
+									<th>Active</th>
+								</tr>
+							</thead>
+							<tbody>
+								@subscriptions.map { subscription =>
+									<tr>
+										<td>@if(subscription.userOption.isDefined){@subscription.userOption.get.name} else {""}</td>
+										<td>@if(subscription.userOption.isDefined){@subscription.userOption.get.email} else {""}</td>
+										<td>@subscription.subscription.active</td>
+									</tr>
+								}
+							</tbody>
+						</table>
+					}
 				</div>
 			</div>
 		</div>

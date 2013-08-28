@@ -151,7 +151,6 @@ object SubscriptionsController extends AppController {
 			val realPage = page.max(1)
 			val (found, matches) = SubscriptionModel.getSubscriptionsByUser(user, realPage - 1)
 			val subscriptions = matches.filter { subscription =>
-				println(subscription)
 				subscription.subscription.alertType == AlertType.alert
 			}
 			Ok(views.html.subscriptions.user(Pagination[SubscriptionRecord](realPage, found, SubscriptionModel.configuredLimit, subscriptions)))

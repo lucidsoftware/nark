@@ -51,39 +51,45 @@
 			}
 		</tr>
 	</table>
-	<h4>Alerts with tag</h4>
-
-	@if(alerts.isEmpty) {
-		<p class="lead text-info">There are no alerts with this tag.</p>
-	} else {
-		<table class="table table-bordered table-hover">
-			<thead>
-				<tr>
-					<th>Name</th>
-					<th>Target</th>
-					<th>Error</th>
-					<th>Warn</th>
-					<th>Comparison</th>
-					<th>Worst State</th>
-					<th>Active</th>
-				</tr>
-			</thead>
-			<tbody>
-				@alerts.sortWith(_.name < _.name).map { alert =>
-					<tr>
-						<td><a href="@narkRoutes.AlertsController.view(alert.id)">@alert.name</a></td>
-						<td>@alert.target</td>
-						<td>@alert.errorThreshold</td>
-						<td>@alert.warnThreshold</td>
-						<td>@alert.comparison</td>
-						<td>@alert.worstState.toString</td>
-						<td>@alert.active</td>
-					</tr>
+	<h4>Alerts with Tag</h4>
+	<div>
+		<div class="row">
+			<div class="span1" />
+			<div class="span11">
+				@if(alerts.isEmpty) {
+					<p class="lead text-info">There are no alerts with this tag.</p>
+				} else {
+					<table class="table table-bordered table-hover">
+						<thead>
+							<tr>
+								<th>Name</th>
+								<th>Target</th>
+								<th>Error</th>
+								<th>Warn</th>
+								<th>Comparison</th>
+								<th>Worst State</th>
+								<th>Active</th>
+							</tr>
+						</thead>
+						<tbody>
+							@alerts.sortWith(_.name < _.name).map { alert =>
+								<tr>
+									<td><a href="@narkRoutes.AlertsController.view(alert.id)">@alert.name</a></td>
+									<td>@alert.target</td>
+									<td>@alert.errorThreshold</td>
+									<td>@alert.warnThreshold</td>
+									<td>@alert.comparison</td>
+									<td>@alert.worstState.toString</td>
+									<td>@alert.active</td>
+								</tr>
+							}
+						</tbody>
+					</table>
 				}
-			</tbody>
-		</table>
-	}
-	<br/>
+			</div>
+		</div>
+	</div>
+
 	<h4>Tag Subscriptions</h4>
 	<div>
 		<div class="row">

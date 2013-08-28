@@ -43,6 +43,16 @@ CREATE TABLE `dynamic_alerts` (
 	KEY `deleted` (`deleted`)
 ) ENGINE=InnoDB CHARSET=utf8 COLLATE=utf8_general_ci;
 
+CREATE TABLE `dynamic_alert_tag_subscriptions` (
+	`hiddenid` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+	`user_id` BINARY(16) NOT NULL,
+	`tag` VARCHAR(25) NOT NULL,
+	`active` BOOLEAN NOT NULL,
+	PRIMARY KEY (`hiddenid`),
+	UNIQUE KEY `alert_tag_lookup` (`user_id`, `tag`),
+	KEY `tag_lookup` (`tag`)
+) ENGINE=InnoDB CHARSET=utf8 COLLATE=utf8_general_ci;
+
 CREATE TABLE `alert_tags` (
 	`hiddenid` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
 	`alert_id` BINARY(16) NOT NULL,
@@ -143,8 +153,10 @@ DROP TABLE `alert_history`;
 DROP TABLE `alert_subscriptions`;
 DROP TABLE `alert_tag_subscriptions`;
 DROP TABLE `alerts`;
-DROP TABLE `dynamic_alerts`;
 DROP TABLE `alert_tags`;
+DROP TABLE `dynamic_alert_tag_subscriptions`;
+DROP TABLE `dynamic_alerts`;
+DROP TABLE `dynamic_alert_tags`;
 ALTER TABLE `graph_targets`
 	DROP COLUMN `summarizer`;
 ALTER TABLE `users`

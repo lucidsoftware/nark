@@ -10,7 +10,9 @@ import play.api.Play.configuration
 import play.api.db.DB
 
 object AlertTagSubscriptionModel extends AlertTagSubscriptionModel
-class AlertTagSubscriptionModel extends AppModel {
+trait AlertTagSubscriptionModel extends AppModel {
+	protected val table = "alert_tag_subscriptions"
+
 	protected val tagSubscriptionRowParser = {
 		get[UUID]("user_id") ~
 		get[String]("tag") ~
@@ -28,7 +30,7 @@ class AlertTagSubscriptionModel extends AppModel {
 	def createSubscription(subscription: AlertTagSubscription) {
 		DB.withConnection("main") { connection =>
 			SQL("""
-				INSERT INTO `alert_tag_subscriptions` (`user_id`, `tag`, `active`)
+				INSERT INTO """ + table + """ (`user_id`, `tag`, `active`)
 				VALUES ({user_id}, {tag}, {active})
 			""").on(
 				"user_id"   -> subscription.userId,
@@ -45,7 +47,7 @@ class AlertTagSubscriptionModel extends AppModel {
 	def editSubscription(subscription: AlertTagSubscription) {
 		DB.withConnection("main") { connection =>
 			SQL("""
-				UPDATE `alert_tag_subscriptions`
+				UPDATE """ + table + """
 				SET `active`= {active}
 				WHERE `tag`={tag} AND `user_id`={user_id}
 			""").on(
@@ -64,7 +66,7 @@ class AlertTagSubscriptionModel extends AppModel {
 	def deleteSubscription(tag: String, userId: UUID) {
 		DB.withConnection("main") { connection =>
 			SQL("""
-				DELETE FROM `alert_tag_subscriptions`
+				DELETE FROM """ + table + """
 				WHERE `tag` = {tag} AND `user_id`={user_id}
 			""").on(
 				"tag"      -> tag,
@@ -93,7 +95,7 @@ class AlertTagSubscriptionModel extends AppModel {
 			val subscriptions = DB.withConnection("main") { connection =>
 				RichSQL("""
 					SELECT *
-					FROM `alert_tag_subscriptions`
+					FROM """ + table + """
 					WHERE `tag` IN ({tags})
 				""").onList(
 					"tags" -> tags
@@ -122,7 +124,7 @@ class AlertTagSubscriptionModel extends AppModel {
 	def getSubscriptionsByUser(user: User, page: Int) = {
 		DB.withConnection("main") { connection =>
 			val found = SQL("""
-				SELECT COUNT(1) FROM `alert_tag_subscriptions`
+				SELECT COUNT(1) FROM """ + table + """
 				WHERE `user_id` = {user_id}
 			""").on(
 				"user_id" -> user.id
@@ -130,7 +132,7 @@ class AlertTagSubscriptionModel extends AppModel {
 
 			val subscriptions = SQL("""
 				SELECT *
-				FROM `alert_tag_subscriptions`
+				FROM """ + table + """
 				WHERE `user_id` = {user_id}
 				ORDER BY `tag` ASC
 				LIMIT {limit} OFFSET {offset}

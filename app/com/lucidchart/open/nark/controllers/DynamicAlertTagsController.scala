@@ -1,7 +1,7 @@
 package com.lucidchart.open.nark.controllers
 
 import com.lucidchart.open.nark.request.{AppAction, AuthAction}
-import com.lucidchart.open.nark.models.{DynamicAlertModel, DynamicAlertTagModel, TagConverter}
+import com.lucidchart.open.nark.models.{DynamicAlertModel, DynamicAlertTagModel, DynamicAlertTagSubscriptionModel, TagConverter}
 import com.lucidchart.open.nark.models.records.{DynamicAlert, TagMap, Pagination}
 
 import com.lucidchart.open.nark.views
@@ -18,8 +18,8 @@ class DynamicAlertTagsController extends AppController {
 		AppAction { implicit request =>
 			val alertIds = DynamicAlertTagModel.findAlertsByTag(tag).map(_.recordId)
 			val alerts = DynamicAlertModel.findDynamicAlertByID(alertIds)
-			//val subscriptions = AlertTagSubscriptionModel.getSubscriptionsByTag(tag)
-			Ok(views.html.datags.tag(tag, alerts))
+			val subscriptions = DynamicAlertTagSubscriptionModel.getSubscriptionsByTag(tag)
+			Ok(views.html.datags.tag(tag, alerts, subscriptions))
 		}
 	}
 

@@ -90,6 +90,11 @@ POST    /tagsubscription/:tag/subscribe      com.lucidchart.open.nark.controller
 POST    /tagsubscription/:tag/edit           com.lucidchart.open.nark.controllers.TagSubscriptionsController.edit(tag: String, mySubscriptionsPage : Int ?= -1)
 POST    /tagsubscription/:tag/delete         com.lucidchart.open.nark.controllers.TagSubscriptionsController.delete(tag: String)
 
+# Dynamic Alert Tag Subscriptions
+POST 		/dtsubcription/:tag/subscribe 		com.lucidchart.open.nark.controllers.DynamicAlertTagSubscriptionsController.subscribe(tag: String)
+POST    /dtsubscription/:tag/edit           com.lucidchart.open.nark.controllers.DynamicAlertTagSubscriptionsController.edit(tag: String, mySubscriptionsPage : Int ?= -1)
+POST    /dtsubscription/:tag/delete         com.lucidchart.open.nark.controllers.DynamicAlertTagSubscriptionsController.delete(tag: String)
+
 # User Pages
 GET     /user/subscriptions                  com.lucidchart.open.nark.controllers.SubscriptionsController.allSubscriptionsForUser(page: Int ?= 1)
 GET     /user/tagsubscriptions               com.lucidchart.open.nark.controllers.TagSubscriptionsController.allSubscriptionsForUser(page: Int ?= 1)

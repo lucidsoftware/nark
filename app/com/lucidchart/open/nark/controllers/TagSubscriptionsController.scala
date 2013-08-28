@@ -39,7 +39,7 @@ object TagSubscriptionsController extends AppController {
 			val subscription = new AlertTagSubscription(user.id, tag)
 			AlertTagSubscriptionModel.createSubscription(subscription)
 
-			Redirect(routes.AlertTagsController.tag(tag)).flashing(AppFlash.success("Successfully subscribed to this alert."))
+			Redirect(routes.AlertTagsController.tag(tag)).flashing(AppFlash.success("Successfully subscribed to this tag."))
 		}
 	}
 
