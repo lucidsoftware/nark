@@ -1,6 +1,6 @@
 @(
 	pagination: com.lucidchart.open.nark.models.records.Pagination[com.lucidchart.open.nark.models.records.AlertTagSubscriptionRecord],
-	tagAlerts: com.lucidchart.open.nark.models.records.AlertTagMap
+	tagAlerts: com.lucidchart.open.nark.models.records.TagMap[com.lucidchart.open.nark.models.records.Alert]
 )(
 	implicit
 	request: com.lucidchart.open.nark.request.AppRequest[_],
@@ -43,7 +43,7 @@
 											<input type="hidden" name="active" value="@(subscription.subscription.active == false)" />
 												<td><a href="@narkRoutes.AlertTagsController.tag(subscription.subscription.tag)" class="btn btn-mini">@subscription.subscription.tag</a></td>
 												<td>
-													@tagAlerts.tagMap(subscription.subscription.tag).map { alert =>
+													@tagAlerts.contents(subscription.subscription.tag).map { alert =>
 														<a href="@narkRoutes.AlertsController.view(alert.id)" class="btn btn-mini btn-info">@alert.name</a>
 													}
 												</td>

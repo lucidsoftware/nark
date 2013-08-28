@@ -4,12 +4,7 @@ import com.lucidchart.open.nark.request.{AppFlash, AppAction, AuthAction, Dashbo
 import com.lucidchart.open.nark.views
 import com.lucidchart.open.nark.utils.DashboardHistory
 import com.lucidchart.open.nark.utils.DashboardHistoryItem
-import com.lucidchart.open.nark.models.DashboardModel
-import com.lucidchart.open.nark.models.DashboardTagsModel
-import com.lucidchart.open.nark.models.DashboardTagConverter
-import com.lucidchart.open.nark.models.GraphModel
-import com.lucidchart.open.nark.models.TargetModel
-import com.lucidchart.open.nark.models.UserModel
+import com.lucidchart.open.nark.models.{DashboardModel, DashboardTagsModel, GraphModel, TagConverter, TargetModel, UserModel}
 import com.lucidchart.open.nark.models.records.{Dashboard, Pagination}
 import com.lucidchart.open.nark.utils.StatsD
 import java.util.UUID
@@ -232,7 +227,7 @@ class DashboardsController extends AppController {
 		AppAction { implicit request =>
 			val realPage = page.max(1)
 			val (found, matches) = DashboardModel.search(term, realPage - 1)
-			val tags = DashboardTagConverter.toDashboardMap(DashboardTagsModel.findTagsForDashboard(matches.map(_.id)))
+			val tags = TagConverter.toTagMap(DashboardTagsModel.findTagsForDashboard(matches.map(_.id)))
 			Ok(views.html.dashboards.search(term, Pagination[Dashboard](realPage, found, DashboardModel.configuredLimit, matches), tags))
 		}
 	}
@@ -244,7 +239,7 @@ class DashboardsController extends AppController {
 		AppAction { implicit request =>
 			val realPage = page.max(1)
 			val (found, matches) = DashboardModel.searchDeleted(user.id, term, realPage - 1)
-			val tags = DashboardTagConverter.toDashboardMap(DashboardTagsModel.findTagsForDashboard(matches.map(_.id)))
+			val tags = TagConverter.toTagMap(DashboardTagsModel.findTagsForDashboard(matches.map(_.id)))
 			Ok(views.html.dashboards.deleted(term, Pagination[Dashboard](realPage, found, DashboardModel.configuredLimit, matches), tags))
 		}
 	}

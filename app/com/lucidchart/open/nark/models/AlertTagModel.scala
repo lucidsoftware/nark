@@ -3,7 +3,7 @@ package com.lucidchart.open.nark.models
 import anorm._
 import anorm.SqlParser._
 import AnormImplicits._
-import com.lucidchart.open.nark.models.records.{Alert, AlertTag, AlertTagMap}
+import com.lucidchart.open.nark.models.records.{Alert, Tag}
 import java.util.UUID
 import play.api.db.DB
 import play.api.Play.current
@@ -16,7 +16,7 @@ trait AlertTagModel extends AppModel {
 	protected val tagsRowParser = {
 		get[UUID]("alert_id") ~
 		get[String]("tag") map {
-			case alertId ~ tag => new AlertTag(alertId, tag)
+			case alertId ~ tag => new Tag(alertId, tag)
 		}
 	}
 
@@ -54,7 +54,7 @@ trait AlertTagModel extends AppModel {
 	 * Find all the tags associated with an alert
 	 * @param id the id of the alert to search for
 	 */
-	def findTagsForAlert(id: UUID): List[AlertTag] = {
+	def findTagsForAlert(id: UUID): List[Tag] = {
 		findTagsForAlert(List(id))
 	}
 	
@@ -63,7 +63,7 @@ trait AlertTagModel extends AppModel {
 	 * @param ids the ids of the alerts to look for
 	 * @return a list of matching AlertTags
 	 */
-	def findTagsForAlert(ids: List[UUID]) : List[AlertTag] = {
+	def findTagsForAlert(ids: List[UUID]) : List[Tag] = {
 		if (ids.isEmpty) {
 			Nil
 		}
@@ -85,7 +85,7 @@ trait AlertTagModel extends AppModel {
 	 * @param tag the tag to search for
 	 * @return the AlertTags
 	 */
-	def findAlertsByTag(tag: String): List[AlertTag] = {
+	def findAlertsByTag(tag: String): List[Tag] = {
 		findAlertsByTag(List(tag))
 	}
 
@@ -94,7 +94,7 @@ trait AlertTagModel extends AppModel {
 	 * @param tags the tags to search for
 	 * @return the AlertTags
 	 */
-	def findAlertsByTag(tags: List[String]): List[AlertTag] = {
+	def findAlertsByTag(tags: List[String]): List[Tag] = {
 		if(tags.isEmpty) {
 			Nil
 		}
@@ -144,38 +144,6 @@ trait AlertTagModel extends AppModel {
 					"tag" -> tags.map(toParameterValue(_))
 				).toSQL.executeUpdate()(connection)
 			}
-		}
-	}
-}
-
-object AlertTagConverter {
-	/**
-	 * Combine a list of alert tags and a list of alerts into a map
-	 * of tag to list of matching alert pairs
-	 */
-	def toTagMap(tags: List[AlertTag], alerts: List[Alert]): AlertTagMap = {
-		val alertsById = alerts.map { a => (a.id, a) }.toMap
-		AlertTagMap(
-			tags.map { tag =>
-				(tag, alertsById.get(tag.alertId))
-			}.collect {
-				case (tag, alertOption) if (alertOption.isDefined) => (tag, alertOption.get)
-			}.groupBy { case (tag, alert) =>
-				tag.tag
-			}.map { case (tag, tuples) =>
-				(tag, tuples.map(_._2))
-			}.toMap
-		)
-	}
-
-	/**
-	 * Find all the tags for each alert ID
-	 */
-	def toAlertMap(tags: List[AlertTag]): Map[UUID, List[String]] = {
-		tags.groupBy { tag =>
-			tag.alertId
-		}.map { case (alertId, tags) =>
-			(alertId, tags.map(_.tag))
 		}
 	}
 }

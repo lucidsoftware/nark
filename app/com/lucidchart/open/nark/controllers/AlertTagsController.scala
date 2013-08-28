@@ -1,9 +1,8 @@
 package com.lucidchart.open.nark.controllers
 
 import com.lucidchart.open.nark.request.{AppAction, AuthAction}
-import com.lucidchart.open.nark.models.{AlertModel, AlertTagModel, AlertTagSubscriptionModel}
-import com.lucidchart.open.nark.models.AlertTagConverter
-import com.lucidchart.open.nark.models.records.{AlertTagMap, Pagination}
+import com.lucidchart.open.nark.models.{AlertModel, AlertTagModel, AlertTagSubscriptionModel, TagConverter}
+import com.lucidchart.open.nark.models.records.{Alert, Pagination, TagMap}
 import com.lucidchart.open.nark.views
 import play.api.libs.json.Json
 
@@ -14,7 +13,7 @@ class AlertTagsController extends AppController {
 	 */
 	def tag(tag: String) = AuthAction.maybeAuthenticatedUser { implicit user =>
 		AppAction { implicit request =>
-			val alertIds = AlertTagModel.findAlertsByTag(tag).map(_.alertId)
+			val alertIds = AlertTagModel.findAlertsByTag(tag).map(_.recordId)
 			val alerts = AlertModel.findAlertByID(alertIds)
 			val subscriptions = AlertTagSubscriptionModel.getSubscriptionsByTag(tag)
 			Ok(views.html.alerttags.tag(tag, alerts, subscriptions))
@@ -29,8 +28,8 @@ class AlertTagsController extends AppController {
 			val realPage = page.max(1)
 			val (found, tags) = AlertTagModel.search(term, realPage - 1)
 			val alertTags = AlertTagModel.findAlertsByTag(tags.map{_.tag})
-			val alerts = AlertModel.findAlertByID(alertTags.map(_.alertId).distinct).filter(!_.deleted)
-			Ok(views.html.alerttags.search(term, Pagination[AlertTagMap](realPage, found, AlertTagModel.configuredLimit, List(AlertTagConverter.toTagMap(alertTags, alerts)))))
+			val alerts = AlertModel.findAlertByID(alertTags.map(_.recordId).distinct).filter(!_.deleted)
+			Ok(views.html.alerttags.search(term, Pagination[TagMap[Alert]](realPage, found, AlertTagModel.configuredLimit, List(TagConverter.toTagMap(alertTags, alerts)))))
 		}
 	}
 
@@ -41,7 +40,7 @@ class AlertTagsController extends AppController {
 		AppAction { implicit request =>
 			val (found, matches) = AlertTagModel.search(term + "%", 0)
 			Ok(Json.toJson(matches.map{ m =>
-				Json.obj("id" -> m.alertId.toString, "name" -> m.tag)
+				Json.obj("id" -> m.recordId.toString, "name" -> m.tag)
 			}))
 		}
 	}

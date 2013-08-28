@@ -47,7 +47,7 @@ case class Alert (
 	errorThreshold: BigDecimal,
 	worstState: AlertState.Value,
 	consecutiveFailures: Int
-) extends AppRecord {
+) extends AppRecord with HasId {
 	/**
 	 * Create a new Alert record for inserting into the database
 	 */

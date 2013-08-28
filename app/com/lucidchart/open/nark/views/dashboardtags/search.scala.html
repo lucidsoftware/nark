@@ -1,6 +1,6 @@
 @(
 	term: String,
-	pagination: com.lucidchart.open.nark.models.records.Pagination[com.lucidchart.open.nark.models.records.DashboardTagMap]
+	pagination: com.lucidchart.open.nark.models.records.Pagination[com.lucidchart.open.nark.models.records.TagMap[com.lucidchart.open.nark.models.records.Dashboard]]
 )(
 	implicit
 	request: com.lucidchart.open.nark.request.AppRequest[_],
@@ -31,7 +31,7 @@
 
 	<h3>Search Results</h3>
 	@helpers.paginationMaxPage(pagination.found, pagination.limit) { maxPage =>
-		@if(pagination.matches(0).tagMap.isEmpty) {
+		@if(pagination.matches(0).contents.isEmpty) {
 			<div class="alert alert-info">No tags were found using your search term.</div>
 		} else {
 			<div class="results">
@@ -44,7 +44,7 @@
 					</thead>
 					<tbody>
 						@pagination.matches.map { tagMap =>
-							@tagMap.tagMap.map { tag =>
+							@tagMap.contents.map { tag =>
 								<tr>
 									<td><a href="@narkRoutes.DashboardTagsController.tag(tag._1)" class="btn btn-mini">@tag._1</a></td>
 									<td>

@@ -1,6 +1,6 @@
 package com.lucidchart.open.nark.models
 
-import com.lucidchart.open.nark.models.records.{DashboardTag, DashboardTagMap}
+import com.lucidchart.open.nark.models.records.{Tag}
 import com.lucidchart.open.nark.models.records.Dashboard
 
 import java.util.UUID
@@ -16,7 +16,7 @@ class DashboardTagsModel extends AppModel {
 	protected val tagsRowParser =  {
 		get[UUID]("dashboard_id") ~
 		get[String]("tag") map {
-			case dashboardId ~ tag => new DashboardTag(dashboardId, tag)
+			case dashboardId ~ tag => new Tag(dashboardId, tag)
 		}
 	}
 
@@ -54,7 +54,7 @@ class DashboardTagsModel extends AppModel {
 	 * @param tag
 	 * @returns dashboardTags
 	 */
-	def findDashboardsWithTag(tag: String): List[DashboardTag] = {
+	def findDashboardsWithTag(tag: String): List[Tag] = {
 		findDashboardsWithTag(List(tag))
 	}
 
@@ -63,7 +63,7 @@ class DashboardTagsModel extends AppModel {
 	 * @param tag
 	 * @returns dashboardTags
 	 */
-	def findDashboardsWithTag(tags: List[String]): List[DashboardTag] = {
+	def findDashboardsWithTag(tags: List[String]): List[Tag] = {
 		if (tags.isEmpty) {
 			Nil
 		}
@@ -86,7 +86,7 @@ class DashboardTagsModel extends AppModel {
 	 * @param dashbaordId
 	 * @returns dashbaordTags
 	 */
-	def findTagsForDashboard(dashboardId: UUID) : List[DashboardTag] = {
+	def findTagsForDashboard(dashboardId: UUID) : List[Tag] = {
 		findTagsForDashboard(List(dashboardId))
 	}
 
@@ -95,7 +95,7 @@ class DashboardTagsModel extends AppModel {
 	 * @param dashbaordId
 	 * @returns tags
 	 */
-	def findTagsForDashboard(dashboardIds: List[UUID]) : List[DashboardTag] = {
+	def findTagsForDashboard(dashboardIds: List[UUID]) : List[Tag] = {
 		if(dashboardIds.isEmpty) {
 			Nil
 		}
@@ -146,38 +146,6 @@ class DashboardTagsModel extends AppModel {
 					"tag" -> tags.map(toParameterValue(_))
 				).toSQL.executeUpdate()(connection)
 			}
-		}
-	}
-}
-
-object DashboardTagConverter {
-	/**
-	 * Combine a list of dashboard tags and a list of dashboards into a map
-	 * of tag to list of matching dashboard pairs
-	 */
-	def toTagMap(tags: List[DashboardTag], dashboards: List[Dashboard]): DashboardTagMap = {
-		val dashboardsById = dashboards.map { a => (a.id, a) }.toMap
-		DashboardTagMap(
-			tags.map { tag =>
-				(tag, dashboardsById.get(tag.dashboardId))
-			}.collect {
-				case (tag, dashboardOption) if (dashboardOption.isDefined) => (tag, dashboardOption.get)
-			}.groupBy { case (tag, dashboard) =>
-				tag.tag
-			}.map { case (tag, tuples) =>
-				(tag, tuples.map(_._2))
-			}.toMap
-		)
-	}
-
-	/**
-	 * Find all the tags for each dashboard ID
-	 */
-	def toDashboardMap(tags: List[DashboardTag]): Map[UUID, List[String]] = {
-		tags.groupBy { tag =>
-			tag.dashboardId
-		}.map { case (dashboardId, tags) =>
-			(dashboardId, tags.map(_.tag))
 		}
 	}
 }

@@ -15,7 +15,7 @@ class DynamicAlertTagsController extends AppController {
 		AppAction { implicit request =>
 			val (found, matches) = DynamicAlertTagModel.search(term + "%", 0)
 			Ok(Json.toJson(matches.map{ m =>
-				Json.obj("id" -> m.alertId.toString, "name" -> m.tag)
+				Json.obj("id" -> m.recordId.toString, "name" -> m.tag)
 			}))
 		}
 	}

@@ -17,7 +17,7 @@ case class DynamicAlert (
 	frequency: Int,
 	warnThreshold: BigDecimal,
 	errorThreshold: BigDecimal
-) extends AppRecord {
+) extends AppRecord with HasId {
 	
 	/**
 	 * Create a new DynamicAlert record for inserting into the database

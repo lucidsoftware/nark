@@ -1,7 +1,7 @@
 package com.lucidchart.open.nark.controllers
 
 import com.lucidchart.open.nark.Global
-import com.lucidchart.open.nark.models.{AlertModel, AlertTagConverter, DynamicAlertModel, DynamicAlertTagModel, SubscriptionModel, UserModel}
+import com.lucidchart.open.nark.models.{AlertModel, DynamicAlertModel, DynamicAlertTagModel, SubscriptionModel, TagConverter, UserModel}
 import com.lucidchart.open.nark.models.records.{Comparisons, DynamicAlert, Pagination}
 import com.lucidchart.open.nark.request.{AppAction, AppFlash, AuthAction, DynamicAlertAction}
 import com.lucidchart.open.nark.views
@@ -123,7 +123,7 @@ class DynamicAlertsController extends AppController {
 		AppAction { implicit request =>
 			val realPage = page.max(1)
 			val (found, matches) = DynamicAlertModel.search(term, realPage - 1)
-			val tags = AlertTagConverter.toAlertMap(DynamicAlertTagModel.findTagsForAlert(matches.map{_.id}))
+			val tags = TagConverter.toTagMap(DynamicAlertTagModel.findTagsForAlert(matches.map{_.id}))
 			Ok(views.html.dynamicalerts.search(term, Pagination[DynamicAlert](realPage, found, DynamicAlertModel.configuredLimit, matches), tags))
 		}
 	}

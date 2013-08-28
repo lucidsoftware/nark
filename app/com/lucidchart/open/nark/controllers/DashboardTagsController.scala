@@ -2,10 +2,8 @@ package com.lucidchart.open.nark.controllers
 
 import com.lucidchart.open.nark.request.{AppFlash, AppAction, AuthAction, DashboardAction}
 import com.lucidchart.open.nark.views
-import com.lucidchart.open.nark.models.DashboardTagsModel
-import com.lucidchart.open.nark.models.DashboardModel
-import com.lucidchart.open.nark.models.DashboardTagConverter
-import com.lucidchart.open.nark.models.records.{DashboardTagMap, Pagination}
+import com.lucidchart.open.nark.models.{DashboardTagsModel, DashboardModel, TagConverter}
+import com.lucidchart.open.nark.models.records.{Dashboard, Pagination, TagMap}
 import com.lucidchart.open.nark.utils.StatsD
 import play.api.data._
 import play.api.data.Forms._
@@ -20,7 +18,7 @@ class DashboardTagsController extends AppController {
 	 */
 	def tag(name: String) = AuthAction.maybeAuthenticatedUser { implicit userOption =>
 		AppAction {implicit request =>
-			val dashboardIds = DashboardTagsModel.findDashboardsWithTag(name).map(_.dashboardId)
+			val dashboardIds = DashboardTagsModel.findDashboardsWithTag(name).map(_.recordId)
 			val dashboards = DashboardModel.findDashboardByID(dashboardIds).filter(!_.deleted)
 			Ok(views.html.dashboardtags.dashboardtag(name, dashboards))
 		}
@@ -34,8 +32,8 @@ class DashboardTagsController extends AppController {
 			val realPage = page.max(1)
 			val (found, tags) = DashboardTagsModel.search(term, realPage - 1)
 			val dashboardTags = DashboardTagsModel.findDashboardsWithTag(tags)
-			val dashboards = DashboardModel.findDashboardByID(dashboardTags.map(_.dashboardId).distinct).filter(!_.deleted)
-			Ok(views.html.dashboardtags.search(term, Pagination(realPage, found, DashboardModel.configuredLimit, List(DashboardTagConverter.toTagMap(dashboardTags, dashboards)))))
+			val dashboards = DashboardModel.findDashboardByID(dashboardTags.map(_.recordId).distinct).filter(!_.deleted)
+			Ok(views.html.dashboardtags.search(term, Pagination(realPage, found, DashboardModel.configuredLimit, List(TagConverter.toTagMap[Dashboard](dashboardTags, dashboards)))))
 		}
 	}
 

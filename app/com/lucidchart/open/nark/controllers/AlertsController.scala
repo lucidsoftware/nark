@@ -1,8 +1,7 @@
 package com.lucidchart.open.nark.controllers
 
-import com.lucidchart.open.nark.models.{AlertModel, AlertHistoryModel, AlertTagModel, SubscriptionModel, UserModel}
-import com.lucidchart.open.nark.models.AlertTagConverter
-import com.lucidchart.open.nark.models.records.{Alert, AlertHistory, Comparisons, AlertState, Pagination}
+import com.lucidchart.open.nark.models.{AlertModel, AlertHistoryModel, AlertTagModel, SubscriptionModel, TagConverter, UserModel}
+import com.lucidchart.open.nark.models.records.{Alert, AlertHistory, Comparisons, AlertState, Pagination, TagMap}
 import com.lucidchart.open.nark.request.{AlertAction, AppFlash, AppAction, AuthAction}
 import com.lucidchart.open.nark.views
 import com.lucidchart.open.nark.Global
@@ -110,7 +109,7 @@ object AlertsController extends AppController {
 		AppAction { implicit request =>
 			val realPage = page.max(1)
 			val (found, matches) = AlertModel.search(term, realPage - 1)
-			val tags = AlertTagConverter.toAlertMap(AlertTagModel.findTagsForAlert(matches.map{_.id}))
+			val tags = TagConverter.toTagMap(AlertTagModel.findTagsForAlert(matches.map{_.id}))
 			Ok(views.html.alerts.search(term, Pagination[Alert](realPage, found, AlertModel.configuredLimit, matches), tags))
 		}
 	}

@@ -10,7 +10,7 @@ case class Dashboard(
 	created: Date,
 	userId: UUID,
 	deleted: Boolean
-) extends AppRecord {
+) extends AppRecord with HasId{
 	/**
 	 * Create a new Dashboard record for inserting into the database
 	 */
