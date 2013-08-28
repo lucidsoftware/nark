@@ -77,6 +77,7 @@ POST 		/dynamicalert/:id/edit 					com.lucidchart.open.nark.controllers.DynamicA
 
 # Dynamic Alert Tags
 GET 		/dynamicalert/tags/searchjson 		com.lucidchart.open.nark.controllers.DynamicAlertTagsController.searchToJson(q: String ?= "")
+GET 		/dynamicalert/tags/search 				com.lucidchart.open.nark.controllers.DynamicAlertTagsController.search(term: String ?= "", page: Int ?= 1)
 
 # Subscription
 POST    /subscription/:type/:id/subscribe          com.lucidchart.open.nark.controllers.SubscriptionsController.subscribe(id: java.util.UUID, type: String)
