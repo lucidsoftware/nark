@@ -90,4 +90,35 @@ class DynamicAlertModel extends AppModel {
 			(found, matches)
 		}
 	}
+
+	/**
+	 * Get the dynamic alert specified by the uuid
+	 * @param id the uuid of the dynamic alert to get
+	 * @return the requested dynamic alert
+	 */
+	def findDynamicAlertByID(id: UUID): Option[DynamicAlert] = {
+		findDynamicAlertByID(List(id)).headOption
+	}
+
+	/**
+	 * Get the dynamic alerts specified by the uuids passed in
+	 * @param ids the ids of the dynamic alerts to get
+	 * @return the requested dynamic alerts
+	 */
+	def findDynamicAlertByID(ids: List[UUID]): List[DynamicAlert] = {
+		if (ids.isEmpty) {
+			Nil
+		}
+		else {
+			DB.withConnection("main") { connection =>
+				RichSQL("""
+					SELECT *
+					FROM `dynamic_alerts`
+					WHERE `id` IN ({ids})
+				""").onList(
+					"ids" -> ids
+				).toSQL.as(dynamicAlertsRowParser *)(connection)
+			}
+		}
+	}
 }

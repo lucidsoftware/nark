@@ -69,14 +69,16 @@ GET     /at/:tag                             com.lucidchart.open.nark.controller
 GET 		/dynamicalert/create 					com.lucidchart.open.nark.controllers.DynamicAlertsController.create()
 POST 		/dynamicalert/create 					com.lucidchart.open.nark.controllers.DynamicAlertsController.createSubmit()
 GET 		/dynamicalert/search 					com.lucidchart.open.nark.controllers.DynamicAlertsController.search(term: String ?= "term", page: Int ?= 1)
+GET 		/dynamicalert/:id/view 					com.lucidchart.open.nark.controllers.DynamicAlertsController.view(id: java.util.UUID)
+POST 		/dynamicalert/:id/edit 					com.lucidchart.open.nark.controllers.DynamicAlertsController.edit(id: java.util.UUID)
 
 # Dynamic Alert Tags
 GET 		/dynamicalert/tags/searchjson 		com.lucidchart.open.nark.controllers.DynamicAlertTagsController.searchToJson(q: String ?= "")
 
 # Subscription
-POST    /subscription/:id/subscribe          com.lucidchart.open.nark.controllers.SubscriptionsController.subscribe(id: java.util.UUID)
-POST    /subscription/:id/edit               com.lucidchart.open.nark.controllers.SubscriptionsController.edit(id: java.util.UUID, mySubscriptionsPage : Int ?= -1)
-POST    /subscription/:id/delete             com.lucidchart.open.nark.controllers.SubscriptionsController.delete(id: java.util.UUID)
+POST    /subscription/:type/:id/subscribe          com.lucidchart.open.nark.controllers.SubscriptionsController.subscribe(id: java.util.UUID, type: String)
+POST    /subscription/:type/:id/edit               com.lucidchart.open.nark.controllers.SubscriptionsController.edit(id: java.util.UUID, type: String, mySubscriptionsPage : Int ?= -1)
+POST    /subscription/:type/:id/delete             com.lucidchart.open.nark.controllers.SubscriptionsController.delete(id: java.util.UUID, type: String)
 
 # Tag Subscriptions
 POST    /tagsubscription/:tag/subscribe      com.lucidchart.open.nark.controllers.TagSubscriptionsController.subscribe(tag: String)

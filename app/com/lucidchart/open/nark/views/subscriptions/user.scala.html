@@ -42,7 +42,7 @@
 								<tbody>
 									@pagination.matches.map { subscription =>
 										<tr>
-											@helper.form(action=narkRoutes.SubscriptionsController.edit(subscription.alertOption.get.id, pagination.page)) {
+											@helper.form(action=narkRoutes.SubscriptionsController.edit(subscription.alertOption.get.id, "alert", pagination.page)) {
 											@helpers.csrfHiddenInput()
 											<input type="hidden" name="alert_type" value="@subscription.subscription.alertType.id" />
 											<input type="hidden" name="active" value="@(subscription.subscription.active == false)" />

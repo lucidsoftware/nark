@@ -1,11 +1,12 @@
 package com.lucidchart.open.nark.controllers
 
 import com.lucidchart.open.nark.Global
-import com.lucidchart.open.nark.models.{AlertTagConverter, DynamicAlertModel, DynamicAlertTagModel}
+import com.lucidchart.open.nark.models.{AlertModel, AlertTagConverter, DynamicAlertModel, DynamicAlertTagModel, SubscriptionModel, UserModel}
 import com.lucidchart.open.nark.models.records.{Comparisons, DynamicAlert, Pagination}
-import com.lucidchart.open.nark.request.{AppAction, AppFlash, AuthAction}
+import com.lucidchart.open.nark.request.{AppAction, AppFlash, AuthAction, DynamicAlertAction}
 import com.lucidchart.open.nark.views
 
+import java.util.UUID
 import play.api.data._
 import play.api.data.Forms._
 import play.api.data.format.Formats._
@@ -94,6 +95,32 @@ class DynamicAlertsController extends AppController {
 			val (found, matches) = DynamicAlertModel.search(term, realPage - 1)
 			val tags = AlertTagConverter.toAlertMap(DynamicAlertTagModel.findTagsForAlert(matches.map{_.id}))
 			Ok(views.html.dynamicalerts.search(term, Pagination[DynamicAlert](realPage, found, DynamicAlertModel.configuredLimit, matches), tags))
+		}
+	}
+
+	/**
+	 * View a dynamic alert
+	 * @param id the id of the dynamic alert to view
+	 */
+	def view(id: UUID) = AuthAction.maybeAuthenticatedUser { implicit user =>
+		DynamicAlertAction.existingAlert(id) { alert =>
+			AppAction { implicit request =>
+				val creator = UserModel.findUserByID(alert.userId)
+				val tags = DynamicAlertTagModel.findTagsForAlert(alert.id)
+				val subscriptions = SubscriptionModel.getSubscriptionsByAlert(alert.id)
+				val propagatedAlerts = AlertModel.findAlertByDynamicAlert(alert.id)
+				Ok(views.html.dynamicalerts.view(alert, propagatedAlerts, creator, tags, subscriptions))
+			}
+		}
+	}
+
+	/**
+	 * Edit a dynamic alert
+	 * @param id the id of the dynamic alert to edit
+	 */
+	def edit(id: UUID) = AuthAction.maybeAuthenticatedUser { implicit user =>
+		AppAction { implicit request =>
+			Redirect(routes.DynamicAlertsController.view(id)).flashing(AppFlash.error("Not yet implemented. Also, do the security thing"))
 		}
 	}
 }

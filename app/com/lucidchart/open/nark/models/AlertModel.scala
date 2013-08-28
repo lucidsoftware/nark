@@ -107,6 +107,23 @@ class AlertModel extends AppModel {
 	}
 
 	/**
+	 * Get all alerts propogated by a specific dynamic alert
+	 * @param dynamicAlertId the id of the dynamic alert to look for
+	 * @return the list of alerts
+	 */
+	def findAlertByDynamicAlert(id: UUID): List[Alert] = {
+		DB.withConnection("main") { connection =>
+			SQL("""
+				SELECT *
+				FROM `alerts`
+				WHERE `dynamic_alert_id`={id}
+			""").on(
+				"id" -> id
+			).as(alertsRowParser *)(connection)
+		}
+	}
+
+	/**
 	 * Search for alert records by a search term
 	 * @param name the search term to search by
 	 * @return a List of Alert records

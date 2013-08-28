@@ -1,9 +1,9 @@
 @(
-	alert: com.lucidchart.open.nark.models.records.Alert,
-	tags: List[com.lucidchart.open.nark.models.records.AlertTag],
+	alert: com.lucidchart.open.nark.models.records.DynamicAlert,
+	propagatedAlerts: List[com.lucidchart.open.nark.models.records.Alert],
 	ownerOption: Option[com.lucidchart.open.nark.models.records.User],
-	subscriptions: List[com.lucidchart.open.nark.models.records.SubscriptionRecord],
-	pagination: com.lucidchart.open.nark.models.records.Pagination[com.lucidchart.open.nark.models.records.AlertHistory]
+	tags: List[com.lucidchart.open.nark.models.records.AlertTag],
+	subscriptions: List[com.lucidchart.open.nark.models.records.SubscriptionRecord]
 )(
 	implicit
 	request: com.lucidchart.open.nark.request.AppRequest[_],
@@ -50,7 +50,7 @@
 		$(document).ready(function() {
 			var data = {
 				'seconds': 3600,
-				'target[0]': '@alert.target'
+				'target[0]': '@alert.searchTarget'
 			}
 
 			function addThresholdData(element, data) {
@@ -126,31 +126,31 @@
 			@if(userOption.isDefined) {
 				@defining(subscriptions.find { subscription => subscription.userOption.get.id == userOption.get.id }) { subscription =>
 					<td>
-						@helper.form(action=narkRoutes.AlertsController.edit(alert.id)) {
+						@helper.form(action=narkRoutes.DynamicAlertsController.edit(alert.id)) {
 							@helpers.csrfHiddenInput()
 							<input class="btn @if(ownerOption.isDefined && userOption.get.id != ownerOption.get.id){ disabled }" type="submit" @if(ownerOption.isDefined && userOption.get.id != ownerOption.get.id){ disabled } value='Manage Alert' />
 						}
 					</td>
 					@if(subscription.isDefined) {
 						<td>
-							@helper.form(action=narkRoutes.SubscriptionsController.edit(alert.id, "alert")) {
+							@helper.form(action=narkRoutes.SubscriptionsController.edit(alert.id, "dynamic")) {
 								@helpers.csrfHiddenInput()
-								<input name="alert_type" type="hidden" value="@AlertType.alert.id" />
+								<input name="alert_type" type="hidden" value="@AlertType.dynamicAlert.id" />
 								<input name="active" type="hidden" value="@(subscription.get.subscription.active == false)" />
 								<input class="btn" type="submit" value='@if(subscription.get.subscription.active) {Deactivate Subscription} else {Reactivate Subscription}' />
 							}
 						</td>
 						<td>
-							@helper.form(action=narkRoutes.SubscriptionsController.delete(alert.id, "alert")) {
+							@helper.form(action=narkRoutes.SubscriptionsController.delete(alert.id, "dynamic")) {
 								@helpers.csrfHiddenInput()
 								<input class="btn btn-danger" name="ignored" type="submit" value="Delete Subscription" />
 							}
 						</td>
 					} else {
 						<td>
-							@helper.form(action=narkRoutes.SubscriptionsController.subscribe(alert.id, "alert")) {
+							@helper.form(action=narkRoutes.SubscriptionsController.subscribe(alert.id, "dynamic")) {
 								@helpers.csrfHiddenInput()
-								<input name="alert_type" type="hidden" value="@AlertType.alert.id" />
+								<input name="alert_type" type="hidden" value="@AlertType.dynamicAlert.id" />
 								<input class="btn" type="submit" value="Subscribe to this Alert" />
 							}
 						</td>
@@ -163,7 +163,7 @@
 	</table>
 	<div>
 		<div id="info-container">
-			<h4>Alert Details</h4>
+			<h4>Dynamic Alert Details</h4>
 			<div>
 				<div class="row">
 					<div class="span1" />
@@ -176,7 +176,7 @@
 											<label><strong>Tags</strong></label>
 											<div class="info-group">
 												@tags.map{alertTag =>
-													<a href="@narkRoutes.AlertTagsController.tag(alertTag.tag)" class="btn btn-mini">@alertTag.tag</a>
+													<a href="" class="btn btn-mini">@alertTag.tag</a>
 												}
 											</div>
 										</div>
@@ -217,7 +217,7 @@
 			</div>
 		</div>
 	</div>
-	<h4>Alert Info</h4>
+	<h4>Dynamic Alert Info</h4>
 	<div>
 		<div class="row">
 			<div class="span1" />
@@ -227,31 +227,70 @@
 						<thead>
 							<tr>
 								<th>Alert Name</th>
-								<th>Target</th>
 								<th>Error</th>
 								<th>Warn</th>
 								<th>Comparison</th>
-								<th>Worst State</th>
 								<th>Active</th>
 							</tr>
 						</thead>
 						<tbody>
 							<tr>
 								<td>@alert.name</td>
-								<td>@alert.target</td>
 								<td>@alert.errorThreshold</td>
 								<td>@alert.warnThreshold</td>
 								<td>@alert.comparison</td>
-								<td>@alert.worstState.toString</td>
 								<td>@alert.active</td>
 							</tr>
 						</tbody>
 					</table>
+					<p><strong>Search Target: </strong>@alert.searchTarget</p>
+					<p><strong>Match Expression: </strong>@alert.matchExpr</p>
+					<p><strong>Build Target: </strong>@alert.buildTarget</p>
 				</div>
 			</div>
 		</div>
 	</div>
-	<h4>Alert Subscriptions</h4>
+	<h4>Propogated Alerts</h4>
+	<div>
+		<div class="row">
+			<div class="span1" />
+			<div class="span11">
+				<div class="well">
+					@if(propagatedAlerts.size == 0) {
+						<p class="lead text-info">There are no alerts from this dynamic alert.</p>
+					} else {
+						<table class="table">
+							<thead>
+								<tr>
+									<th>Alert Name</th>
+									<th>Target</th>
+									<th>Error</th>
+									<th>Warn</th>
+									<th>Comparison</th>
+									<th>Worst State</th>
+									<th>Active</th>
+								</tr>
+							</thead>
+							<tbody>
+								@propagatedAlerts.map { alert =>
+									<tr>
+										<td>@alert.name</td>
+										<td>@alert.target</td>
+										<td>@alert.errorThreshold</td>
+										<td>@alert.warnThreshold</td>
+										<td>@alert.comparison</td>
+										<td>@alert.worstState.toString</td>
+										<td>@alert.active</td>
+									</tr>
+								}
+							</tbody>
+						</table>
+					}
+				</div>
+			</div>
+		</div>
+	</div>
+	<h4>Dynamic Alert Subscriptions</h4>
 	<div>
 		<div class="row">
 			<div class="span1" />
@@ -283,40 +322,4 @@
 			</div>
 		</div>
 	</div>
-	<h4>Alert History</h4>
-	<div>
-		<div class="row">
-			<div class="span1" />
-			<div class="span11">
-				<div class="well">
- 					@if(pagination.matches.size == 0){
- 						<p class="lead text-info">This alert does not have any history yet.</p>
- 					} else {
-	 					@helpers.paginationMaxPage(pagination.found, pagination.limit) { maxPage =>
-		 					<table class="table">
-		 						<thead>
-		 							<tr>
-		 								<th>Date</th>
-		 								<th>State</th>
-		 								<th>Messages Sent</th>
-		 							</tr>
-		 						</thead>
-		 						<tbody>
-		 							@pagination.matches.map { history =>
-		 								<tr>
-		 									<td>@history.date</td>
-		 									<td>@history.state.toString</td>
-		 									<td>@history.messagesSent</td>
-		 								</tr>
-		 							}
-		 						</tbody>
-		 					</table>
-		 					@{ helpers.paginationLinks(pagination.page, maxPage) { i => narkRoutes.AlertsController.view(alert.id, i).toString } }
-		 				}
-	 				}
- 				</div>
-			</div>
-		</div>
-	</div>
-	<br />
 }

@@ -48,7 +48,7 @@
 					<tbody>
 						@pagination.matches.sortWith(_.name.toLowerCase < _.name.toLowerCase).map { alert =>
 							<tr>
-								<td><a href="">@alert.name</a></td>
+								<td><a href="@narkRoutes.DynamicAlertsController.view(alert.id)">@alert.name</a></td>
 								<td>@alert.searchTarget</td>
 								<td>@alert.errorThreshold</td>
 								<td>@alert.warnThreshold</td>
