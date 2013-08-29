@@ -87,7 +87,7 @@
 									<li class="divider"></li>
 									<li><a href="@narkRoutes.DashboardsController.search()">Search by Name</a></li>
 									<li><a href="@narkRoutes.DashboardTagsController.search()">Search by Tag</a></li>
-									<li><a href="@narkRoutes.DashboardsController.deleted()">Recover Deactivated</a></li>
+									<li><a href="@narkRoutes.DashboardsController.deleted()">Recover Deleted</a></li>
 									@defining(DashboardHistory.getHistory()) { history =>
 										@if(!history.isEmpty) {
 											<li class="divider"></li>

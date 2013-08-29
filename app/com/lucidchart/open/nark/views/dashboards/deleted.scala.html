@@ -14,7 +14,7 @@
 @import helper.twitterBootstrap._
 @import helper._
 
-@com.lucidchart.open.nark.views.html.layouts.main("Deactivated Dashboards", userOption = Some(user)) {
+@com.lucidchart.open.nark.views.html.layouts.main("Deleted Dashboards", userOption = Some(user)) {
 	<style type="text/css">
 		td form {
 			padding: 0;
@@ -22,12 +22,12 @@
 		}
 	</style>
 
-	<h3>Deactivated Dashboards</h3>
+	<h3>Deleted Dashboards</h3>
 	<br>
 	@helper.form(action=narkRoutes.DashboardsController.deleted()) {
 		<fieldset>
 			<div class="clearfix" id="search_field">
-				<label for="term">Search deactivated dashboards</label>
+				<label for="term">Search deleted dashboards</label>
 				<div class="input">
 					<input id="term" type="text" name="term" class="input-xlarge" placeholder="Vitals" value="@term" autofocus="true">
 					<span class="help-block">Use '%' as a wildcard.</span>
@@ -48,7 +48,7 @@
 						<tr>
 							<th>Dashboard Name</th>
 							<th>Tags</th>
-							<th>Activate</th>
+							<th>Recover</th>
 						</tr>
 					</thead>
 					<tbody>
@@ -65,7 +65,7 @@
 								<td>
 									@helper.form(action=narkRoutes.DashboardsController.activate(dashboard.id)) {
 										@helpers.csrfHiddenInput()
-										<button id="activate" class="btn btn-primary">Activate</button>
+										<button id="activate" class="btn btn-primary">Recover</button>
 									}
 								</td>
 							</tr>
@@ -74,7 +74,7 @@
 				</table>
 				@{ helpers.paginationLinks(pagination.page, maxPage) { i => narkRoutes.DashboardsController.deleted(term, i).toString } }
 			</div>
-			<p>These graphs are currently <span class="label label-important">deactivated</span>. They will not show up on the dashboard page. </p>
+			<p>These graphs are currently <span class="label label-important">deleted</span>. They will not show up on the dashboard page. </p>
 		}
 	}
 }

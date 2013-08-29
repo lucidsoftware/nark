@@ -211,11 +211,11 @@ class DashboardsController extends AppController {
 	/**
 	 * Deactivate a dashboard
 	 */
-	def deactivate(dashboardId: UUID) = AuthAction.authenticatedUser { implicit user =>
+	def delete(dashboardId: UUID) = AuthAction.authenticatedUser { implicit user =>
 		DashboardAction.dashboardManagementAccess(dashboardId, user.id) { dashboard =>
 			AppAction { implicit request =>
 				DashboardModel.editDashboard(dashboard.copy(deleted = true))
-				Redirect(routes.HomeController.index()).flashing(AppFlash.success("Dashboard was deactivated successfully."))
+				Redirect(routes.HomeController.index()).flashing(AppFlash.success("Dashboard was deleted successfully."))
 			}
 		}
 	}

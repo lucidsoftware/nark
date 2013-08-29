@@ -25,7 +25,7 @@ GET     /dashboard/sortGraphs/:uuid          com.lucidchart.open.nark.controller
 POST    /dashboard/sortGraphs/:uuid          com.lucidchart.open.nark.controllers.DashboardsController.sortGraphsSubmit(uuid: java.util.UUID)
 GET     /dashboard/edit/:uuid                com.lucidchart.open.nark.controllers.DashboardsController.edit(uuid: java.util.UUID)
 POST    /dashboard/edit/:uuid                com.lucidchart.open.nark.controllers.DashboardsController.editSubmit(uuid: java.util.UUID)
-POST    /dashboard/deactivate/:uuid          com.lucidchart.open.nark.controllers.DashboardsController.deactivate(uuid: java.util.UUID)
+POST    /dashboard/delete/:uuid          com.lucidchart.open.nark.controllers.DashboardsController.delete(uuid: java.util.UUID)
 POST    /dashboard/activate/:uuid            com.lucidchart.open.nark.controllers.DashboardsController.activate(uuid: java.util.UUID)
 GET     /d/:url                              com.lucidchart.open.nark.controllers.DashboardsController.dashboard(url: String)
 

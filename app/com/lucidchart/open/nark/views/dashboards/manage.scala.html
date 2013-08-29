@@ -23,11 +23,11 @@
 		<a href="@narkRoutes.DashboardsController.manageGraphsAndTargets(dashboard.id)" class="btn btn-primary">Manage Graphs &amp; Targets</a>
 		<a href="@narkRoutes.DashboardsController.sortGraphs(dashboard.id)" class="btn btn-primary">Sort Graphs</a>
 	</p>
-	@helper.form(action=narkRoutes.DashboardsController.deactivate(dashboard.id)) {
+	@helper.form(action=narkRoutes.DashboardsController.delete(dashboard.id)) {
 		@helpers.csrfHiddenInput()
 		<p>
-			If you don't want to see the dashboard anymore, you can deactivate it. This <strong>is</strong> a reversible operation.
-			<button id="deactivate" class="btn btn-danger">Deactivate</button>
+			If you don't want to see the dashboard anymore, you can delete it. This <strong>is</strong> a reversible operation.
+			<button id="delete" class="btn btn-danger">Delete</button>
 		</p>
 	}
 }
