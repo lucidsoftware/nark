@@ -2,7 +2,7 @@ package com.lucidchart.open.nark.controllers
 
 import com.lucidchart.open.nark.models.SubscriptionModel
 import com.lucidchart.open.nark.models.AlertTagSubscriptionModel
-import com.lucidchart.open.nark.models.records.{AlertType, Pagination, Subscription, SubscriptionRecord}
+import com.lucidchart.open.nark.models.records.{Alert, DynamicAlert, AlertType, Pagination, Subscription, SubscriptionRecord}
 import com.lucidchart.open.nark.request.{AppFlash, AppAction, AuthAction}
 import com.lucidchart.open.nark.views
 import java.util.UUID
@@ -92,7 +92,12 @@ object SubscriptionsController extends AppController {
 	 						Redirect(routes.DynamicAlertsController.view(alertId)).flashing(AppFlash.error("Unable to edit subscription"))
 	 					}
 	 				} else {
-	 					Redirect(routes.SubscriptionsController.allSubscriptionsForUser(mySubscriptionsPage)).flashing(AppFlash.error("Unable to edit subscription."))
+	 					if (alertType == "alert") {
+	 						Redirect(routes.SubscriptionsController.allSubscriptionsForUser(mySubscriptionsPage)).flashing(AppFlash.error("Unable to edit subscription."))
+	 					}
+	 					else {
+	 						Redirect(routes.SubscriptionsController.allDynamicAlertSubscriptionsForUser(mySubscriptionsPage)).flashing(AppFlash.error("Unable to edit subscription."))	
+	 					}
 	 				}
 	 			},
 	 			data => {
@@ -106,7 +111,12 @@ object SubscriptionsController extends AppController {
 	 						Redirect(routes.DynamicAlertsController.view(alertId)).flashing(AppFlash.success("Successfully saved changes."))
 	 					}
 	 				} else {
-	 					Redirect(routes.SubscriptionsController.allSubscriptionsForUser(mySubscriptionsPage)).flashing(AppFlash.success("Successfully saved changes."))
+	 					if (alertType == "alert") {
+	 						Redirect(routes.SubscriptionsController.allSubscriptionsForUser(mySubscriptionsPage)).flashing(AppFlash.success("Successfully saved changes."))
+	 					}
+	 					else {
+	 						Redirect(routes.SubscriptionsController.allDynamicAlertSubscriptionsForUser(mySubscriptionsPage)).flashing(AppFlash.success("Successfully saved changes."))
+	 					}
 	 				}
 	 			}
 	 		)
@@ -149,11 +159,19 @@ object SubscriptionsController extends AppController {
 	def allSubscriptionsForUser(page: Int) = AuthAction.authenticatedUser { implicit user =>
 		AppAction { implicit request =>
 			val realPage = page.max(1)
-			val (found, matches) = SubscriptionModel.getSubscriptionsByUser(user, realPage - 1)
-			val subscriptions = matches.filter { subscription =>
-				subscription.subscription.alertType == AlertType.alert
-			}
-			Ok(views.html.subscriptions.user(Pagination[SubscriptionRecord](realPage, found, SubscriptionModel.configuredLimit, subscriptions)))
+			val (found, subscriptions) = SubscriptionModel.getSubscriptionsByUser[Alert](user, realPage - 1, AlertType.alert)
+			Ok(views.html.subscriptions.user(Pagination[SubscriptionRecord[Alert]](realPage, found, SubscriptionModel.configuredLimit, subscriptions)))
+		}
+	}
+
+	/**
+	 * Get all dynamic alert subscriptions for a user
+	 */
+	def allDynamicAlertSubscriptionsForUser(page: Int) = AuthAction.authenticatedUser { implicit user =>
+		AppAction { implicit request =>
+			val realPage = page.max(1)
+			val (found, subscriptions) = SubscriptionModel.getSubscriptionsByUser[DynamicAlert](user, realPage - 1, AlertType.dynamicAlert)
+			Ok(views.html.dasubscriptions.user(Pagination[SubscriptionRecord[DynamicAlert]](realPage, found, SubscriptionModel.configuredLimit, subscriptions)))
 		}
 	}
 

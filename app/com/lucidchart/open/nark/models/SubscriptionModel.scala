@@ -3,7 +3,7 @@ package com.lucidchart.open.nark.models
 import anorm._
 import anorm.SqlParser._
 import AnormImplicits._
-import com.lucidchart.open.nark.models.records.{Subscription, SubscriptionRecord, AlertType, User}
+import com.lucidchart.open.nark.models.records.{HasId, Subscription, SubscriptionRecord, AlertType, User}
 import java.util.UUID
 import play.api.Play.current
 import play.api.Play.configuration
@@ -82,14 +82,14 @@ class SubscriptionModel extends AppModel {
 	 * Get all subscriptions for a certain alert
 	 * @param id the id of the Alert for which to find subscriptions
 	 */
-	def getSubscriptionsByAlert(id: UUID): List[SubscriptionRecord] = {
+	def getSubscriptionsByAlert(id: UUID) = {
 		getSubscriptionsByAlerts(List(id))
 	}
 	/**
 	 * Get all subscriptions for specified alerts
 	 * @param id the id of the Alert for which to find subscriptions
 	 */
-	def getSubscriptionsByAlerts(ids: List[UUID]): List[SubscriptionRecord] = {
+	def getSubscriptionsByAlerts(ids: List[UUID]) = {
 		if(ids.isEmpty) {
 			Nil
 		}
@@ -124,25 +124,28 @@ class SubscriptionModel extends AppModel {
 	 /**
 	 * Get all subscriptions for a certain user
 	 * @param id the id of the User for which to find subscriptions
+	 * @param page the page of subscriptions to retur
+	 * @param alertType the type of alert subscription to look for
 	 */
-	def getSubscriptionsByUser(user: User, page:Int) = {
+	def getSubscriptionsByUser[T <: HasId](user: User, page: Int, alertType: AlertType.Value): (Long, List[SubscriptionRecord[T]]) = {
 		DB.withConnection("main") { connection =>
 			val found = SQL("""
 				SELECT COUNT(1) FROM `alert_subscriptions`
-				WHERE `user_id` = {user_id}
+				WHERE `user_id` = {user_id} AND `alert_type`={alert_type}
 			""").on(
-				"user_id" -> user.id
+				"user_id" -> user.id,
+				"alert_type" -> alertType.id
 			).as(scalar[Long].single)(connection)
-
 
 			val subscriptions = SQL("""
 				SELECT *
 				FROM `alert_subscriptions`
-				WHERE `user_id` = {user_id}
+				WHERE `user_id` = {user_id} AND `alert_type`={alert_type}
 				ORDER BY `alert_id` ASC
 				LIMIT {limit} OFFSET {offset}
 			""").on(
 				"user_id" -> user.id,
+				"alert_type" -> alertType.id,
 				"limit" -> configuredLimit,
 				"offset" -> configuredLimit * page
 			).as(subscriptionsRowParser *)(connection)
@@ -152,11 +155,16 @@ class SubscriptionModel extends AppModel {
 			}
 			else {
 				val alertIds = subscriptions.map(_.alertId)
-				val alerts = AlertModel.findAlertByID(alertIds).map { alert => (alert.id, alert) }.toMap
+				val alerts = if (alertType == AlertType.alert) {
+					AlertModel.findAlertByID(alertIds).map { alert => (alert.id, alert) }.toMap
+				}
+				else {
+					DynamicAlertModel.findDynamicAlertByID(alertIds).map { alert => (alert.id, alert) }.toMap
+				}
 				val subscriptionRecords = subscriptions.map { subscription =>
-					SubscriptionRecord(
+					SubscriptionRecord[T](
 						subscription,
-						alerts.get(subscription.alertId),
+						alerts.get(subscription.alertId).asInstanceOf[Option[T]],
 						Some(user)
 					)
 				}

@@ -3,7 +3,7 @@
 	propagatedAlerts: List[com.lucidchart.open.nark.models.records.Alert],
 	ownerOption: Option[com.lucidchart.open.nark.models.records.User],
 	tags: List[com.lucidchart.open.nark.models.records.Tag],
-	subscriptions: List[com.lucidchart.open.nark.models.records.SubscriptionRecord]
+	subscriptions: List[com.lucidchart.open.nark.models.records.SubscriptionRecord[com.lucidchart.open.nark.models.records.Alert]]
 )(
 	implicit
 	request: com.lucidchart.open.nark.request.AppRequest[_],

@@ -97,6 +97,7 @@ POST    /dtsubscription/:tag/delete         com.lucidchart.open.nark.controllers
 
 # User Pages
 GET     /user/subscriptions                  com.lucidchart.open.nark.controllers.SubscriptionsController.allSubscriptionsForUser(page: Int ?= 1)
+GET     /user/dasubscriptions                  com.lucidchart.open.nark.controllers.SubscriptionsController.allDynamicAlertSubscriptionsForUser(page: Int ?= 1)
 GET     /user/datagsubscriptions               com.lucidchart.open.nark.controllers.DynamicAlertTagSubscriptionsController.allSubscriptionsForUser(page: Int ?= 1)
 GET     /user/tagsubscriptions               com.lucidchart.open.nark.controllers.TagSubscriptionsController.allSubscriptionsForUser(page: Int ?= 1)
 GET     /user/addresses                      com.lucidchart.open.nark.controllers.UsersController.addresses()

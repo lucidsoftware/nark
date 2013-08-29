@@ -1,5 +1,5 @@
 @(
-	pagination: com.lucidchart.open.nark.models.records.Pagination[com.lucidchart.open.nark.models.records.SubscriptionRecord[com.lucidchart.open.nark.models.records.Alert]]
+	pagination: com.lucidchart.open.nark.models.records.Pagination[com.lucidchart.open.nark.models.records.SubscriptionRecord[com.lucidchart.open.nark.models.records.DynamicAlert]]
 )(
 	implicit
 	request: com.lucidchart.open.nark.request.AppRequest[_],
@@ -17,7 +17,7 @@
 			margin-left: 10px;
 		}
 	</style>
-	<h3>Alert Subscriptions</h3>
+	<h3>Dynamic Alert Subscriptions</h3>
 	@helpers.paginationMaxPage(pagination.found, pagination.limit) { maxPage =>
 		<div>
 			<div class="row">
@@ -25,33 +25,31 @@
 				<div class="span11">
 					<div class="well">
 						@if(pagination.matches.size == 0){
-							<p class="lead text-info">You have no alert subscriptions.</p>
+							<p class="lead text-info">You have no dynamic alert subscriptions.</p>
 						} else {
 							<table class="table">
 								<thead>
 									<tr>
 										<th>Alert Name</th>
-										<th>Target</th>
+										<th>Search Target</th>
 										<th>Error</th>
 										<th>Warn</th>
 										<th>Comparison</th>
-										<th>Worst State</th>
 										<th>Active</th>
 									</tr>
 								</thead>
 								<tbody>
 									@pagination.matches.map { subscription =>
 										<tr>
-											@helper.form(action=narkRoutes.SubscriptionsController.edit(subscription.alertOption.get.id, "alert", pagination.page)) {
+											@helper.form(action=narkRoutes.SubscriptionsController.edit(subscription.alertOption.get.id, "dynamic", pagination.page)) {
 											@helpers.csrfHiddenInput()
 											<input type="hidden" name="alert_type" value="@subscription.subscription.alertType.id" />
 											<input type="hidden" name="active" value="@(subscription.subscription.active == false)" />
-												<td><a href="@narkRoutes.AlertsController.view(subscription.alertOption.get.id)">@subscription.alertOption.get.name</a></td>
-												<td>@subscription.alertOption.get.target</td>
+												<td><a href="@narkRoutes.DynamicAlertsController.view(subscription.alertOption.get.id)">@subscription.alertOption.get.name</a></td>
+												<td>@subscription.alertOption.get.searchTarget</td>
 												<td>@subscription.alertOption.get.errorThreshold</td>
 												<td>@subscription.alertOption.get.warnThreshold</td>
 												<td>@subscription.alertOption.get.comparison</td>
-												<td>@subscription.alertOption.get.worstState.toString</td>
 												<td><input class="btn" type="submit" value="@if(subscription.subscription.active){Deactivate Subscription} else {Reactivate Subscription}" /></td>
 											}
 										</tr>
@@ -63,6 +61,6 @@
 				</div>
 			</div>
 		</div>
-		@{ helpers.paginationLinks(pagination.page, maxPage) { i => narkRoutes.SubscriptionsController.allSubscriptionsForUser(i).toString } }
+		@{ helpers.paginationLinks(pagination.page, maxPage) { i => narkRoutes.SubscriptionsController.allDynamicAlertSubscriptionsForUser(i).toString } }
 	}
 }
