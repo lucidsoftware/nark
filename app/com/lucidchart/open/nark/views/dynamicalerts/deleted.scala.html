@@ -1,0 +1,80 @@
+@(
+	term: String,
+	pagination: com.lucidchart.open.nark.models.records.Pagination[com.lucidchart.open.nark.models.records.DynamicAlert],
+	tags: Map[java.util.UUID, List[String]]
+)(
+	implicit
+	request: com.lucidchart.open.nark.request.AppRequest[_],
+	user: com.lucidchart.open.nark.models.records.User
+)
+@import com.lucidchart.open.nark.controllers.{routes=>narkRoutes}
+@import com.lucidchart.open.nark.views
+@import com.lucidchart.open.nark.views.html.helpers
+@import play.api.libs.json.Json
+@import helper.twitterBootstrap._
+@import helper._
+
+@com.lucidchart.open.nark.views.html.layouts.main("Deleted Dynamic Alerts", userOption = Some(user)) {
+	<style type="text/css">
+		td form {
+			padding: 0;
+			margin: 0;
+		}
+	</style>
+
+	<h3>Deleted Dynamic Alerts</h3>
+	<br>
+	@helper.form(action=narkRoutes.DynamicAlertsController.deleted()) {
+		<fieldset>
+			<div class="clearfix" id="search_field">
+				<label for="term">Search deleted dynamic alerts</label>
+				<div class="input">
+					<input id="term" type="text" name="term" class="input-xlarge" placeholder="Vitals" value="@term" autofocus="true">
+					<span class="help-block">Use '%' as a wildcard.</span>
+				</div>
+			</div>
+			<button id="search" class="btn btn-primary">Search</button>
+		</fieldset>
+	}
+
+	<h3>Search Results</h3>
+	@helpers.paginationMaxPage(pagination.found, pagination.limit) { maxPage =>
+		@if(pagination.matches.isEmpty) {
+			<div class="alert alert-info">No dynamic alerts were found using your search term.</div>
+		} else {
+			<div class="results">
+				<table class="table table-bordered table-hover">
+					<thead>
+						<tr>
+							<th>Dynamic Alert Name</th>
+							<th>Tags</th>
+							<th>Recover</th>
+						</tr>
+					</thead>
+					<tbody>
+						@pagination.matches.sortWith(_.name.toLowerCase < _.name.toLowerCase).map { alert =>
+							<tr>
+								<td>@alert.name</td>
+								<td>
+									@if(tags contains alert.id) {
+										@tags.get(alert.id).get.map{ tag =>
+											<a href="@narkRoutes.DynamicAlertTagsController.tag(tag)" class="btn btn-mini">@tag</a>
+										}
+									}
+								</td>
+								<td>
+									@helper.form(action=narkRoutes.DynamicAlertsController.recover(alert.id)) {
+										@helpers.csrfHiddenInput()
+										<button id="activate" class="btn btn-primary">Recover</button>
+									}
+								</td>
+							</tr>
+						}
+					</tbody>
+				</table>
+				@{ helpers.paginationLinks(pagination.page, maxPage) { i => narkRoutes.DynamicAlertsController.deleted(term, i).toString } }
+			</div>
+			<p>These dynamic alerts are currently <span class="label label-important">deleted</span>. They will not show up on the dynamic alert page. </p>
+		}
+	}
+}

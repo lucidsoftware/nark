@@ -202,13 +202,25 @@ class DynamicAlertsController extends AppController {
 	}
 
 	/**
+	 * Deleted dynamic alerts
+	 */
+	def deleted(term: String, page: Int) = AuthAction.authenticatedUser { implicit user =>
+		AppAction { implicit request =>
+			val realPage = page.max(1)
+			val (found, matches) = DynamicAlertModel.searchDeleted(user.id, term, realPage - 1)
+			val tags = TagConverter.toTagMap(DynamicAlertTagModel.findTagsForAlert(matches.map(_.id)))
+			Ok(views.html.dynamicalerts.deleted(term, Pagination[DynamicAlert](realPage, found, DynamicAlertModel.configuredLimit, matches), tags))
+		}
+	}
+
+	/**
 	 * Recover a dynamic alert
 	 */
 	def recover(alertId: UUID) = AuthAction.authenticatedUser { implicit user =>
 		DynamicAlertAction.alertManagementAccess(alertId, user.id, allowDeleted = true) { alert =>
 			AppAction { implicit request =>
 				DynamicAlertModel.editDynamicAlert(alert.copy(deleted = false))
-				Redirect(routes.DynamicAlertsController.view(alertId)).flashing(AppFlash.success("Dynamic alert was recovered successfully."))
+				Redirect(routes.DynamicAlertsController.edit(alertId)).flashing(AppFlash.success("Dynamic alert was recovered successfully."))
 			}
 		}
 	}
