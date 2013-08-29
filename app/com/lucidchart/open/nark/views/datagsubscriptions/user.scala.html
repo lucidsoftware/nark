@@ -1,0 +1,64 @@
+@(
+	pagination: com.lucidchart.open.nark.models.records.Pagination[com.lucidchart.open.nark.models.records.AlertTagSubscriptionRecord],
+	tagAlerts: com.lucidchart.open.nark.models.records.TagMap[com.lucidchart.open.nark.models.records.DynamicAlert]
+)(
+	implicit
+	request: com.lucidchart.open.nark.request.AppRequest[_],
+	user: com.lucidchart.open.nark.models.records.User
+)
+@import com.lucidchart.open.nark.controllers.{routes=>narkRoutes}
+@import com.lucidchart.open.nark.models.records.AlertType
+@import com.lucidchart.open.nark.views.html.helpers
+@import helper._
+
+@com.lucidchart.open.nark.views.html.layouts.main("Subscriptions", userOption = Some(user)) {
+	<style type="text/css">
+		a.btn {
+			margin-left: 10px;
+		}
+	</style>
+	<h3>Dynamic Alert Tag Subscriptions</h3>
+	@helpers.paginationMaxPage(pagination.found, pagination.limit) { maxPage =>
+		<div>
+			<div class="row">
+				<div class="span1" />
+				<div class="span11">
+					<div class="well">
+						@if(pagination.matches.size == 0){
+							<p class="lead text-info">You have no tag subscriptions.</p>
+						} else {
+							<table class="table">
+								<thead>
+									<tr>
+										<th>Tag</th>
+										<th>Dynamic Alerts</th>
+										<th>Active</th>
+									</tr>
+								</thead>
+								<tbody>
+									@pagination.matches.map {subscription =>
+										<tr>
+											@helper.form(action=narkRoutes.DynamicAlertTagSubscriptionsController.edit(subscription.subscription.tag, pagination.page)) {
+											@helpers.csrfHiddenInput()
+											<input type="hidden" name="active" value="@(subscription.subscription.active == false)" />
+												<td><a href="@narkRoutes.DynamicAlertTagsController.tag(subscription.subscription.tag)" class="btn btn-mini">@subscription.subscription.tag</a></td>
+												<td>
+													@tagAlerts.contents(subscription.subscription.tag).map { alert =>
+														<a href="@narkRoutes.DynamicAlertsController.view(alert.id)" class="btn btn-mini btn-info">@alert.name</a>
+													}
+												</td>
+												<td><input class="btn" type="submit" value="@if(subscription.subscription.active){Deactivate Subscription} else {Reactivate Subscription}" /></td>
+											}
+										</tr>
+									}
+								</tbody>
+							</table>
+						}
+					</div>
+				</div>
+			</div>
+		</div>
+		@{ helpers.paginationLinks(pagination.page, maxPage) { i => narkRoutes.DynamicAlertTagSubscriptionsController.allSubscriptionsForUser(i).toString } }
+	}
+
+}

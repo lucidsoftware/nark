@@ -1,8 +1,9 @@
 package com.lucidchart.open.nark.controllers
 
-import com.lucidchart.open.nark.models.{DynamicAlertTagSubscriptionModel}
-import com.lucidchart.open.nark.models.records.{AlertTagSubscription}
+import com.lucidchart.open.nark.models.{DynamicAlertModel, DynamicAlertTagModel, DynamicAlertTagSubscriptionModel, TagConverter}
+import com.lucidchart.open.nark.models.records.{AlertTagSubscription, AlertTagSubscriptionRecord, DynamicAlert, Pagination}
 import com.lucidchart.open.nark.request.{AppFlash, AppAction, AuthAction}
+import com.lucidchart.open.nark.views
 
 import play.api.data._
 import play.api.data.Forms._
@@ -55,7 +56,7 @@ class DynamicAlertTagSubscriptionsController extends AppController {
 					if(mySubscriptionsPage < 1) {
 						Redirect(routes.DynamicAlertTagsController.tag(tag)).flashing(AppFlash.error("Unable to edit subscription."))
 					} else {
-						Redirect(routes.TagSubscriptionsController.allSubscriptionsForUser(mySubscriptionsPage)).flashing(AppFlash.error("Unable to edit subscription."))
+						Redirect(routes.DynamicAlertTagSubscriptionsController.allSubscriptionsForUser(mySubscriptionsPage)).flashing(AppFlash.error("Unable to edit subscription."))
 					}
 				},
 				data => {
@@ -64,7 +65,7 @@ class DynamicAlertTagSubscriptionsController extends AppController {
 					if(mySubscriptionsPage < 1) {
 						Redirect(routes.DynamicAlertTagsController.tag(tag)).flashing(AppFlash.success("Successfully saved changes."))
  					} else {
-						Redirect(routes.TagSubscriptionsController.allSubscriptionsForUser(mySubscriptionsPage)).flashing(AppFlash.success("Successfully saved changes."))
+						Redirect(routes.DynamicAlertTagSubscriptionsController.allSubscriptionsForUser(mySubscriptionsPage)).flashing(AppFlash.success("Successfully saved changes."))
 					}
 	 			}
 	 		)
@@ -86,6 +87,19 @@ class DynamicAlertTagSubscriptionsController extends AppController {
 					Redirect(routes.DynamicAlertTagsController.tag(tag)).flashing(AppFlash.success("Successfully deleted subscription."))
 				}
 			)
+		}
+	}
+
+	/**
+	 * Get all subscriptions for a user
+	 */
+	def allSubscriptionsForUser(page: Int) = AuthAction.authenticatedUser { implicit user =>
+		AppAction { implicit request =>
+			val realPage = page.max(1)
+			val (found, tagSubscriptions) = DynamicAlertTagSubscriptionModel.getSubscriptionsByUser(user, realPage - 1)
+			val tags = DynamicAlertTagModel.findAlertsByTag(tagSubscriptions.map{ts => ts.subscription.tag})
+			val alerts = DynamicAlertModel.findDynamicAlertByID(tags.map{tag => tag.recordId}.distinct)
+			Ok(views.html.datagsubscriptions.user(Pagination[AlertTagSubscriptionRecord](realPage, found, DynamicAlertTagSubscriptionModel.configuredLimit, tagSubscriptions), TagConverter.toTagMap[DynamicAlert](tags, alerts)))
 		}
 	}
 }
