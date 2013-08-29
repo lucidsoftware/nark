@@ -186,13 +186,25 @@ object AlertsController extends AppController {
 	}
 
 	/**
+	 * Deleted alerts
+	 */
+	def deleted(term: String, page: Int) = AuthAction.authenticatedUser { implicit user =>
+		AppAction { implicit request =>
+			val realPage = page.max(1)
+			val (found, matches) = AlertModel.searchDeleted(user.id, term, realPage - 1)
+			val tags = TagConverter.toTagMap(AlertTagModel.findTagsForAlert(matches.map(_.id)))
+			Ok(views.html.alerts.deleted(term, Pagination[Alert](realPage, found, AlertModel.configuredLimit, matches), tags))
+		}
+	}
+
+	/**
 	 * Recover an alert
 	 */
 	def recover(alertId: UUID) = AuthAction.authenticatedUser { implicit user =>
 		AlertAction.alertManagementAccess(alertId, user.id, allowDeleted = true) { alert =>
 			AppAction { implicit request =>
 				AlertModel.editAlert(alert.copy(deleted = false))
-				Redirect(routes.AlertsController.view(alertId)).flashing(AppFlash.success("Alert was recovered successfully."))
+				Redirect(routes.AlertsController.edit(alertId)).flashing(AppFlash.success("Alert was recovered successfully."))
 			}
 		}
 	}

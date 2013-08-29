@@ -153,6 +153,39 @@ class AlertModel extends AppModel {
 	}
 
 	/**
+	 * Get all deleted alerts for a user
+	 * @param userId the id of the user
+	 * @param name the name of the alert to search for
+	 * @param page the page of deleted alerts to return
+	 * @return the number of matching alerts and a list of matching alerts
+	 */
+	def searchDeleted(userId: UUID, name: String, page: Int): (Long, List[Alert]) = {
+		DB.withConnection("main") { connection =>
+			val found = SQL("""
+				SELECT COUNT(1) FROM `alerts`
+				WHERE `name` LIKE {name} AND `deleted` = TRUE AND `user_id` = {user_id}
+			""").on(
+				"name" -> name,
+				"user_id" -> userId
+			).as(scalar[Long].single)(connection)
+
+			val matches = SQL("""
+				SELECT * FROM `alerts`
+				WHERE `name` LIKE {name} AND `deleted` = TRUE AND `user_id` = {user_id}
+				ORDER BY `name` ASC
+				LIMIT {limit} OFFSET {offset}
+			""").on(
+				"name" -> name,
+				"user_id" -> userId,
+				"limit" -> configuredLimit,
+				"offset" -> configuredLimit * page
+			).as(alertsRowParser *)(connection)
+
+			(found, matches)
+		}
+	}
+
+	/**
 	 * Edit an alert in the database
 	 * @param alert the edited values
 	 */

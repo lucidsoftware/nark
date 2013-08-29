@@ -203,7 +203,7 @@ class DashboardsController extends AppController {
 		DashboardAction.dashboardManagementAccess(dashboardId, user.id, allowDeleted = true) { dashboard =>
 			AppAction { implicit request =>
 				DashboardModel.editDashboard(dashboard.copy(deleted = false))
-				Redirect(routes.DashboardsController.manage(dashboardId)).flashing(AppFlash.success("Dashboard was activated successfully."))
+				Redirect(routes.DashboardsController.manage(dashboardId)).flashing(AppFlash.success("Dashboard was recovered successfully."))
 			}
 		}
 	}

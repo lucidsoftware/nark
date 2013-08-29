@@ -59,6 +59,7 @@ POST    /alert/:uuid/delete              com.lucidchart.open.nark.controllers.Al
 GET     /alert/:uuid/view                    com.lucidchart.open.nark.controllers.AlertsController.view(uuid: java.util.UUID, page: Int ?= 1)
 GET     /alert/:uuid/edit                    com.lucidchart.open.nark.controllers.AlertsController.edit(uuid: java.util.UUID)
 POST    /alert/:uuid/edit                    com.lucidchart.open.nark.controllers.AlertsController.editSubmit(uuid: java.util.UUID)
+GET 		/alerts/deleted 							com.lucidchart.open.nark.controllers.AlertsController.deleted(term: String ?= "", page: Int ?= 1)
 
 # Alert Tags
 GET     /alert/tags/searchjson               com.lucidchart.open.nark.controllers.AlertTagsController.searchToJson(q: String ?= "")
