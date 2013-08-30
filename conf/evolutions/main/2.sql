@@ -73,6 +73,7 @@ CREATE TABLE `alerts` (
 	`active` BOOLEAN NOT NULL,
 	`deleted` BOOLEAN NOT NULL,
 	`created` DATETIME NOT NULL,
+	`updated` DATETIME NOT NULL,
 	`thread_id` BINARY(16),
 	`thread_start` DATETIME,
 	`last_checked` DATETIME NOT NULL,
@@ -88,7 +89,9 @@ CREATE TABLE `alerts` (
 	KEY `worker` (`active`, `deleted`, `thread_id`, `next_check`, `id`),
 	KEY `worst_state` (`worst_state`, `last_checked`),
 	KEY `deleted` (`deleted`),
-	KEY `active` (`active`)
+	KEY `active` (`active`),
+	KEY `target` (`dynamic_alert_id`, `target` (100)),
+	KEY `updated` (`dynamic_alert_id`, `updated`)
 ) ENGINE=InnoDB CHARSET=utf8 COLLATE=utf8_general_ci;
 
 CREATE TABLE `alert_subscriptions` (

@@ -28,16 +28,26 @@ class SubscriptionModel extends AppModel {
 	 * @param subscription the Subscription to create
 	 */
 	def createSubscription(subscription: Subscription) {
-		DB.withConnection("main") { connection =>
-			SQL("""
-				INSERT INTO `alert_subscriptions` (`user_id`, `alert_id`, `alert_type`, `active`)
-				VALUES ({user_id}, {alert_id}, {alert_type}, {active})
-			""").on(
-				"user_id" -> subscription.userId,
-				"alert_id" -> subscription.alertId,
-				"alert_type" -> subscription.alertType.id,
-				"active" -> subscription.active
-			).executeUpdate()(connection)
+		createSubscriptions(List(subscription))
+	}
+
+	/**
+	 * Create multiple new subscriptions in the database
+	 * @param subscriptions the subscriptions to create
+	 */
+	def createSubscriptions(subscriptions: List[Subscription]): Unit = {
+		if (subscriptions.size > 0) {
+			DB.withConnection("main") { connection =>
+				RichSQL("""
+					INSERT IGNORE INTO `alert_subscriptions` (`user_id`, `alert_id`, `alert_type`, `active`)
+					VALUES ({fields})
+				""").multiInsert(subscriptions.size, Seq("user_id", "alert_id", "alert_type", "active"))(
+					"user_id" -> subscriptions.map(s => toParameterValue(s.userId)),
+					"alert_id" -> subscriptions.map(s => toParameterValue(s.alertId)),
+					"alert_type" -> subscriptions.map(s => toParameterValue(s.alertType.id)),
+					"active" -> subscriptions.map(s => toParameterValue(s.active))
+				).toSQL.executeUpdate()(connection)
+			}
 		}
 	}
 
@@ -75,6 +85,53 @@ class SubscriptionModel extends AppModel {
 				"alert_id" -> alertId,
 				"user_id" -> userId
 			).executeUpdate()(connection)
+		}
+	}
+
+	/**
+	 * Delete all subscriptions to an alert
+	 * @param alertId the id of the alert to delete
+	 */
+	def deleteSubscriptionsByAlert(alertId: UUID) {
+		DB.withConnection("main") { connection =>
+			SQL("""
+				DELETE FROM `alert_subscriptions`
+				WHERE `alert_id`={alert_id}
+			""").on(
+				"alert_id" -> alertId
+			).executeUpdate()(connection)
+		}
+	}
+
+	/**
+	 * Delete all subscriptions to a list of alerts
+	 * @param alertIds the ids of the alerts to delete
+	 */
+	def deleteSubscriptionsByAlert(alertIds: List[UUID]) {
+		if (alertIds.size > 0) {
+			DB.withConnection("main") { connection =>
+				RichSQL("""
+					DELETE FROM `alert_subscriptions`
+					WHERE `alert_id` IN ({alert_ids})
+				""").onList(
+					"alert_ids" -> alertIds
+				).toSQL.executeUpdate()(connection)
+			}
+		}
+	}
+
+	def deleteSubscriptions(alertId: UUID, userIds: List[UUID]) = {
+		if (userIds.size > 0) {
+			DB.withConnection("main") { connection =>
+				RichSQL("""
+					DELETE FROM `alert_subscriptions`
+					WHERE `alert_id` = {alert_id} AND `user_id` IN ({user_ids}) 
+				""").onList(
+					"user_ids" -> userIds
+				).toSQL.on(
+					"alert_id" -> alertId
+				).executeUpdate()(connection)
+			}
 		}
 	}
 

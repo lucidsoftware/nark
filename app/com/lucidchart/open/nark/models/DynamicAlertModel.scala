@@ -156,6 +156,20 @@ class DynamicAlertModel extends AppModel {
 	}
 
 	/**
+	 * Get all active non deleted dynamic alerts
+	 * @return the list of active non deleted dynamic alerts
+	 */
+	def findActiveDynamicAlerts(): List[DynamicAlert] = {
+		DB.withConnection("main") { connection =>
+			SQL("""
+				SELECT *
+				FROM `dynamic_alerts`
+				WHERE `active` = TRUE AND `deleted` = FALSE
+			""").as(dynamicAlertsRowParser *)(connection)
+		}
+	}
+
+	/**
 	 * Edit a particular dynamic alert
 	 * @param alert the edited alert
 	 */

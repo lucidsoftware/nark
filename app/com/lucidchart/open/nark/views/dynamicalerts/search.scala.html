@@ -54,8 +54,10 @@
 								<td>@alert.warnThreshold</td>
 								<td>@alert.comparison</td>
 								<td>
-									@tags.get(alert.id).get.map { tag =>
-										<a href="" class="btn btn-mini">@tag</a>
+									@if(tags.contains(alert.id)) {
+										@tags.get(alert.id).get.map { tag =>
+											<a href="" class="btn btn-mini">@tag</a>
+										}
 									}
 								</td>
 							</tr>

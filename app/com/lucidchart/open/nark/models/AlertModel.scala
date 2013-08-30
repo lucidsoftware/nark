@@ -27,6 +27,7 @@ class AlertModel extends AppModel {
 		get[Boolean]("active") ~
 		get[Boolean]("deleted") ~
 		get[Date]("created") ~
+		get[Date]("updated") ~
 		get[Option[UUID]]("thread_id") ~
 		get[Option[Date]]("thread_start") ~
 		get[Date]("last_checked") ~
@@ -36,8 +37,8 @@ class AlertModel extends AppModel {
 		get[BigDecimal]("error_threshold") ~
 		get[Int]("worst_state") ~
 		get[Int]("consecutive_failures") map {
-			case id ~ name ~ user_id ~ target ~ comparison ~ dynamic_alert_id ~ active ~ deleted ~ created ~ thread_id ~ thread_start ~ last_checked ~ next_check ~ frequency ~ warn_threshold ~ error_threshold ~ worst_state ~ consecutive_failures =>
-				new Alert(id, name, user_id, target, Comparisons(comparison), dynamic_alert_id, active, deleted, created, thread_id, thread_start, last_checked, next_check, frequency, warn_threshold, error_threshold, AlertState(worst_state), consecutive_failures)
+			case id ~ name ~ user_id ~ target ~ comparison ~ dynamic_alert_id ~ active ~ deleted ~ created ~ updated ~ thread_id ~ thread_start ~ last_checked ~ next_check ~ frequency ~ warn_threshold ~ error_threshold ~ worst_state ~ consecutive_failures =>
+				new Alert(id, name, user_id, target, Comparisons(comparison), dynamic_alert_id, active, deleted, created, updated, thread_id, thread_start, last_checked, next_check, frequency, warn_threshold, error_threshold, AlertState(worst_state), consecutive_failures)
 		}
 	}
 
@@ -50,8 +51,8 @@ class AlertModel extends AppModel {
 	def createAlert(alert: Alert) {
 		DB.withConnection("main") { connection =>
 			SQL("""
-				INSERT INTO `alerts` (`id`, `name`, `user_id`, `target`, `comparison`, `dynamic_alert_id`, `active`, `deleted`, `created`, `thread_id`, `thread_start`, `last_checked`, `next_check`, `frequency`, `warn_threshold`, `error_threshold`, `worst_state`, `consecutive_failures`)
-				VALUES ({id}, {name}, {user_id}, {target}, {comparison}, {dynamic_alert_id}, {active}, {deleted}, {created}, {thread_id}, {thread_start}, {last_checked}, {next_check}, {frequency}, {warn_threshold}, {error_threshold}, {worst_state}, {consecutive_failures})
+				INSERT INTO `alerts` (`id`, `name`, `user_id`, `target`, `comparison`, `dynamic_alert_id`, `active`, `deleted`, `created`, `updated`, `thread_id`, `thread_start`, `last_checked`, `next_check`, `frequency`, `warn_threshold`, `error_threshold`, `worst_state`, `consecutive_failures`)
+				VALUES ({id}, {name}, {user_id}, {target}, {comparison}, {dynamic_alert_id}, {active}, {deleted}, {created}, {updated}, {thread_id}, {thread_start}, {last_checked}, {next_check}, {frequency}, {warn_threshold}, {error_threshold}, {worst_state}, {consecutive_failures})
 			""").on(
 				"id"                    -> alert.id,
 				"name"                  -> alert.name,
@@ -62,6 +63,7 @@ class AlertModel extends AppModel {
 				"active"                -> alert.active,
 				"deleted"               -> alert.deleted,
 				"created"               -> alert.created,
+				"updated"					-> alert.updated,
 				"thread_id"             -> alert.threadId,
 				"thread_start"          -> alert.threadStart,
 				"last_checked"          -> alert.lastChecked,
@@ -193,19 +195,20 @@ class AlertModel extends AppModel {
 		DB.withConnection("main") { connection =>
 			SQL("""
 				UPDATE `alerts`
-				SET name={name}, target={target}, comparison={comparison}, active = {active}, deleted = {deleted}, 
+				SET name={name}, target={target}, comparison={comparison}, active = {active}, deleted = {deleted}, updated = {updated},
 					frequency={frequency}, error_threshold={error_threshold}, warn_threshold={warn_threshold}
 				WHERE id={id}
 			""").on(
-				"id"                    -> alert.id,
-				"name"                  -> alert.name,
-				"target"                -> alert.target,
-				"comparison"            -> alert.comparison.id,
-				"active"                -> alert.active,
-				"deleted"               -> alert.deleted,
-				"frequency"             -> alert.frequency,
-				"warn_threshold"        -> alert.warnThreshold,
-				"error_threshold"       -> alert.errorThreshold
+				"id"							-> alert.id,
+				"name"						-> alert.name,
+				"target"						-> alert.target,
+				"comparison"				-> alert.comparison.id,
+				"active"						-> alert.active,
+				"deleted"					-> alert.deleted,
+				"updated"					-> alert.updated,
+				"frequency"					-> alert.frequency,
+				"warn_threshold"			-> alert.warnThreshold,
+				"error_threshold"			-> alert.errorThreshold
 			).executeUpdate()(connection)
 		}
 	}
@@ -337,6 +340,89 @@ class AlertModel extends AppModel {
 			""").on(
 				"date" -> date
 			).executeUpdate() (connection)
+		}
+	}
+
+	/**
+	 * Find a particular alert propagated by a dynamic alert
+	 * @param id the id of the dynamic alert that propagated the alert
+	 * @param target the target of the alert
+	 * @return optionally return the alert
+	 */
+	def findPropagatedAlert(id: UUID, target: String): Option[Alert] = {
+		DB.withConnection("main") { connection =>
+			val alerts = SQL("""
+				SELECT *
+				FROM `alerts`
+				WHERE `dynamic_alert_id`={dynamic_alert_id} AND `target`={target}
+			""").on(
+				"dynamic_alert_id" -> id,
+				"target" -> target
+			).as(alertsRowParser *)(connection)
+
+			alerts.headOption
+		}
+	}
+
+	/**
+	 * Find all alerts propagated by a dynamic alert
+	 * @param id the id of the dynamic alert that propagated the alerts
+	 * @return the propagated alerts
+	 */
+	def findPropagatedAlerts(id: UUID): List[Alert] = {
+		DB.withConnection("main") { connection =>
+			SQL("""
+				SELECT *
+				FROM `alerts`
+				WHERE `dynamic_alert_id`={dynamic_alert_id}
+			""").on(
+				"dynamic_alert_id" -> id
+			).as(alertsRowParser *)(connection)
+		}
+	}
+
+	/**
+	 * Delete a particular alert propagated by a dynamic alert
+	 * @param id the id of the dynamic alert that propagated the alert
+	 * @param target the target of the alert
+	 */
+	def deletePropagatedAlert(id: UUID, target: String): Unit = {
+		DB.withConnection("main") { connection =>
+			SQL("""
+				DELETE FROM `alerts`
+				WHERE `dynamic_alert_id`={dynamic_alert_id} AND `target`={target}
+			""").on(
+				"dynamic_alert_id" -> id,
+				"target" -> target
+			).executeUpdate()(connection)
+		}
+	}
+
+	/**
+	 * Delete all alerts propagated by a dynamic alert that were updated before a particular time
+	 * @param id the id of the dynamic alert that propagated the alerts
+	 * @param updated the updated time used as the cutoff
+	 * @return the deleted alerts
+	 */
+	def deletePropagatedAlerts(id: UUID, updated: Date): List[Alert] = {
+		DB.withConnection("main") { connection =>
+			val deleted = SQL("""
+				SELECT * FROM `alerts`
+				WHERE `dynamic_alert_id`={dynamic_alert_id} AND `updated` < {updated}
+			""").on(
+				"dynamic_alert_id" -> id,
+				"updated" -> updated
+			).as(alertsRowParser *)(connection)
+
+			SQL("""
+				DELETE FROM `alerts`
+				WHERE `dynamic_alert_id`={dynamic_alert_id} AND `updated` < {updated}
+			""").on(
+				"dynamic_alert_id" -> id,
+				"updated" -> updated
+			).executeUpdate()(connection)
+
+			deleted
 		}
 	}
 }

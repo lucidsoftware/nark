@@ -56,8 +56,10 @@
 								<td>@alert.comparison</td>
 								<td>@alert.worstState.toString</td>
 								<td>
-									@tags.get(alert.id).get.map { tag =>
-										<a href="@narkRoutes.AlertTagsController.tag(tag)" class="btn btn-mini">@tag</a>
+									@if(tags.contains(alert.id)) {
+										@tags.get(alert.id).get.map { tag =>
+											<a href="@narkRoutes.AlertTagsController.tag(tag)" class="btn btn-mini">@tag</a>
+										}
 									}
 								</td>
 							</tr>

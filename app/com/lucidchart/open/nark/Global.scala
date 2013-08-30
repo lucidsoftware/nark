@@ -5,6 +5,7 @@ import com.lucidchart.open.nark.offline.HostDiscoverer
 import com.lucidchart.open.nark.request.KeepFlashFilter
 import com.lucidchart.open.nark.request.AppRequest
 import com.lucidchart.open.nark.jobs.alerts.AlertMaster
+import com.lucidchart.open.nark.jobs.dynamic.AlertPropagator
 
 import play.api._
 import play.api.mvc._
@@ -31,6 +32,7 @@ object Global extends WithFilters(CSRFFilter(), KeepFlashFilter()) with GlobalSe
 		Logger.info("Registering background jobs")
 		HostDiscoverer.schedule()
 		AlertMaster.schedule()
+		AlertPropagator.schedule()
 	}
 	
 	override def onError(request: RequestHeader, e: Throwable) = {

@@ -48,7 +48,7 @@
 					@helper.inputText(formCreate("tags"), 'id -> "tags", 'class -> "input-xlarge", '_label -> "Tags (separate by comma)", 'placeholder -> "ops", '_showConstraints -> false)
 					@helper.inputText(formCreate("search_target"), 'id -> "target-input", 'class -> "input-xlarge", '_label -> "Search Target", 'placeholder -> "stats.gauges.servers.*.*.*.cpu.count", 'required -> true, '_showConstraints -> false)
 					@helper.inputText(formCreate("match_expr"), 'class -> "input-xlarge", '_label -> "Match Expression", 'placeholder -> "^(.*)\\.gauges\\.servers\\.(.*)\\.cpu\\.count$", 'required -> true, '_showConstraints -> false)
-					@helper.inputText(formCreate("build_target"), 'class -> "input-xlarge", '_label -> "Build Target", 'placeholder -> "\\1.gauges.servers.\\2.cpu.ptime.user", 'required -> true, '_showConstraints -> false)
+					@helper.inputText(formCreate("build_target"), 'class -> "input-xlarge", '_label -> "Build Target", 'placeholder -> "(1).gauges.servers.(2).cpu.ptime.user", 'required -> true, '_showConstraints -> false)
 					@helper.inputText(formCreate("error_threshold"), 'class -> "input-xlarge", '_label -> "Error Threshold", 'placeholder -> "0.0", 'required -> true, '_showConstraints -> false)
 					@helper.inputText(formCreate("warn_threshold"), 'class -> "input-xlarge", '_label -> "Warn Threshold", 'placeholder -> "0.0", 'required -> true, '_showConstraints -> false)
 					@helper.select(formCreate("comparison"), com.lucidchart.open.nark.models.records.Comparisons.values.map(m => m.id.toString -> m.toString).toSeq, '_label -> "Comparison Type", '_showConstraints -> false)
