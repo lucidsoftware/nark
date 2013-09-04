@@ -109,7 +109,7 @@ class AlertModel extends AppModel {
 	}
 
 	/**
-	 * Get all alerts propogated by a specific dynamic alert
+	 * Get all alerts propagated by a specific dynamic alert
 	 * @param dynamicAlertId the id of the dynamic alert to look for
 	 * @return the list of alerts
 	 */
