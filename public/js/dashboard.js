@@ -257,7 +257,7 @@ function refreshData(graphIds) {
 				}
 
 				data['target[' + (count++) + ']'] = summarizedTarget;
-				graphUrl += '&target=' + summarizedTarget;
+				graphUrl += encodeURIComponent('&target=' + summarizedTarget);
 			}
 		});
 
