@@ -139,17 +139,23 @@ object AlertsController extends AppController {
 	def edit(alertId: UUID) = AuthAction.authenticatedUser { implicit user =>
 		AlertAction.alertManagementAccess(alertId, user.id) { alert =>
 			AppAction { implicit request =>
-				val form = editAlertForm.fill(EditFormSubmission(
-					alert.name,
-					AlertTagModel.findTagsForAlert(alert.id).map(_.tag),
-					alert.target,
-					alert.errorThreshold,
-					alert.warnThreshold,
-					alert.comparison,
-					alert.frequency,
-					alert.active
-				))
-				Ok(views.html.alerts.edit(form, alertId))
+				//disallow management of propagated alerts
+				if (alert.dynamicAlertId.isDefined) {
+					Redirect(routes.AlertsController.view(alertId)).flashing(AppFlash.error("Alerts propagated by dynamic alerts may not be managed."))
+				}
+				else {
+					val form = editAlertForm.fill(EditFormSubmission(
+						alert.name,
+						AlertTagModel.findTagsForAlert(alert.id).map(_.tag),
+						alert.target,
+						alert.errorThreshold,
+						alert.warnThreshold,
+						alert.comparison,
+						alert.frequency,
+						alert.active
+					))
+					Ok(views.html.alerts.edit(form, alertId))
+				}
 			}
 		}
 	}
