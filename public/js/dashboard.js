@@ -205,7 +205,7 @@ function refreshData(graphIds) {
 
 		//reset the graphite link under the graph
 		var graphUrl = graphiteBaseUrl;
-		graphUrl += '/render?title=' + graph['name'] + '&width=650&height=400&';
+		graphUrl += '/render?title=' + encodeURIComponent(graph['name']) + '&width=650&height=400&';
 
 		var graphSeconds = null;
 		if (dateRange["type"] == "custom") {
