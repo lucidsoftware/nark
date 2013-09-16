@@ -212,12 +212,12 @@ function refreshData(graphIds) {
 			data["from"] = Math.floor(dateRange["start"].getTime() / 1000);
 			data["to"] = Math.floor(dateRange["end"].getTime() / 1000);
 			graphSeconds = Math.abs(data["to"] - data["from"]);
-			graphUrl += 'from=' + data['from'] + '&to=' + data['to'];
+			graphUrl += 'from=' + encodeURLComponent(data['from']) + '&to=' + encodeURLComponent(data['to']);
 		}
 		else {
 			data["seconds"] = dateRange["seconds"];
 			graphSeconds = data["seconds"];
-			graphUrl += 'from=-' + data['seconds'] + 's';
+			graphUrl += 'from=' + encodeURLComponent('-' + data['seconds'] + 's');
 		}
 
 		var intervalString = null;
@@ -257,7 +257,7 @@ function refreshData(graphIds) {
 				}
 
 				data['target[' + (count++) + ']'] = summarizedTarget;
-				graphUrl += encodeURIComponent('&target=' + summarizedTarget);
+				graphUrl += '&target=' + encodeURIComponent(summarizedTarget);
 			}
 		});
 
