@@ -212,12 +212,12 @@ function refreshData(graphIds) {
 			data["from"] = Math.floor(dateRange["start"].getTime() / 1000);
 			data["to"] = Math.floor(dateRange["end"].getTime() / 1000);
 			graphSeconds = Math.abs(data["to"] - data["from"]);
-			graphUrl += 'from=' + encodeURLComponent(data['from']) + '&to=' + encodeURLComponent(data['to']);
+			graphUrl += 'from=' + encodeURIComponent(data['from']) + '&to=' + encodeURIComponent(data['to']);
 		}
 		else {
 			data["seconds"] = dateRange["seconds"];
 			graphSeconds = data["seconds"];
-			graphUrl += 'from=' + encodeURLComponent('-' + data['seconds'] + 's');
+			graphUrl += 'from=' + encodeURIComponent('-' + data['seconds'] + 's');
 		}
 
 		var intervalString = null;
