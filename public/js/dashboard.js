@@ -114,11 +114,20 @@ function queueRedrawAllGraphs() {
 
 
 function showGraphError(id, error) {
-	$("#graph-" + id + "-wrapper .graph-error").text(error);
+	var graph = $("#graph-" + id);
+
+	if (graph.find(".graph-error").length == 0) {
+		graph.empty().append(
+			$('<div class="graph-error alert-error"></div>')
+		);
+	}
+
+	graph.find(".graph-error").text(error);
+	$('#loading-' + id).hide(250);
 }
 
 function removeGraphError(id) {
-	$("#graph-" + id + "-wrapper .graph-error").text("");
+	$("#graph-" + id + "-error").remove();
 }
 
 function regexIndexOf(string, regex, startpos) {
