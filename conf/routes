@@ -25,7 +25,7 @@ GET     /dashboard/sortGraphs/:uuid          com.lucidchart.open.nark.controller
 POST    /dashboard/sortGraphs/:uuid          com.lucidchart.open.nark.controllers.DashboardsController.sortGraphsSubmit(uuid: java.util.UUID)
 GET     /dashboard/edit/:uuid                com.lucidchart.open.nark.controllers.DashboardsController.edit(uuid: java.util.UUID)
 POST    /dashboard/edit/:uuid                com.lucidchart.open.nark.controllers.DashboardsController.editSubmit(uuid: java.util.UUID)
-POST    /dashboard/delete/:uuid          com.lucidchart.open.nark.controllers.DashboardsController.delete(uuid: java.util.UUID)
+POST    /dashboard/delete/:uuid              com.lucidchart.open.nark.controllers.DashboardsController.delete(uuid: java.util.UUID)
 POST    /dashboard/activate/:uuid            com.lucidchart.open.nark.controllers.DashboardsController.activate(uuid: java.util.UUID)
 GET     /d/:url                              com.lucidchart.open.nark.controllers.DashboardsController.dashboard(url: String)
 
@@ -54,12 +54,12 @@ GET     /dt/:tag                             com.lucidchart.open.nark.controller
 GET     /alert/create                        com.lucidchart.open.nark.controllers.AlertsController.create
 POST    /alert/createSubmit                  com.lucidchart.open.nark.controllers.AlertsController.createSubmit
 GET     /alert/search                        com.lucidchart.open.nark.controllers.AlertsController.search(term: String ?= "", page: Int ?= 1)
-POST    /alert/:uuid/recover                com.lucidchart.open.nark.controllers.AlertsController.recover(uuid: java.util.UUID)
-POST    /alert/:uuid/delete              com.lucidchart.open.nark.controllers.AlertsController.delete(uuid: java.util.UUID)
+POST    /alert/:uuid/recover                 com.lucidchart.open.nark.controllers.AlertsController.recover(uuid: java.util.UUID)
+POST    /alert/:uuid/delete                  com.lucidchart.open.nark.controllers.AlertsController.delete(uuid: java.util.UUID)
 GET     /alert/:uuid/view                    com.lucidchart.open.nark.controllers.AlertsController.view(uuid: java.util.UUID, page: Int ?= 1)
 GET     /alert/:uuid/edit                    com.lucidchart.open.nark.controllers.AlertsController.edit(uuid: java.util.UUID)
 POST    /alert/:uuid/edit                    com.lucidchart.open.nark.controllers.AlertsController.editSubmit(uuid: java.util.UUID)
-GET 		/alerts/deleted 							com.lucidchart.open.nark.controllers.AlertsController.deleted(term: String ?= "", page: Int ?= 1)
+GET     /alerts/deleted                      com.lucidchart.open.nark.controllers.AlertsController.deleted(term: String ?= "", page: Int ?= 1)
 
 # Alert Tags
 GET     /alert/tags/searchjson               com.lucidchart.open.nark.controllers.AlertTagsController.searchToJson(q: String ?= "")
@@ -67,25 +67,25 @@ GET     /alert/tags/search                   com.lucidchart.open.nark.controller
 GET     /at/:tag                             com.lucidchart.open.nark.controllers.AlertTagsController.tag(tag:String)
 
 # Dynamic Alerts
-GET 		/dynamicalert/create 					com.lucidchart.open.nark.controllers.DynamicAlertsController.create()
-POST 		/dynamicalert/create 					com.lucidchart.open.nark.controllers.DynamicAlertsController.createSubmit()
-GET 		/dynamicalert/search 					com.lucidchart.open.nark.controllers.DynamicAlertsController.search(term: String ?= "term", page: Int ?= 1)
-POST    /dynamicalert/:uuid/recover                com.lucidchart.open.nark.controllers.DynamicAlertsController.recover(uuid: java.util.UUID)
-POST    /dynamicalert/:uuid/delete              com.lucidchart.open.nark.controllers.DynamicAlertsController.delete(uuid: java.util.UUID)
-GET 		/dynamicalert/:id/view 					com.lucidchart.open.nark.controllers.DynamicAlertsController.view(id: java.util.UUID)
-GET 		/dynamicalert/:id/edit 					com.lucidchart.open.nark.controllers.DynamicAlertsController.edit(id: java.util.UUID)
-POST 		/dynamicalert/:id/edit 					com.lucidchart.open.nark.controllers.DynamicAlertsController.editSubmit(id: java.util.UUID)
-GET 		/dynamicalerts/deleted 							com.lucidchart.open.nark.controllers.DynamicAlertsController.deleted(term: String ?= "", page: Int ?= 1)
+GET     /dynamicalert/create                 com.lucidchart.open.nark.controllers.DynamicAlertsController.create()
+POST    /dynamicalert/create                 com.lucidchart.open.nark.controllers.DynamicAlertsController.createSubmit()
+GET     /dynamicalert/search                 com.lucidchart.open.nark.controllers.DynamicAlertsController.search(term: String ?= "term", page: Int ?= 1)
+POST    /dynamicalert/:uuid/recover          com.lucidchart.open.nark.controllers.DynamicAlertsController.recover(uuid: java.util.UUID)
+POST    /dynamicalert/:uuid/delete           com.lucidchart.open.nark.controllers.DynamicAlertsController.delete(uuid: java.util.UUID)
+GET     /dynamicalert/:id/view               com.lucidchart.open.nark.controllers.DynamicAlertsController.view(id: java.util.UUID)
+GET     /dynamicalert/:id/edit               com.lucidchart.open.nark.controllers.DynamicAlertsController.edit(id: java.util.UUID)
+POST    /dynamicalert/:id/edit               com.lucidchart.open.nark.controllers.DynamicAlertsController.editSubmit(id: java.util.UUID)
+GET     /dynamicalerts/deleted               com.lucidchart.open.nark.controllers.DynamicAlertsController.deleted(term: String ?= "", page: Int ?= 1)
 
 # Dynamic Alert Tags
-GET 		/dynamicalert/tags/searchjson 		com.lucidchart.open.nark.controllers.DynamicAlertTagsController.searchToJson(q: String ?= "")
-GET 		/dynamicalert/tags/search 				com.lucidchart.open.nark.controllers.DynamicAlertTagsController.search(term: String ?= "", page: Int ?= 1)
-GET 		/dyt/:tag 						com.lucidchart.open.nark.controllers.DynamicAlertTagsController.tag(tag: String)
+GET     /dynamicalert/tags/searchjson        com.lucidchart.open.nark.controllers.DynamicAlertTagsController.searchToJson(q: String ?= "")
+GET     /dynamicalert/tags/search            com.lucidchart.open.nark.controllers.DynamicAlertTagsController.search(term: String ?= "", page: Int ?= 1)
+GET     /dyt/:tag                            com.lucidchart.open.nark.controllers.DynamicAlertTagsController.tag(tag: String)
 
 # Subscription
-POST    /subscription/:type/:id/subscribe          com.lucidchart.open.nark.controllers.SubscriptionsController.subscribe(id: java.util.UUID, type: String)
-POST    /subscription/:type/:id/edit               com.lucidchart.open.nark.controllers.SubscriptionsController.edit(id: java.util.UUID, type: String, mySubscriptionsPage : Int ?= -1)
-POST    /subscription/:type/:id/delete             com.lucidchart.open.nark.controllers.SubscriptionsController.delete(id: java.util.UUID, type: String)
+POST    /subscription/:type/:id/subscribe    com.lucidchart.open.nark.controllers.SubscriptionsController.subscribe(id: java.util.UUID, type: String)
+POST    /subscription/:type/:id/edit         com.lucidchart.open.nark.controllers.SubscriptionsController.edit(id: java.util.UUID, type: String, mySubscriptionsPage : Int ?= -1)
+POST    /subscription/:type/:id/delete       com.lucidchart.open.nark.controllers.SubscriptionsController.delete(id: java.util.UUID, type: String)
 
 # Tag Subscriptions
 POST    /tagsubscription/:tag/subscribe      com.lucidchart.open.nark.controllers.TagSubscriptionsController.subscribe(tag: String)
@@ -93,14 +93,14 @@ POST    /tagsubscription/:tag/edit           com.lucidchart.open.nark.controller
 POST    /tagsubscription/:tag/delete         com.lucidchart.open.nark.controllers.TagSubscriptionsController.delete(tag: String)
 
 # Dynamic Alert Tag Subscriptions
-POST 		/dtsubcription/:tag/subscribe 		com.lucidchart.open.nark.controllers.DynamicAlertTagSubscriptionsController.subscribe(tag: String)
-POST    /dtsubscription/:tag/edit           com.lucidchart.open.nark.controllers.DynamicAlertTagSubscriptionsController.edit(tag: String, mySubscriptionsPage : Int ?= -1)
-POST    /dtsubscription/:tag/delete         com.lucidchart.open.nark.controllers.DynamicAlertTagSubscriptionsController.delete(tag: String)
+POST    /dtsubcription/:tag/subscribe        com.lucidchart.open.nark.controllers.DynamicAlertTagSubscriptionsController.subscribe(tag: String)
+POST    /dtsubscription/:tag/edit            com.lucidchart.open.nark.controllers.DynamicAlertTagSubscriptionsController.edit(tag: String, mySubscriptionsPage : Int ?= -1)
+POST    /dtsubscription/:tag/delete          com.lucidchart.open.nark.controllers.DynamicAlertTagSubscriptionsController.delete(tag: String)
 
 # User Pages
 GET     /user/subscriptions                  com.lucidchart.open.nark.controllers.SubscriptionsController.allSubscriptionsForUser(page: Int ?= 1)
-GET     /user/dasubscriptions                  com.lucidchart.open.nark.controllers.SubscriptionsController.allDynamicAlertSubscriptionsForUser(page: Int ?= 1)
-GET     /user/datagsubscriptions               com.lucidchart.open.nark.controllers.DynamicAlertTagSubscriptionsController.allSubscriptionsForUser(page: Int ?= 1)
+GET     /user/dasubscriptions                com.lucidchart.open.nark.controllers.SubscriptionsController.allDynamicAlertSubscriptionsForUser(page: Int ?= 1)
+GET     /user/datagsubscriptions             com.lucidchart.open.nark.controllers.DynamicAlertTagSubscriptionsController.allSubscriptionsForUser(page: Int ?= 1)
 GET     /user/tagsubscriptions               com.lucidchart.open.nark.controllers.TagSubscriptionsController.allSubscriptionsForUser(page: Int ?= 1)
 GET     /user/addresses                      com.lucidchart.open.nark.controllers.UsersController.addresses()
 POST    /user/addresses                      com.lucidchart.open.nark.controllers.UsersController.addressesSubmit()
