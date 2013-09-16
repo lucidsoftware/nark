@@ -1,8 +1,11 @@
 package com.lucidchart.open.nark.controllers
 
+import com.lucidchart.open.nark.Global
 import com.lucidchart.open.nark.request.{AppFlash, AppAction, AuthAction}
 import com.lucidchart.open.nark.views
 import com.lucidchart.open.nark.utils.Graphite
+import com.lucidchart.open.nark.utils.GraphiteData
+import com.lucidchart.open.nark.utils.GraphiteMetricData
 import com.lucidchart.open.nark.forms.Forms
 import com.lucidchart.open.nark.utils.StatsD
 import java.util.Date
@@ -11,8 +14,11 @@ import play.api.data.Form
 import play.api.data.Forms._
 import play.api.libs.json.Json
 import play.api.data.validation.Constraints
+import play.api.Play.configuration
+import play.api.Play.current
 import scala.concurrent.Future
 import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.duration._
 
 class GraphiteDataController extends AppController {
 	private case class DataPointsFormSubmission(
@@ -64,21 +70,31 @@ class GraphiteDataController extends AppController {
 				BadRequest
 			},
 			data => {
-				Async {
-					val returnedDataFuture = data.secondsOption match {
-						case Some(seconds) => {
-							Graphite.data(data.targets, seconds)
-						}
-						case None => {
-							val from = data.fromOption.get
-							val to = data.toOption.get
-							Graphite.data(data.targets, new Date(from * 1000L), new Date(to * 1000L))
-						}
+				val returnedDataFuture = data.secondsOption match {
+					case Some(seconds) => {
+						Graphite.data(data.targets, seconds)
 					}
+					case None => {
+						val from = data.fromOption.get
+						val to = data.toOption.get
+						Graphite.data(data.targets, new Date(from * 1000L), new Date(to * 1000L))
+					}
+				}
 
-					returnedDataFuture.map { returnedData =>
-						val filteredReturnedData = returnedData.filterEmptyTargets()
-						Ok(views.models.graphiteData(filteredReturnedData))
+				val timeout = configuration.getLong("graphite.timeoutMS.metrics.server").get.millis
+				val timeoutFuture = play.api.libs.concurrent.Promise.timeout("Oops", timeout)
+
+				Async {
+					Future.firstCompletedOf(Seq(returnedDataFuture, timeoutFuture)).map {
+						case returnedData: GraphiteData => {
+							val filteredReturnedData = returnedData.filterEmptyTargets()
+							Ok(views.models.graphiteData(filteredReturnedData))
+						}
+						case _ => {
+							val fakeException = new Exception("timeout")
+							Logger.error("Timeout waiting for graphite data points", fakeException)
+							Global.error500(request, Some(fakeException))
+						}
 					}
 				}
 			}
@@ -96,9 +112,21 @@ class GraphiteDataController extends AppController {
 				BadRequest
 			},
 			data => {
+				val metricsFuture = Graphite.metrics(data.target)
+
+				val timeout = configuration.getLong("graphite.timeoutMS.metrics.server").get.millis
+				val timeoutFuture = play.api.libs.concurrent.Promise.timeout("Oops", timeout)
+
 				Async {
-					Graphite.metrics(data.target).map { metrics =>
-						Ok(views.models.graphiteMetricData(metrics))
+					Future.firstCompletedOf(Seq(metricsFuture, timeoutFuture)).map {
+						case metrics: GraphiteMetricData => {
+							Ok(views.models.graphiteMetricData(metrics))
+						}
+						case _ => {
+							val fakeException = new Exception("timeout")
+							Logger.error("Timeout waiting for graphite metrics", fakeException)
+							Global.error500(request, Some(fakeException))
+						}
 					}
 				}
 			}

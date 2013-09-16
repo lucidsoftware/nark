@@ -275,7 +275,7 @@ function refreshData(graphIds) {
 			"url": "/graphite/datapoints",
 			"data": data,
 			"dataType": "json",
-			"timeout": 300000,
+			"timeout": 3600000,
 			"complete": function(xhr, status) {
 				dataRequests[graph["id"]] = false;
 			},

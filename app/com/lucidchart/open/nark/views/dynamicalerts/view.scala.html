@@ -92,7 +92,7 @@
 				'url': '/graphite/datapoints',
 				'data': data,
 				'dataType': 'json',
-				'timeout': 300000,
+				'timeout': 3600000,
 				success: function(data, textStatus, xhr) {
 					if (data.length > 0) {
 						addThresholdData('graph svg', data);

@@ -14,6 +14,8 @@ import play.api.libs.json._
 import java.text.SimpleDateFormat
 import scala.concurrent.Future
 import scala.concurrent.ExecutionContext
+import scala.concurrent.duration._
+import scala.concurrent.Await
 
 case class GraphiteData(targets: List[GraphiteTarget]) {
 	def filterEmptyTargets() = copy(
@@ -35,10 +37,6 @@ class Graphite(protocol: String, host: String, port: Int) {
 		builder.setScheme(protocol)
 		builder.setHost(host)
 		builder.setPort(port)
-	}
-
-	def baseUrl() = {
-		basicUriBuilder.build()
 	}
 
 	protected def addTargets(builder: URIBuilder, targets: List[String]) {
@@ -117,6 +115,10 @@ class Graphite(protocol: String, host: String, port: Int) {
 		)
 	}
 
+	def baseUrl() = {
+		basicUriBuilder.build()
+	}
+
 	/**
 	 * Get the graphite data for the target over the last x number of seconds.
 	 */
@@ -157,9 +159,37 @@ class Graphite(protocol: String, host: String, port: Int) {
 	}
 
 	/**
+	 * Synchronously get the graphite data for the targets over the last x number of seconds.
+	 */
+	def synchronousData(target: String, seconds: Int)(implicit executionContext: ExecutionContext): GraphiteData = {
+		synchronousData(target, seconds, configuration.getLong("graphite.timeoutMS.data.server").get.millis)
+	}
+
+	/**
+	 * Synchronously get the graphite data for the targets over the last x number of seconds.
+	 */
+	def synchronousData(target: String, seconds: Int, timeout: Duration)(implicit executionContext: ExecutionContext): GraphiteData = {
+		Await.result(data(target, seconds), timeout)
+	}
+
+	/**
+	 * Synchronously get the graphite data for the target during a time period
+	 */
+	def synchronousData(targets: List[String], from: Date, to: Date)(implicit executionContext: ExecutionContext): GraphiteData = {
+		synchronousData(targets, from, to, configuration.getLong("graphite.timeoutMS.data.server").get.millis)
+	}
+
+	/**
+	 * Synchronously get the graphite data for the target during a time period
+	 */
+	def synchronousData(targets: List[String], from: Date, to: Date, timeout: Duration)(implicit executionContext: ExecutionContext): GraphiteData = {
+		Await.result(data(targets, from, to), timeout)
+	}
+
+	/**
 	 * Find metrics in graphite
 	 */
-	def metrics(target: String)(implicit executionContext: ExecutionContext) = {
+	def metrics(target: String)(implicit executionContext: ExecutionContext): Future[GraphiteMetricData] = {
 		val builder = basicUriBuilder()
 		builder.setPath("/metrics/find/")
 		builder.setParameter("format", "completer")
@@ -167,6 +197,20 @@ class Graphite(protocol: String, host: String, port: Int) {
 		Future {
 			jsonToGraphiteMetricData(executeGet(builder.build))
 		}
+	}
+
+	/**
+	 * Synchronously find metrics in graphite
+	 */
+	def synchronousMetrics(target: String)(implicit executionContext: ExecutionContext): GraphiteMetricData = {
+		synchronousMetrics(target, configuration.getLong("graphite.timeoutMS.metrics.server").get.millis)
+	}
+
+	/**
+	 * Synchronously find metrics in graphite
+	 */
+	def synchronousMetrics(target: String, timeout: Duration)(implicit executionContext: ExecutionContext): GraphiteMetricData = {
+		Await.result(metrics(target), timeout)
 	}
 }
 

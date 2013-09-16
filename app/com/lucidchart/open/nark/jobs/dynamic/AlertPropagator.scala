@@ -90,8 +90,7 @@ class AlertPropagator(stateChangeTime: Int) extends Actor {
 	}
 
 	def getTargets(search: String): List[GraphiteTarget] = {
-		val dataFuture = Graphite.data(search, stateChangeTime)
-		Await.result(dataFuture, Duration.Inf).targets
+		Graphite.synchronousData(search, stateChangeTime).targets
 	}
 
 	def buildTarget(matchExpr: Regex, target: String, buildTarget: String, default: String): String = {

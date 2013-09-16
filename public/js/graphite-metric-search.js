@@ -35,7 +35,7 @@ $(document).ready(function() {
 				data: {
 					"target": request.term
 				},
-				timeout: 30000,
+				timeout: 3600000,
 				complete: function(xhr, status) {
 					currentAutocompleteRequest = null;
 				},
@@ -78,7 +78,7 @@ $(document).ready(function() {
 			"url": "/graphite/datapoints",
 			"data": data,
 			"dataType": "json",
-			"timeout": 300000,
+			"timeout": 3600000,
 			"complete": function(xhr, status) {
 				currentPreviewRequest = false;
 			},
