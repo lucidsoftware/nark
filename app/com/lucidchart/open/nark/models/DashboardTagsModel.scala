@@ -22,7 +22,7 @@ class DashboardTagsModel extends AppModel {
 
 	/**
 	 * Gets all tags.
-	 * @returns tags
+	 * @return tags
 	 */
 	def search(tag: String, page: Int) = {
 		DB.withConnection("main") { connection =>
@@ -52,7 +52,7 @@ class DashboardTagsModel extends AppModel {
 	/**
 	 * Gets all dashboards with this tag.
 	 * @param tag
-	 * @returns dashboardTags
+	 * @return dashboardTags
 	 */
 	def findDashboardsWithTag(tag: String): List[Tag] = {
 		findDashboardsWithTag(List(tag))
@@ -61,7 +61,7 @@ class DashboardTagsModel extends AppModel {
 	/**
 	 * Gets all dashboards with this tag.
 	 * @param tag
-	 * @returns dashboardTags
+	 * @return dashboardTags
 	 */
 	def findDashboardsWithTag(tags: List[String]): List[Tag] = {
 		if (tags.isEmpty) {
@@ -84,7 +84,7 @@ class DashboardTagsModel extends AppModel {
 	/**
 	 * Gets all tags for a dashbaord.
 	 * @param dashbaordId
-	 * @returns dashbaordTags
+	 * @return dashbaordTags
 	 */
 	def findTagsForDashboard(dashboardId: UUID) : List[Tag] = {
 		findTagsForDashboard(List(dashboardId))
@@ -93,7 +93,7 @@ class DashboardTagsModel extends AppModel {
 	/**
 	 * Gets all tags for dashbaords.
 	 * @param dashbaordId
-	 * @returns tags
+	 * @return tags
 	 */
 	def findTagsForDashboard(dashboardIds: List[UUID]) : List[Tag] = {
 		if(dashboardIds.isEmpty) {
