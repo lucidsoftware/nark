@@ -126,9 +126,16 @@
 			@if(userOption.isDefined) {
 				@defining(subscriptions.find { subscription => subscription.userOption.get.id == userOption.get.id }) { subscription =>
 					<td>
-						@helper.form(action=narkRoutes.AlertsController.edit(alert.id)) {
-							@helpers.csrfHiddenInput()
-							<input class="btn @if(ownerOption.isDefined && userOption.get.id != ownerOption.get.id || alert.dynamicAlertId.isDefined){ disabled }" type="submit" @if(ownerOption.isDefined && userOption.get.id != ownerOption.get.id || alert.dynamicAlertId.isDefined){ disabled } value='Manage Alert' />
+						@if(alert.dynamicAlertId.isDefined) {
+							@helper.form(action=narkRoutes.DynamicAlertsController.view(alert.dynamicAlertId.get)) {
+								<input class="btn" type="submit" value="Dynamic Alert" />
+							}
+						} else {
+							@if(userOption.isDefined && userOption.get.id == alert.userId) {
+								@helper.form(action=narkRoutes.AlertsController.edit(alert.id)) {
+									<input class="btn" type="submit" value="Manage Alert" />
+								}
+							}
 						}
 					</td>
 					@if(subscription.isDefined) {
