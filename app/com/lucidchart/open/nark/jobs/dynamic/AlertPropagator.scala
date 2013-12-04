@@ -44,47 +44,61 @@ class AlertPropagator(stateChangeTime: Int) extends Actor {
 		}
 	}
 
-	def propagateAlerts() = {
+	def propagateAlerts() {
 		Logger.info("Alert Propagation Starting")
 		val dynamicAlerts = DynamicAlertModel.findActiveDynamicAlerts()
 		dynamicAlerts.map { dynamicAlert =>
-			val matchExpr = dynamicAlert.matchExpr.r
-			val startedUpdating = new Date()
+			try {
+				val matchExpr = dynamicAlert.matchExpr.r
+				val startedUpdating = new Date()
 
-			getTargets(dynamicAlert.searchTarget).foreach { target =>
-				val builtTarget = buildTarget(matchExpr, target.target, dynamicAlert.buildTarget, dynamicAlert.searchTarget)
-			
-				val up = !target.datapoints.exists(_.value.isEmpty)
-				val down = !target.datapoints.exists(_.value.isDefined)
-				val alertOption = AlertModel.findPropagatedAlert(dynamicAlert.id, builtTarget)
-				
-				if (up) {
-					if (alertOption.isDefined) {
-						updateAlert(dynamicAlert, alertOption.get)
-						cleanSubscriptions(dynamicAlert)
-						Logger.info("Updated: " + dynamicAlert.name + " (Propagated Alert) " + builtTarget)
+				getTargets(dynamicAlert.searchTarget).foreach { target =>
+					try {
+						val builtTarget = buildTarget(matchExpr, target.target, dynamicAlert.buildTarget, dynamicAlert.searchTarget)
+					
+						val up = !target.datapoints.exists(_.value.isEmpty)
+						val down = !target.datapoints.exists(_.value.isDefined)
+						val alertOption = AlertModel.findPropagatedAlert(dynamicAlert.id, builtTarget)
+						
+						if (up) {
+							if (alertOption.isDefined) {
+								updateAlert(dynamicAlert, alertOption.get)
+								cleanSubscriptions(dynamicAlert)
+								Logger.info("Updated: " + dynamicAlert.name + " (Propagated Alert) " + builtTarget)
+							}
+							else {
+								createAlert(dynamicAlert, builtTarget)
+								Logger.info("Created: " + dynamicAlert.name + " (Propagated Alert) " + builtTarget)
+							}
+						}
+						else if (down) {
+							if (alertOption.isDefined) {
+								deleteAlert(dynamicAlert, alertOption.get, builtTarget)
+								Logger.info("Deleted: " + alertOption.get.name + " " + builtTarget)
+							}
+							else {
+								cleanSubscriptions(dynamicAlert)
+							}
+						}
+						else {
+							cleanSubscriptions(dynamicAlert)
+						}
 					}
-					else {
-						createAlert(dynamicAlert, builtTarget)
-						Logger.info("Created: " + dynamicAlert.name + " (Propagated Alert) " + builtTarget)
+					catch {
+						case e: Exception => {
+							Logger.error("Error while propagating dynamic alert: " + dynamicAlert + " with target: " + target, e)
+						}
 					}
 				}
-				else if (down) {
-					if (alertOption.isDefined) {
-						deleteAlert(dynamicAlert, alertOption.get, builtTarget)
-						Logger.info("Deleted: " + alertOption.get.name + " " + builtTarget)
-					}
-					else {
-						cleanSubscriptions(dynamicAlert)
-					}
-				}
-				else {
-					cleanSubscriptions(dynamicAlert)
+
+				//clean out any alerts created with a different version of the searchTarget
+				cleanUpBefore(dynamicAlert, startedUpdating)
+			}
+			catch {
+				case e: Exception => {
+					Logger.error("Error while propagating dynamic alert: " + dynamicAlert, e)
 				}
 			}
-
-			//clean out any alerts created with a different version of the searchTarget
-			cleanUpBefore(dynamicAlert, startedUpdating)
 		}
 		Logger.info("Alert Propagation done!")
 	}
