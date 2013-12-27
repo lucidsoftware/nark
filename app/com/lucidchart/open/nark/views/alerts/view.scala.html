@@ -12,6 +12,7 @@
 @import com.lucidchart.open.nark.controllers.{routes=>narkRoutes}
 @import com.lucidchart.open.nark.models.records.AlertType
 @import com.lucidchart.open.nark.views.html.helpers
+@import com.lucidchart.open.nark.utils.Graphite
 @import helper._
 
 @com.lucidchart.open.nark.views.html.layouts.main(alert.name, userOption = userOption, scripts = List("js/graphite-metric-search.js", "js/dygraph-combined.js", "js/dygraph-helper.js")) {
@@ -45,13 +46,31 @@
 		.info-group {
 			margin-left: 20px;
 		}
+		.graph-links {
+			margin-top: 15px;
+			width: 100%;
+			height: 20px;
+			text-align: center;
+		}
 	</style>
 	<script type="text/javascript">
+		var graphiteBaseUrl = '@Graphite.baseUrl';
+
 		$(document).ready(function() {
 			var data = {
 				'seconds': 3600,
 				'target[0]': '@alert.target'
 			}
+			$('#graph-link').attr('href',
+				graphiteBaseUrl + '/render?' +
+				'title=' + encodeURIComponent("@alert.name") + '&' +
+				'from=-3600s&' +
+				'width=650&' +
+				'height=400&' +
+				'target=' + encodeURIComponent("@alert.target") + '&' +
+				'target=' + encodeURIComponent("color(alias(constantLine(@alert.errorThreshold), 'error'), 'red')") + '&' +
+				'target=' + encodeURIComponent("color(alias(constantLine(@alert.warnThreshold), 'warning'), 'yellow')")
+			);
 
 			function addThresholdData(element, data) {
 				var error = {
@@ -219,6 +238,9 @@
 							<p id="graph-text" class="lead text-info">Loading Graph...</p>
 							<svg></svg>
 						</div>
+					</div>
+					<div class="graph-links">
+						<a id='graph-link' class='small-text' href='#' target="_blank">(Graphite)</a>
 					</div>
 				</div>
 			</div>
