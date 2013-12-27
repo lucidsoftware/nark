@@ -7,6 +7,7 @@ import play.api.libs.json.Json
 object host {
 	def apply(obj: Host) = Json.obj(
 		"n" -> obj.name,
+		"c" -> obj.lastConfirmed.getTime,
 		"s" -> obj.state.toString
 	)
 }

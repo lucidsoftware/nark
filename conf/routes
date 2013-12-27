@@ -107,6 +107,7 @@ POST    /user/addresses                      com.lucidchart.open.nark.controller
 
 # Hosts
 GET     /hosts/search                        com.lucidchart.open.nark.controllers.HostsController.search(term: String ?= "", page: Int ?= 1)
+GET     /hosts/target-builder                com.lucidchart.open.nark.controllers.HostsController.buildGraphiteTarget(searchName: String ?= "", searchState: String ?= "all")
 
 # Map static resources from the /public folder to the /assets URL path
 GET     /favicon.ico                         controllers.Assets.at(path="/public", file = "img/favicon.png")

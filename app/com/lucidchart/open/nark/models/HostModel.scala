@@ -78,6 +78,27 @@ class HostModel extends AppModel {
 			(found, matches)
 		}
 	}
+
+	/**
+	 * Find all the hosts that match
+	 */
+	def search(name: String, states: Set[HostState.Value]) = {
+		if (states.isEmpty) {
+			Nil
+		}
+		else {
+			DB.withConnection("main") { connection =>
+				RichSQL("""
+					SELECT * FROM `hosts`
+					WHERE `name` LIKE {name} AND `state` IN ({states})
+				""").onList(
+					"states" -> states.map(_.id)
+				).toSQL.on(
+					"name" -> name
+				).as(hostsRowParser *)(connection)
+			}
+		}
+	}
 }
 
 object HostModel extends HostModel
