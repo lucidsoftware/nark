@@ -240,32 +240,48 @@ class AlertModel extends AppModel {
 	 */
 	def takeNextAlertsToCheck(threadId: UUID, limit: Integer)(worker: (List[Alert]) => Map[Alert, AlertStatus.Value]) = {
 		val start = new Date()
-		val alertsForWorker = DB.withConnection("main") { connection =>
-			val updated = SQL("""
-				UPDATE `alerts`
-				SET `thread_id` = {thread_id},
-					`thread_start` = {thread_start}
-				WHERE `active` = 1
-				AND `deleted` = 0
-				AND `thread_id` IS NULL
-				AND `next_check` <= NOW()
-				ORDER BY `next_check` ASC, `id` ASC
+		val alertsForWorker = DB.withTransaction("main") { connection =>
+			val selectedAlertIds = SQL("""
+				SELECT `id` FROM `alerts`
+				WHERE
+					`active` = 1
+					AND `deleted` = 0
+					AND `thread_id` IS NULL
+					AND `next_check` <= NOW()
+				ORDER BY
+					`next_check` ASC,
+					`id` ASC
 				LIMIT {limit}
+				FOR UPDATE
 			""").on(
-				"thread_id" -> threadId,
-				"thread_start" -> start,
 				"limit" -> limit
-			).executeUpdate() (connection)
+			).as(scalar[UUID] *)(connection)
 
-			if (updated == 0) {
+			if (selectedAlertIds.isEmpty) {
 				Nil
 			}
 			else {
-				SQL("""
+				val updated = RichSQL("""
+					UPDATE `alerts`
+					SET `thread_id` = {thread_id},
+						`thread_start` = {thread_start}
+					WHERE `id` IN ({ids})
+				""").onList(
+					"ids" -> selectedAlertIds
+				).toSQL.on(
+					"thread_id" -> threadId,
+					"thread_start" -> start
+				).executeUpdate()(connection)
+
+				RichSQL("""
 					SELECT * FROM `alerts`
-					WHERE `thread_id` = {thread_id}
-					AND `thread_start` = {thread_start}
-				""").on(
+					WHERE
+						`thread_id` = {thread_id}
+						AND `thread_start` = {thread_start}
+						AND `id` IN ({ids})
+				""").onList(
+					"ids" -> selectedAlertIds
+				).toSQL.on(
 					"thread_id" -> threadId,
 					"thread_start" -> start
 				).as(alertsRowParser *)(connection)
