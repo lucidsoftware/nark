@@ -15,3 +15,6 @@ dist
 /.settings
 /*.ensime*
 /*.sublime-*
+/conf/app_compilation_date.txt
+/conf/app_version.txt
+

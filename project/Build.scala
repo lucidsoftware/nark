@@ -1,11 +1,13 @@
 import sbt._
 import Keys._
 import play.Project._
+import java.io.PrintWriter
+import java.io.File
 
 object ApplicationBuild extends Build {
 
 	val appName         = "Nark"
-	val appVersion      = "1.0-SNAPSHOT"
+	val appVersion      = "0.0.4." + "git rev-parse --short HEAD".!!.trim + ".SNAPSHOT"
 
 	val appDependencies = Seq(
 		jdbc,
@@ -19,6 +21,13 @@ object ApplicationBuild extends Build {
 		"org.apache.httpcomponents" % "httpclient" % "4.2.5"
 	)
 
+	def writeToFile(fileName: String, value: String) = {
+		val file = new PrintWriter(new File(fileName))
+		try { file.print(value) } finally { file.close() }
+	}
+
+	writeToFile("conf/app_version.txt", appVersion)
+	writeToFile("conf/app_compilation_date.txt", System.currentTimeMillis.toString)
 
 	val main = play.Project(appName, appVersion, appDependencies).settings(
 		scalaVersion := "2.10.1"
