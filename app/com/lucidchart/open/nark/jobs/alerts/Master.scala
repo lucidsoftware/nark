@@ -52,7 +52,7 @@ class Master extends Actor {
 	}
 	
 	private def handleDone(m: DoneMessage) {
-		threadCount = threadCount - m.requested
+		threadCount = threadCount - 1
 		if(m.found > 0) {
 			sleepSeconds = AlertMaster.initialSleepSeconds
 		}
