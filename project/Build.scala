@@ -7,7 +7,7 @@ import java.io.File
 object ApplicationBuild extends Build {
 
 	val appName         = "Nark"
-	val appVersion      = "0.0.4." + "git rev-parse --short HEAD".!!.trim + ".SNAPSHOT"
+	val appVersion      = "0.0.4." + "git rev-parse --short HEAD".!!.trim
 
 	val appDependencies = Seq(
 		jdbc,
