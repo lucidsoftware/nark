@@ -31,7 +31,7 @@ object AlertMaster {
 	def schedule() {
 		val alertmaster = Akka.system.actorOf(Props[Master], name = "alertmaster")
 		Akka.system.scheduler.scheduleOnce(1.seconds, alertmaster, "start")
-		Akka.system.scheduler.schedule(cleanupFrequency.seconds, cleanupFrequency.seconds, alertmaster, "cleanup")
+		Akka.system.scheduler.schedule(cleanupFrequency.seconds, cleanupFrequency.seconds, alertmaster, "clean")
 	}
 }
 
