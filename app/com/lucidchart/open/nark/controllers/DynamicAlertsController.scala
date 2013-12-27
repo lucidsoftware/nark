@@ -48,7 +48,15 @@ class DynamicAlertsController extends AppController {
 			              .verifying(Constraints.pattern("^[a-zA-Z0-9\\.\\-_,]*$".r, error = "Only alpha-numberic text and periods (.), dashes (-), and underscores (_) allowed"))
 			              .transform[List[String]](str => if(str.length == 0) List[String]() else str.split(",").map(_.trim.toLowerCase).toList, _.mkString(",")),
 			"search_target" -> text,
-			"match_expr" -> text,
+			"match_expr" -> text.verifying("Invalid regular expression.", { expression =>
+				try {
+					expression.r
+					true
+				}
+				catch {
+					case e: Exception => false
+				}
+			}),
 			"build_target" -> text,
 			"error_threshold" -> bigDecimal,
 			"warn_threshold" -> bigDecimal,
