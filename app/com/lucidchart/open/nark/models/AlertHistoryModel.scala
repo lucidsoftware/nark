@@ -72,7 +72,7 @@ class AlertHistoryModel extends AppModel {
 	 			SELECT *
 	 			FROM `alert_history`
 	 			WHERE `alert_id`={alert_id}
-	 			ORDER BY `date`
+	 			ORDER BY `date` DESC
 	 			LIMIT {limit} OFFSET {offset}
 	 		""").on(
 	 			"alert_id" -> alertId,
