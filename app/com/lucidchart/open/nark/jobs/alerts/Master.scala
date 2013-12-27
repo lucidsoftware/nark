@@ -32,6 +32,9 @@ object AlertMaster {
 		val alertmaster = Akka.system.actorOf(Props[Master], name = "alertmaster")
 		Akka.system.scheduler.scheduleOnce(1.seconds, alertmaster, "start")
 		Akka.system.scheduler.schedule(cleanupFrequency.seconds, cleanupFrequency.seconds, alertmaster, "clean")
+
+		// sending the start once every 60 seconds is just fault tolerance. not necessary, but nice to have.
+		Akka.system.scheduler.schedule(1.seconds, 60.seconds, alertmaster, "restart")
 	}
 }
 
@@ -87,6 +90,10 @@ class Master extends Actor {
 		case "start" => {
 			Logger.trace("AlertMaster: Starting alert jobs")
 			sendWork(configuration.getInt("alerts.initialThreadCount").get)
+		}
+		case "restart" => {
+			Logger.trace("AlertMaster: Restarting alert jobs")
+			sendWork(1)
 		}
 		case _ =>
 	}
