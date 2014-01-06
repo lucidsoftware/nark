@@ -66,14 +66,21 @@ class Worker extends Actor {
 
 	private def checkAlert(message: CheckAlertMessage) {
 		Logger.trace("AlertWorker: checking up to " + message.limit + " messages")
-		val alerts = AlertModel.takeNextAlertsToCheck(threadId, message.limit)(checkAlerts)
-		val results = alerts.groupBy { case (alert, status) => status }
+		try {
+			val alerts = AlertModel.takeNextAlertsToCheck(threadId, message.limit)(checkAlerts)
+			val results = alerts.groupBy { case (alert, status) => status }
 
-		sender ! DoneMessage(
-			results.get(AlertStatus.success).map(_.size).getOrElse(0),
-			results.get(AlertStatus.failure).map(_.size).getOrElse(0),
-			message.limit
-		)
+			sender ! DoneMessage(
+				results.get(AlertStatus.success).map(_.size).getOrElse(0),
+				results.get(AlertStatus.failure).map(_.size).getOrElse(0),
+				message.limit
+			)
+		}
+		catch {
+			case e: Exception => {
+				sender ! DoneMessage(0, 0, message.limit)
+			}
+		}
 	}
 
 	private def checkAlerts(alertsToCheck : List[Alert]) : Map[Alert, AlertStatus.Value] = {
