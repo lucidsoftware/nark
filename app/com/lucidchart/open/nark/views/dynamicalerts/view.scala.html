@@ -55,19 +55,20 @@
 	</style>
 	<script type="text/javascript">
 		var graphiteBaseUrl = '@Graphite.baseUrl';
+		var alert = @Html(com.lucidchart.open.nark.views.models.dynamicAlert(alert).toString);
 
 		$(document).ready(function() {
 			var data = {
 				'seconds': 3600,
-				'target[0]': '@alert.searchTarget'
-			}
+				'target[0]': alert.searchTarget
+			};
 			$('#graph-link').attr('href',
 				graphiteBaseUrl + '/render?' +
-				'title=' + encodeURIComponent("@alert.name") + '&' +
+				'title=' + encodeURIComponent(alert.name) + '&' +
 				'from=-3600s&' +
 				'width=650&' +
 				'height=400&' +
-				'target=' + encodeURIComponent("@alert.searchTarget") + '&' +
+				'target=' + encodeURIComponent(alert.searchTarget) + '&' +
 				'target=' + encodeURIComponent("color(alias(constantLine(@alert.errorThreshold), 'error'), 'red')") + '&' +
 				'target=' + encodeURIComponent("color(alias(constantLine(@alert.warnThreshold), 'warning'), 'yellow')")
 			);
