@@ -126,7 +126,8 @@ class AlertPropagator(stateChangeTime: Int) extends Actor {
 			updated = new Date(), 
 			frequency = dynamicAlert.frequency,
 			warnThreshold = dynamicAlert.warnThreshold,
-			errorThreshold = dynamicAlert.errorThreshold
+			errorThreshold = dynamicAlert.errorThreshold,
+			dataSeconds = dynamicAlert.dataSeconds
 		))
 	}
 
