@@ -27,9 +27,10 @@ class DynamicAlertModel extends AppModel {
 		get[Int]("comparison") ~
 		get[Boolean]("active") ~
 		get[Boolean]("deleted") ~
-		get[Int]("frequency") map {
-			case id ~ name ~ userId ~ created ~ searchTarget ~ matchExpr ~ buildTarget ~ errorThreshold ~ warnThreshold ~ comparison ~ active ~ deleted ~ frequency =>
-				new DynamicAlert(id, name, userId, searchTarget, matchExpr, buildTarget, Comparisons(comparison), active, deleted, created, frequency, warnThreshold, errorThreshold)
+		get[Int]("frequency") ~
+		get[Int]("data_seconds") map {
+			case id ~ name ~ userId ~ created ~ searchTarget ~ matchExpr ~ buildTarget ~ errorThreshold ~ warnThreshold ~ comparison ~ active ~ deleted ~ frequency ~ dataSeconds =>
+				new DynamicAlert(id, name, userId, searchTarget, matchExpr, buildTarget, Comparisons(comparison), active, deleted, created, frequency, warnThreshold, errorThreshold, dataSeconds)
 		}
 	}
 
@@ -41,8 +42,8 @@ class DynamicAlertModel extends AppModel {
 	def createDynamicAlert(alert: DynamicAlert): Unit = {
 		DB.withConnection("main") { connection =>
 			SQL("""
-				INSERT INTO `dynamic_alerts` (`id`, `name`, `user_id`, `created`, `search_target`, `match`, `build_target`, `error_threshold`, `warn_threshold`, `comparison`, `active`, `deleted`, `frequency`)
-				VALUES ({id}, {name}, {user_id}, {created}, {search_target}, {match}, {build_target}, {error_threshold}, {warn_threshold}, {comparison}, {active}, {deleted}, {frequency})
+				INSERT INTO `dynamic_alerts` (`id`, `name`, `user_id`, `created`, `search_target`, `match`, `build_target`, `error_threshold`, `warn_threshold`, `comparison`, `active`, `deleted`, `frequency`, `data_seconds`)
+				VALUES ({id}, {name}, {user_id}, {created}, {search_target}, {match}, {build_target}, {error_threshold}, {warn_threshold}, {comparison}, {active}, {deleted}, {frequency}, {data_seconds})
 			""").on(
 				"id" -> alert.id,
 				"name" -> alert.name,
@@ -56,7 +57,8 @@ class DynamicAlertModel extends AppModel {
 				"comparison" -> alert.comparison.id,
 				"active" -> alert.active,
 				"deleted" -> alert.deleted,
-				"frequency" -> alert.frequency
+				"frequency" -> alert.frequency,
+				"data_seconds" -> alert.dataSeconds
 			).executeUpdate()(connection)
 		}
 	}
@@ -177,7 +179,7 @@ class DynamicAlertModel extends AppModel {
 		DB.withConnection("main") { connection =>
 			SQL("""
 				UPDATE `dynamic_alerts`
-				SET `name`={name}, `search_target`={search_target}, `match`={match_expr}, `build_target`={build_target}, `error_threshold`={error_threshold}, `warn_threshold`={warn_threshold}, `comparison`={comparison}, `active`={active}, `deleted`={deleted}, `frequency`={frequency}
+				SET `name`={name}, `search_target`={search_target}, `match`={match_expr}, `build_target`={build_target}, `error_threshold`={error_threshold}, `warn_threshold`={warn_threshold}, `comparison`={comparison}, `active`={active}, `deleted`={deleted}, `frequency`={frequency}, `data_seconds`={data_seconds}
 				WHERE `id`={id}
 			""").on(
 				"name" -> alert.name,
@@ -190,6 +192,7 @@ class DynamicAlertModel extends AppModel {
 				"active" -> alert.active,
 				"deleted" -> alert.deleted,
 				"frequency" -> alert.frequency,
+				"data_seconds" -> alert.dataSeconds,
 				"id" -> alert.id
 			).executeUpdate()(connection)
 		}

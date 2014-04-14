@@ -47,11 +47,12 @@ case class Alert (
 	warnThreshold: BigDecimal,
 	errorThreshold: BigDecimal,
 	worstState: AlertState.Value,
-	consecutiveFailures: Int
+	consecutiveFailures: Int,
+	dataSeconds: Int
 ) extends AppRecord with HasId {
 	/**
 	 * Create a new Alert record for inserting into the database
 	 */
-	def this(name: String, userId: UUID, dynamicAlertId: Option[UUID], target: String, comparison: Comparisons.Value, frequency: Int, warnThreshold: BigDecimal, errorThreshold: BigDecimal) = this(UUID.randomUUID(), name, userId, target, comparison, dynamicAlertId, true, false, new Date(), new Date(), None, None, new Date(), new Date(), frequency, warnThreshold, errorThreshold, AlertState.normal, 0)
-	def this(name: String, userId: UUID, target: String, comparison: Comparisons.Value, frequency: Int, warnThreshold: BigDecimal, errorThreshold: BigDecimal) = this(name, userId, None, target, comparison, frequency, warnThreshold, errorThreshold)
+	def this(name: String, userId: UUID, dynamicAlertId: Option[UUID], target: String, comparison: Comparisons.Value, frequency: Int, warnThreshold: BigDecimal, errorThreshold: BigDecimal, dataSeconds: Int) = this(UUID.randomUUID(), name, userId, target, comparison, dynamicAlertId, true, false, new Date(), new Date(), None, None, new Date(), new Date(), frequency, warnThreshold, errorThreshold, AlertState.normal, 0, dataSeconds)
+	def this(name: String, userId: UUID, target: String, comparison: Comparisons.Value, frequency: Int, warnThreshold: BigDecimal, errorThreshold: BigDecimal, dataSeconds: Int) = this(name, userId, None, target, comparison, frequency, warnThreshold, errorThreshold, dataSeconds)
 }

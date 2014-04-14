@@ -51,6 +51,7 @@
 					@helper.inputText(formCreate("warn_threshold"), 'class -> "input-xlarge", '_label -> "Warn Threshold", 'placeholder -> "0.0", 'required -> true, '_showConstraints -> false)
 					@helper.select(formCreate("comparison"), com.lucidchart.open.nark.models.records.Comparisons.values.map(m => m.id.toString -> m.toString).toSeq, '_label -> "Comparison Type", '_showConstraints -> false)
 					@helper.inputText(formCreate("frequency"), 'class -> "input-xlarge", '_label -> "Frequency in Seconds", 'placeholder -> "0", 'required -> true, '_showConstraints -> false)
+					@helper.inputText(formCreate("data_seconds"), 'class -> "input-xlarge", '_label -> "Data to Query in Seconds", 'placeholder -> "60", 'required -> true, '_showConstraints -> false)
 					<br />
 					<br />
 					<button id="create" name="create" class="btn btn-primary">Create</button>

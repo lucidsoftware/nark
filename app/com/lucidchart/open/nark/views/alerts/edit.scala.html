@@ -63,6 +63,7 @@
 					@helper.inputText(formEdit("warn_threshold"), 'class -> "input-xlarge", '_label -> "Warn Threshold", 'placeholder -> "0.0", 'required -> true, '_showConstraints -> false)
 					@helper.select(formEdit("comparison"), com.lucidchart.open.nark.models.records.Comparisons.values.map(m => m.id.toString -> m.toString).toSeq, '_label -> "Comparison Type", '_showConstraints -> false)
 					@helper.inputText(formEdit("frequency"), 'class -> "input-xlarge", '_label -> "Frequency in Seconds", 'placeholder -> "0", 'required -> true, '_showConstraints -> false)
+					@helper.inputText(formEdit("data_seconds"), 'class -> "input-xlarge", '_label -> "Data to Query in Seconds", 'placeholder -> "60", 'required -> true, '_showConstraints -> false)
 					@helper.checkbox(formEdit("active"), 'class -> "input-xlarge", '_label -> "Active", 'placeholder -> true, '_text -> "", '_help -> "")
 					<br />
 				</fieldset>

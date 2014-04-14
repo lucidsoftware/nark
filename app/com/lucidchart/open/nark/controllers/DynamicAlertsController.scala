@@ -10,6 +10,8 @@ import java.util.UUID
 import play.api.data._
 import play.api.data.Forms._
 import play.api.data.format.Formats._
+import play.api.Play.configuration
+import play.api.Play.current
 import scala.math.BigDecimal
 import validation.Constraints
 
@@ -25,7 +27,8 @@ class DynamicAlertsController extends AppController {
 		errorThreshold: BigDecimal,
 		warnThreshold: BigDecimal,
 		comparison: Comparisons.Value,
-		frequency: Int
+		frequency: Int,
+		dataSeconds: Int
 	)
 
 	private case class EditFormSubmission(
@@ -38,7 +41,8 @@ class DynamicAlertsController extends AppController {
 		warnThreshold: BigDecimal,
 		comparison: Comparisons.Value,
 		frequency: Int,
-		active: Boolean
+		active: Boolean,
+		dataSeconds: Int
 	)
 
 	private val createAlertForm = Form(
@@ -61,7 +65,8 @@ class DynamicAlertsController extends AppController {
 			"error_threshold" -> bigDecimal,
 			"warn_threshold" -> bigDecimal,
 			"comparison" -> number.verifying("Invalid comparison type", x => Comparisons.values.map(_.id).contains(x)).transform[Comparisons.Value](Comparisons(_), _.id),
-			"frequency" -> number.verifying(Constraints.min(1))
+			"frequency" -> number.verifying(Constraints.min(1)),
+			"data_seconds" -> number.verifying("Must be positive", x => x > 0)
 		)(CreateFormSubmission.apply)(CreateFormSubmission.unapply)
 	)
 
@@ -78,7 +83,8 @@ class DynamicAlertsController extends AppController {
 			"warn_threshold" -> bigDecimal,
 			"comparison" -> number.verifying("Invalid comparison type", x => Comparisons.values.map(_.id).contains(x)).transform[Comparisons.Value](Comparisons(_), _.id),
 			"frequency" -> number.verifying(Constraints.min(1)),
-			"active" -> boolean
+			"active" -> boolean,
+			"data_seconds" -> number.verifying("Must be positive", x => x > 0)
 		)(EditFormSubmission.apply)(EditFormSubmission.unapply)
 	)
 
@@ -87,7 +93,7 @@ class DynamicAlertsController extends AppController {
 	 */
 	def create() = AuthAction.authenticatedUser { implicit user =>
 		AppAction { implicit request =>
-			val form = createAlertForm.fill(CreateFormSubmission("", Nil, "", "", "", 0, 0, Comparisons.<, 60))
+			val form = createAlertForm.fill(CreateFormSubmission("", Nil, "", "", "", 0, 0, Comparisons.<, 60, configuration.getInt("alerts.secondsToCheckData").get))
 			Ok(views.html.dynamicalerts.create(form))
 		}
 	}
@@ -111,7 +117,8 @@ class DynamicAlertsController extends AppController {
 						data.comparison,
 						data.frequency,
 						data.warnThreshold,
-						data.errorThreshold
+						data.errorThreshold,
+						data.dataSeconds
 					)
 					DynamicAlertModel.createDynamicAlert(alert)
 					DynamicAlertTagModel.updateTagsForAlert(alert.id, data.tags)
@@ -169,7 +176,8 @@ class DynamicAlertsController extends AppController {
 					alert.warnThreshold,
 					alert.comparison,
 					alert.frequency,
-					alert.active
+					alert.active,
+					alert.dataSeconds
 				))
 				Ok(views.html.dynamicalerts.edit(form, id))
 			}
@@ -197,7 +205,8 @@ class DynamicAlertsController extends AppController {
 							warnThreshold = data.warnThreshold,
 							comparison = data.comparison,
 							frequency = data.frequency,
-							active = data.active
+							active = data.active,
+							dataSeconds = data.dataSeconds
 						)
 						
 						DynamicAlertModel.editDynamicAlert(editedAlert)

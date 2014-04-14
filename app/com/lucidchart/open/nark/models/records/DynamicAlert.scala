@@ -16,11 +16,12 @@ case class DynamicAlert (
 	created: Date,
 	frequency: Int,
 	warnThreshold: BigDecimal,
-	errorThreshold: BigDecimal
+	errorThreshold: BigDecimal,
+	dataSeconds: Int
 ) extends AppRecord with HasId {
 	
 	/**
 	 * Create a new DynamicAlert record for inserting into the database
 	 */
-	def this(name: String, userId: UUID, searchTarget: String, matchExpr: String, buildTarget: String, comparison: Comparisons.Value, frequency: Int, warnThreshold: BigDecimal, errorThreshold: BigDecimal) = this(UUID.randomUUID(), name, userId, searchTarget, matchExpr, buildTarget, comparison, true, false, new Date(), frequency, warnThreshold, errorThreshold)
+	def this(name: String, userId: UUID, searchTarget: String, matchExpr: String, buildTarget: String, comparison: Comparisons.Value, frequency: Int, warnThreshold: BigDecimal, errorThreshold: BigDecimal, dataSeconds: Int) = this(UUID.randomUUID(), name, userId, searchTarget, matchExpr, buildTarget, comparison, true, false, new Date(), frequency, warnThreshold, errorThreshold, dataSeconds)
 }

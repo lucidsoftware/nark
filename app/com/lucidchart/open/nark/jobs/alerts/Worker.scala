@@ -88,7 +88,7 @@ class Worker extends Actor {
 			Logger.trace("AlertWorker: checking alert named '" + alert.name + "'")
 			try {
 				// get all targets
-				val returnedData = Graphite.synchronousData(alert.target, AlertWorker.secondsToCheck).filterEmptyTargets()
+				val returnedData = Graphite.synchronousData(alert.target, alert.dataSeconds).filterEmptyTargets()
 
 				// get current target states for this alert
 				val alertTargetStatesByTarget = AlertTargetStateModel.getTargetStatesByAlertID(alert.id).map { state => (state.target, state) }.toMap

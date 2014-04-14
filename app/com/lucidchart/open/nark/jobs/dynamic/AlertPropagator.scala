@@ -140,7 +140,8 @@ class AlertPropagator(stateChangeTime: Int) extends Actor {
 			dynamicAlert.comparison,
 			dynamicAlert.frequency,
 			dynamicAlert.warnThreshold,
-			dynamicAlert.errorThreshold
+			dynamicAlert.errorThreshold,
+			dynamicAlert.dataSeconds
 		)
 		AlertModel.createAlert(alert)
 
