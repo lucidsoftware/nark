@@ -66,7 +66,7 @@ class AlertModel extends AppModel {
 				"active"                -> alert.active,
 				"deleted"               -> alert.deleted,
 				"created"               -> alert.created,
-				"updated"					-> alert.updated,
+				"updated"               -> alert.updated,
 				"thread_id"             -> alert.threadId,
 				"thread_start"          -> alert.threadStart,
 				"last_checked"          -> alert.lastChecked,
