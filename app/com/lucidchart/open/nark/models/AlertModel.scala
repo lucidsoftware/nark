@@ -287,13 +287,11 @@ class AlertModel extends AppModel {
 					SELECT * FROM `alerts`
 					WHERE
 						`thread_id` = {thread_id}
-						AND `thread_start` = {thread_start}
 						AND `id` IN ({ids})
 				""").onList(
 					"ids" -> selectedAlertIds
 				).toSQL.on(
-					"thread_id" -> threadId,
-					"thread_start" -> start
+					"thread_id" -> threadId
 				).as(alertsRowParser *)(connection)
 			}
 		}
