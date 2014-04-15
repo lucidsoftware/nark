@@ -49,7 +49,7 @@ class HostDiscoverer(stateChangeTime: Int, patterns: List[HostDiscovererPattern]
 	protected def discoverNew(start: Date) {
 		patterns.foreach { pattern =>
 			Logger.info("HostDiscovery pattern " + pattern.target)
-			val data = Graphite.synchronousData(pattern.target, stateChangeTime)
+			val data = Graphite.synchronousData(pattern.target, stateChangeTime).dropLastNullPoints(1)
 			data.targets.foreach { target =>
 				try {
 					val pattern.extractor(extractedName) = target.target

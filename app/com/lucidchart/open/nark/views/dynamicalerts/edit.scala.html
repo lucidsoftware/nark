@@ -8,6 +8,7 @@
 )
 
 @import com.lucidchart.open.nark.controllers.{routes=>narkRoutes}
+@import com.lucidchart.open.nark.models.records.Comparisons
 @import com.lucidchart.open.nark.views.html.helpers
 @import helper.twitterBootstrap._
 @import helper._
@@ -43,6 +44,23 @@
 			});
 		});
 
+		$(document).ready(function() {
+			var comparisonInput = $('#comparison')
+			var comparisonNullExplanationDiv = $('#comparisonNullExplanation');
+			function updateComparisonNullExplanation() {
+				var value = comparisonInput.val()
+				if ([@Html(Comparisons.nullables.map("'" + _.id + "'").mkString(","))].indexOf(value) != -1) {
+					comparisonNullExplanationDiv.show();
+				}
+				else {
+					comparisonNullExplanationDiv.hide();
+				}
+			}
+
+			comparisonInput.change(updateComparisonNullExplanation);
+			updateComparisonNullExplanation();
+		});
+
 	</script>
 
 	<h3>Edit dynamic alert</h3>
@@ -58,11 +76,20 @@
 					@helper.inputText(formEdit("search_target"), 'id -> "target-input", 'class -> "input-xlarge", '_label -> "Search Target", 'placeholder -> "stats.gauges.servers.*.*.*.cpu.count", 'required -> true, '_showConstraints -> false)
 					@helper.inputText(formEdit("match_expr"), 'class -> "input-xlarge", '_label -> "Match Expression", 'placeholder -> "^(.*)\\.gauges\\.servers\\.(.*)\\.cpu\\.count$", 'required -> true, '_showConstraints -> false)
 					@helper.inputText(formEdit("build_target"), 'class -> "input-xlarge", '_label -> "Build Target", 'placeholder -> "(1).gauges.servers.(2).cpu.ptime.user", 'required -> true, '_showConstraints -> false)
+					@helper.select(formEdit("comparison"), com.lucidchart.open.nark.models.records.Comparisons.values.map(m => m.id.toString -> m.toString).toSeq, '_label -> "Comparison Type", '_showConstraints -> false)
+					<div class="well" id="comparisonNullExplanation">
+						The thresholds operate differently when a nullable comparison is selected.<br>
+						<ul>
+							<li>Place a 1 in the error threshold if the alert should be in an ERROR state when the comparison succeeds.</li>
+							<li>Place a 1 in the warning threshold if the alert should be in an WARN state when the comparison succeeds.</li>
+						</ul>
+					</div>
 					@helper.inputText(formEdit("error_threshold"), 'class -> "input-xlarge", '_label -> "Error Threshold", 'placeholder -> "0.0", 'required -> true, '_showConstraints -> false)
 					@helper.inputText(formEdit("warn_threshold"), 'class -> "input-xlarge", '_label -> "Warn Threshold", 'placeholder -> "0.0", 'required -> true, '_showConstraints -> false)
-					@helper.select(formEdit("comparison"), com.lucidchart.open.nark.models.records.Comparisons.values.map(m => m.id.toString -> m.toString).toSeq, '_label -> "Comparison Type", '_showConstraints -> false)
 					@helper.inputText(formEdit("frequency"), 'class -> "input-xlarge", '_label -> "Frequency in Seconds", 'placeholder -> "0", 'required -> true, '_showConstraints -> false)
 					@helper.inputText(formEdit("data_seconds"), 'class -> "input-xlarge", '_label -> "Data to Query in Seconds", 'placeholder -> "60", 'required -> true, '_showConstraints -> false)
+					@helper.inputText(formEdit("drop_null_points"), 'class -> "input-xlarge", '_label -> "Null Data Points to Drop", 'placeholder -> "60", 'required -> true, '_showConstraints -> false)
+					@helper.checkbox(formEdit("drop_null_targets"), 'class -> "input-xlarge", '_label -> "Drop Targets without Data", 'required -> true, '_showConstraints -> false)
 					@helper.checkbox(formEdit("active"), 'class -> "input-xlarge", '_label -> "Active", 'placeholder -> true, '_text -> "", '_help -> "")
 					<br />
 				</fieldset>

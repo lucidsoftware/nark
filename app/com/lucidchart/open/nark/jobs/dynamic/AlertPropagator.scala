@@ -104,7 +104,7 @@ class AlertPropagator(stateChangeTime: Int) extends Actor {
 	}
 
 	def getTargets(search: String): List[GraphiteTarget] = {
-		Graphite.synchronousData(search, stateChangeTime).targets
+		Graphite.synchronousData(search, stateChangeTime).dropLastNullPoints(1).targets
 	}
 
 	def buildTarget(matchExpr: Regex, target: String, buildTarget: String, default: String): String = {
@@ -127,7 +127,9 @@ class AlertPropagator(stateChangeTime: Int) extends Actor {
 			frequency = dynamicAlert.frequency,
 			warnThreshold = dynamicAlert.warnThreshold,
 			errorThreshold = dynamicAlert.errorThreshold,
-			dataSeconds = dynamicAlert.dataSeconds
+			dataSeconds = dynamicAlert.dataSeconds,
+			dropNullPoints = dynamicAlert.dropNullPoints,
+			dropNullTargets = dynamicAlert.dropNullTargets
 		))
 	}
 
@@ -142,7 +144,9 @@ class AlertPropagator(stateChangeTime: Int) extends Actor {
 			dynamicAlert.frequency,
 			dynamicAlert.warnThreshold,
 			dynamicAlert.errorThreshold,
-			dynamicAlert.dataSeconds
+			dynamicAlert.dataSeconds,
+			dynamicAlert.dropNullPoints,
+			dynamicAlert.dropNullTargets
 		)
 		AlertModel.createAlert(alert)
 

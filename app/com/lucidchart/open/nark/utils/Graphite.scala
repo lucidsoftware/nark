@@ -24,6 +24,21 @@ case class GraphiteData(targets: List[GraphiteTarget]) {
 			target.datapoints.exists(_.value.isDefined)
 		}
 	)
+
+	def dropLastNullPoints(max: Int) = {
+		if (max <= 0) {
+			this
+		}
+		else {
+			copy(
+				targets = targets.map { target =>
+					target.copy(
+						datapoints = target.datapoints.reverse.zipWithIndex.dropWhile { case (point, index) => index < max && point.value.isEmpty }.map(_._1).reverse
+					)
+				}
+			)
+		}
+	}
 }
 
 case class GraphiteTarget(target: String, datapoints: List[GraphiteDataPoint])
@@ -68,11 +83,8 @@ class Graphite(protocol: String, host: String, port: Int) {
 	 * Convert the JSON render data from graphite into a type-checked case class
 	 *
 	 * @param dataJson Must be a JsArray
-	 * @param removeLastNull As graphite time boundaries switch, the last element in the datapoints
-	 *                       becomes null. Setting removeLastNull to true fixes this problem until
-	 *                       StatsD can report the next value for the statistic.
 	 */
-	protected def jsonToGraphiteData(dataJson: JsValue, removeLastNull: Boolean) = {
+	protected def jsonToGraphiteData(dataJson: JsValue) = {
 		GraphiteData(
 			dataJson.asInstanceOf[JsArray].value.toList.map { e1 =>
 				val targetJson = e1.asInstanceOf[JsObject]
@@ -87,17 +99,9 @@ class Graphite(protocol: String, host: String, port: Int) {
 					)
 				}
 
-				val lastIsNull = !datapoints.isEmpty && datapoints.last.value.isEmpty
-				val filterLastNullDatapoints = if (lastIsNull && removeLastNull) {
-					datapoints.take(datapoints.size - 1)
-				}
-				else {
-					datapoints
-				}
-
 				GraphiteTarget(
 					targetJson.value("target").asInstanceOf[JsString].value,
-					filterLastNullDatapoints
+					datapoints
 				)
 			}
 		)
@@ -135,7 +139,7 @@ class Graphite(protocol: String, host: String, port: Int) {
 		builder.setParameter("from", "-" + seconds.toString + "seconds")
 		addTargets(builder, targets)
 		Future {
-			jsonToGraphiteData(executeGet(builder.build()), true)
+			jsonToGraphiteData(executeGet(builder.build()))
 		}
 	}
 
@@ -155,7 +159,7 @@ class Graphite(protocol: String, host: String, port: Int) {
 		builder.setParameter("until", (to.getTime() / 1000).toString)
 		addTargets(builder, targets)
 		Future {
-			jsonToGraphiteData(executeGet(builder.build()), false)
+			jsonToGraphiteData(executeGet(builder.build()))
 		}
 	}
 

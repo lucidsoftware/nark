@@ -37,9 +37,11 @@ class AlertModel extends AppModel {
 		get[BigDecimal]("error_threshold") ~
 		get[Int]("worst_state") ~
 		get[Int]("consecutive_failures") ~
-		get[Int]("data_seconds") map {
-			case id ~ name ~ user_id ~ target ~ comparison ~ dynamic_alert_id ~ active ~ deleted ~ created ~ updated ~ thread_id ~ thread_start ~ last_checked ~ next_check ~ frequency ~ warn_threshold ~ error_threshold ~ worst_state ~ consecutive_failures ~ data_seconds =>
-				new Alert(id, name, user_id, target, Comparisons(comparison), dynamic_alert_id, active, deleted, created, updated, thread_id, thread_start, last_checked, next_check, frequency, warn_threshold, error_threshold, AlertState(worst_state), consecutive_failures, data_seconds)
+		get[Int]("data_seconds") ~
+		get[Int]("drop_null_points") ~
+		get[Boolean]("drop_null_targets") map {
+			case id ~ name ~ user_id ~ target ~ comparison ~ dynamic_alert_id ~ active ~ deleted ~ created ~ updated ~ thread_id ~ thread_start ~ last_checked ~ next_check ~ frequency ~ warn_threshold ~ error_threshold ~ worst_state ~ consecutive_failures ~ data_seconds ~ drop_null_points ~ drop_null_targets=>
+				new Alert(id, name, user_id, target, Comparisons(comparison), dynamic_alert_id, active, deleted, created, updated, thread_id, thread_start, last_checked, next_check, frequency, warn_threshold, error_threshold, AlertState(worst_state), consecutive_failures, data_seconds, drop_null_points, drop_null_targets)
 		}
 	}
 
@@ -52,8 +54,8 @@ class AlertModel extends AppModel {
 	def createAlert(alert: Alert) {
 		DB.withConnection("main") { connection =>
 			SQL("""
-				INSERT INTO `alerts` (`id`, `name`, `user_id`, `target`, `comparison`, `dynamic_alert_id`, `active`, `deleted`, `created`, `updated`, `thread_id`, `thread_start`, `last_checked`, `next_check`, `frequency`, `warn_threshold`, `error_threshold`, `worst_state`, `consecutive_failures`, `data_seconds`)
-				VALUES ({id}, {name}, {user_id}, {target}, {comparison}, {dynamic_alert_id}, {active}, {deleted}, {created}, {updated}, {thread_id}, {thread_start}, {last_checked}, {next_check}, {frequency}, {warn_threshold}, {error_threshold}, {worst_state}, {consecutive_failures}, {data_seconds})
+				INSERT INTO `alerts` (`id`, `name`, `user_id`, `target`, `comparison`, `dynamic_alert_id`, `active`, `deleted`, `created`, `updated`, `thread_id`, `thread_start`, `last_checked`, `next_check`, `frequency`, `warn_threshold`, `error_threshold`, `worst_state`, `consecutive_failures`, `data_seconds`, `drop_null_points`, `drop_null_targets`)
+				VALUES ({id}, {name}, {user_id}, {target}, {comparison}, {dynamic_alert_id}, {active}, {deleted}, {created}, {updated}, {thread_id}, {thread_start}, {last_checked}, {next_check}, {frequency}, {warn_threshold}, {error_threshold}, {worst_state}, {consecutive_failures}, {data_seconds}, {drop_null_points}, {drop_null_targets})
 			""").on(
 				"id"                    -> alert.id,
 				"name"                  -> alert.name,
@@ -74,7 +76,9 @@ class AlertModel extends AppModel {
 				"error_threshold"       -> alert.errorThreshold,
 				"worst_state"           -> alert.worstState.id,
 				"consecutive_failures"  -> alert.consecutiveFailures,
-				"data_seconds"          -> alert.dataSeconds
+				"data_seconds"          -> alert.dataSeconds,
+				"drop_null_points"      -> alert.dropNullPoints,
+				"drop_null_targets"     -> alert.dropNullTargets
 			).executeUpdate()(connection)
 		}
 	}
@@ -198,7 +202,8 @@ class AlertModel extends AppModel {
 			SQL("""
 				UPDATE `alerts`
 				SET name={name}, target={target}, comparison={comparison}, active = {active}, deleted = {deleted}, updated = {updated},
-					frequency={frequency}, error_threshold={error_threshold}, warn_threshold={warn_threshold}, data_seconds={data_seconds}
+					frequency={frequency}, error_threshold={error_threshold}, warn_threshold={warn_threshold}, data_seconds={data_seconds},
+					drop_null_points={drop_null_points}, drop_null_targets={drop_null_targets}
 				WHERE id={id}
 			""").on(
 				"id"							-> alert.id,
@@ -211,7 +216,9 @@ class AlertModel extends AppModel {
 				"frequency"					-> alert.frequency,
 				"warn_threshold"			-> alert.warnThreshold,
 				"error_threshold"			-> alert.errorThreshold,
-				"data_seconds"				-> alert.dataSeconds
+				"data_seconds"				-> alert.dataSeconds,
+				"drop_null_points"			-> alert.dropNullPoints,
+				"drop_null_targets"			-> alert.dropNullTargets
 			).executeUpdate()(connection)
 		}
 	}

@@ -11,6 +11,7 @@
 )
 @import com.lucidchart.open.nark.controllers.{routes=>narkRoutes}
 @import com.lucidchart.open.nark.models.records.AlertType
+@import com.lucidchart.open.nark.models.records.Comparisons
 @import com.lucidchart.open.nark.views.html.helpers
 @import com.lucidchart.open.nark.utils.Graphite
 @import helper._
@@ -250,20 +251,32 @@
 						<thead>
 							<tr>
 								<th>Alert Name</th>
-								<th>Error</th>
-								<th>Warn</th>
+								@if(Comparisons.nullables.contains(alert.comparison)) {
+									<th>Type</th>
+								} else {
+									<th>Error</th>
+									<th>Warn</th>
+								}
 								<th>Comparison</th>
 								<th>Data Seconds</th>
+								<th>NULL Points</th>
+								<th>NULL Targets</th>
 								<th>Active</th>
 							</tr>
 						</thead>
 						<tbody>
 							<tr>
 								<td>@alert.name</td>
-								<td>@alert.errorThreshold</td>
-								<td>@alert.warnThreshold</td>
+								@if(Comparisons.nullables.contains(alert.comparison)) {
+									<td>@if(alert.errorThreshold > 0) { Error } else { Warning }</td>
+								} else {
+									<td>@alert.errorThreshold</td>
+									<td>@alert.warnThreshold</td>
+								}
 								<td>@alert.comparison</td>
 								<td>@alert.dataSeconds</td>
+								<td>@if(alert.dropNullPoints > 0) { Drop @alert.dropNullPoints } else { Keep }</td>
+								<td>@if(alert.dropNullTargets) { Drop } else { Keep }</td>
 								<td>@alert.active</td>
 							</tr>
 						</tbody>

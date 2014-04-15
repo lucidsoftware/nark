@@ -72,7 +72,7 @@ class GraphiteDataController extends AppController {
 			data => {
 				val returnedDataFuture = data.secondsOption match {
 					case Some(seconds) => {
-						Graphite.data(data.targets, seconds)
+						Graphite.data(data.targets, seconds).map(_.dropLastNullPoints(1))
 					}
 					case None => {
 						val from = data.fromOption.get

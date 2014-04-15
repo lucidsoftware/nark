@@ -88,16 +88,16 @@ class Worker extends Actor {
 			Logger.trace("AlertWorker: checking alert named '" + alert.name + "'")
 			try {
 				// get all targets
-				val returnedData = Graphite.synchronousData(alert.target, alert.dataSeconds).filterEmptyTargets()
+				val returnedData = Graphite.synchronousData(alert.target, alert.dataSeconds)
+				val filteredNullsData = (if (alert.dropNullTargets) returnedData.filterEmptyTargets() else returnedData).dropLastNullPoints(alert.dropNullPoints)
 
 				// get current target states for this alert
 				val alertTargetStatesByTarget = AlertTargetStateModel.getTargetStatesByAlertID(alert.id).map { state => (state.target, state) }.toMap
 
 				// for each target
-				val nonNullTargets = returnedData.targets.filter(_.datapoints.last.value.isDefined)
-				val previousStates = nonNullTargets.map { target => (target, alertTargetStatesByTarget.get(target.target).map(_.state).getOrElse(AlertState.normal)) }.toMap
-				val currentStates = nonNullTargets.map { target => (target, getState(alert, target.datapoints.last.value.get)) }.toMap
-				val changedStates = nonNullTargets.filter { target => previousStates(target) != currentStates(target) }
+				val previousStates = filteredNullsData.targets.map { target => (target, alertTargetStatesByTarget.get(target.target).map(_.state).getOrElse(AlertState.normal)) }.toMap
+				val currentStates = filteredNullsData.targets.map { target => (target, getState(alert, target.datapoints.last.value)) }.toMap
+				val changedStates = filteredNullsData.targets.filter { target => previousStates(target) != currentStates(target) }
 
 				if(!changedStates.isEmpty) {
 					val subscribers = getSubscribers(alert)
@@ -221,14 +221,19 @@ class Worker extends Actor {
 		(tagSubscribers ++ alertSubscribers).distinct
 	}
 
-	private def crossesThreshold(value: BigDecimal, threshold:BigDecimal, comparison: Comparisons.Value): Boolean = {
+	private def crossesThreshold(valueOption: Option[BigDecimal], threshold:BigDecimal, comparison: Comparisons.Value): Boolean = {
 		comparison match {
-			case Comparisons.<  => (value <  threshold)
-			case Comparisons.<= => (value <= threshold)
-			case Comparisons.== => (value == threshold)
-			case Comparisons.>  => (value >  threshold)
-			case Comparisons.>= => (value >= threshold)
-			case Comparisons.!= => (value != threshold)
+			// Threshold operators
+			case Comparisons.<  => (valueOption.isDefined && valueOption.get <  threshold)
+			case Comparisons.<= => (valueOption.isDefined && valueOption.get <= threshold)
+			case Comparisons.== => (valueOption.isDefined && valueOption.get == threshold)
+			case Comparisons.>  => (valueOption.isDefined && valueOption.get >  threshold)
+			case Comparisons.>= => (valueOption.isDefined && valueOption.get >= threshold)
+			case Comparisons.!= => (valueOption.isDefined && valueOption.get != threshold)
+
+			// Nullable Operators
+			case Comparisons.isNull    => (valueOption.isEmpty   && threshold > 0)
+			case Comparisons.isNotNull => (valueOption.isDefined && threshold > 0)
 		}
 	}
 
@@ -236,11 +241,11 @@ class Worker extends Actor {
 		new Date(new Date().getTime + (1000 * seconds))
 	}
 
-	private def getState(alert:Alert, lastDataPoint:BigDecimal) : AlertState.Value = {
-		if(crossesThreshold(lastDataPoint, alert.errorThreshold, alert.comparison)) {
+	private def getState(alert:Alert, lastDataPointOption:Option[BigDecimal]) : AlertState.Value = {
+		if(crossesThreshold(lastDataPointOption, alert.errorThreshold, alert.comparison)) {
 			AlertState.error
 		}
-		else if (crossesThreshold(lastDataPoint, alert.warnThreshold, alert.comparison)) {
+		else if (crossesThreshold(lastDataPointOption, alert.warnThreshold, alert.comparison)) {
 			AlertState.warn
 		}
 		else {

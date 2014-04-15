@@ -23,7 +23,9 @@ object AlertsController extends AppController {
 		warnThreshold: BigDecimal,
 		comparison: Comparisons.Value,
 		frequency: Int,
-		dataSeconds: Int
+		dataSeconds: Int,
+		dropNullPoints: Int,
+		dropNullTargets: Boolean
 	)
 
 	private case class EditFormSubmission(
@@ -35,7 +37,9 @@ object AlertsController extends AppController {
 		comparison: Comparisons.Value,
 		frequency: Int,
 		active: Boolean,
-		dataSeconds: Int
+		dataSeconds: Int,
+		dropNullPoints: Int,
+		dropNullTargets: Boolean
 	)
 
 	private val createAlertForm = Form(
@@ -49,7 +53,9 @@ object AlertsController extends AppController {
 			"warn_threshold" -> bigDecimal,
 			"comparison" -> number.verifying("Invalid comparison type", x => Comparisons.values.map(_.id).contains(x)).transform[Comparisons.Value](Comparisons(_), _.id),
 			"frequency" -> number.verifying(Constraints.min(1)),
-			"data_seconds" -> number.verifying("Must be positive", x => x > 0)
+			"data_seconds" -> number.verifying("Must be positive", x => x > 0),
+			"drop_null_points" -> number.verifying("Must be positive", x => x >= 0),
+			"drop_null_targets" -> boolean
 		)(AlertFormSubmission.apply)(AlertFormSubmission.unapply)
 	)
 
@@ -65,7 +71,9 @@ object AlertsController extends AppController {
 			"comparison" -> number.verifying("Invalid comparison type", x => Comparisons.values.map(_.id).contains(x)).transform[Comparisons.Value](Comparisons(_), _.id),
 			"frequency" -> number.verifying(Constraints.min(1)),
 			"active" -> boolean,
-			"data_seconds" -> number.verifying("Must be positive", x => x > 0)
+			"data_seconds" -> number.verifying("Must be positive", x => x > 0),
+			"drop_null_points" -> number.verifying("Must be positive", x => x >= 0),
+			"drop_null_targets" -> boolean
 		)(EditFormSubmission.apply)(EditFormSubmission.unapply)
 	)
 
@@ -74,7 +82,7 @@ object AlertsController extends AppController {
 	 */
 	def create = AuthAction.authenticatedUser { implicit user =>
 		AppAction { implicit request =>
-			val form = createAlertForm.fill(AlertFormSubmission("", Nil, "", 0, 0, Comparisons.<, 60, configuration.getInt("alerts.secondsToCheckData").get))
+			val form = createAlertForm.fill(AlertFormSubmission("", Nil, "", 0, 0, Comparisons.<, 60, configuration.getInt("alerts.secondsToCheckData").get, 1, true))
 			Ok(views.html.alerts.create(form))
 		}
 	}
@@ -97,7 +105,9 @@ object AlertsController extends AppController {
 						data.frequency,
 						data.warnThreshold,
 						data.errorThreshold,
-						data.dataSeconds
+						data.dataSeconds,
+						data.dropNullPoints,
+						data.dropNullTargets
 					)
 
 					AlertModel.createAlert(alert)
@@ -160,7 +170,9 @@ object AlertsController extends AppController {
 						alert.comparison,
 						alert.frequency,
 						alert.active,
-						alert.dataSeconds
+						alert.dataSeconds,
+						alert.dropNullPoints,
+						alert.dropNullTargets
 					))
 					Ok(views.html.alerts.edit(form, alertId))
 				}
@@ -188,7 +200,9 @@ object AlertsController extends AppController {
 							comparison = data.comparison,
 							frequency = data.frequency,
 							active = data.active,
-							dataSeconds = data.dataSeconds
+							dataSeconds = data.dataSeconds,
+							dropNullPoints = data.dropNullPoints,
+							dropNullTargets = data.dropNullTargets
 						)
 						
 						AlertModel.editAlert(editedAlert)
