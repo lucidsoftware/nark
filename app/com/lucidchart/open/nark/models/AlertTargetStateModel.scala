@@ -3,6 +3,7 @@ package com.lucidchart.open.nark.models
 import anorm._
 import anorm.SqlParser._
 import AnormImplicits._
+import com.lucidchart.open.nark.models.records.Alert
 import com.lucidchart.open.nark.models.records.AlertState
 import com.lucidchart.open.nark.models.records.AlertTargetState
 import java.util.{Date, UUID}
@@ -25,14 +26,13 @@ class AlertTargetStateModel extends AppModel {
 	/**
 	 * updates ALL existing target states for the alert
 	 */
-	def setAlertTargetStates(alertId: UUID, states: List[AlertTargetState]) {
-		val now = new Date()
+	def setAlertTargetStates(alert: Alert, states: List[AlertTargetState]) {
 		DB.withTransaction("main") { connection =>
 			if(!states.isEmpty) {
 				states.groupBy(_.state).map { case (state, records) =>
 					RichSQL("""
 						INSERT INTO `alert_target_state` (`alert_id`, `target`,`state`,`last_updated`) 
-						VALUES ({fields}) ON DUPLICATE KEY UPDATE `state` = {update_state}, `last_updated` = NOW()
+						VALUES ({fields}) ON DUPLICATE KEY UPDATE `state` = {update_state}, `last_updated` = VALUES(`last_updated`)
 					""").multiInsert(records.size, Seq("alert_id", "target", "state", "last_updated"))(
 						"alert_id"      -> records.map(s => toParameterValue(s.alertId)),
 						"target"        -> records.map(s => toParameterValue(s.target)),
@@ -44,13 +44,15 @@ class AlertTargetStateModel extends AppModel {
 				}
 			}
 
+			//delete all old targets of this alert that have not been updated in 100 intervals
+			val now = new Date
+			val hundredIntervals = new Date(now.getTime - (100000 * alert.dataSeconds))
 			SQL("""
 				DELETE FROM `alert_target_state`
-				WHERE `alert_id` = {alert_id}
-				AND `last_updated` < {boundary_time}
-			""").on (
-				"alert_id"      -> alertId,
-				"boundary_time" -> now
+				WHERE `alert_id` = {alert_id} AND `last_updated` < {limit}
+			""").on(
+				"alert_id" -> alert.id,
+				"limit" -> hundredIntervals
 			).executeUpdate()(connection)
 		}
 	}

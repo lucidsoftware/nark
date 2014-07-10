@@ -136,7 +136,7 @@ class Worker extends Actor {
 				}
 
 				val currentAlertTargetStates = currentStates.map{ case (target, state) => new AlertTargetState(alert.id, target.target, state) }.toList
-				AlertTargetStateModel.setAlertTargetStates(alert.id, currentAlertTargetStates)
+				AlertTargetStateModel.setAlertTargetStates(alert, currentAlertTargetStates)
 
 				(alert.copy(worstState = getWorstState(currentStates.values.toList)), AlertStatus.success)
 			} catch {
