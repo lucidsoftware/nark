@@ -1,8 +1,8 @@
 package com.lucidchart.open.nark.controllers
 
 import com.lucidchart.open.nark.request.{AppAction, AuthAction}
-import com.lucidchart.open.nark.models.{AlertModel, AlertTagModel, AlertTagSubscriptionModel, TagConverter}
-import com.lucidchart.open.nark.models.records.{Alert, Pagination, TagMap}
+import com.lucidchart.open.nark.models.{AlertModel, AlertTagModel, AlertTagSubscriptionModel, AlertTargetStateModel, TagConverter}
+import com.lucidchart.open.nark.models.records.{Alert, Pagination, SickTarget, TagMap}
 import com.lucidchart.open.nark.views
 import play.api.libs.json.Json
 
@@ -42,6 +42,31 @@ class AlertTagsController extends AppController {
 			Ok(Json.toJson(matches.map{ m =>
 				Json.obj("id" -> m.recordId.toString, "name" -> m.tag)
 			}))
+		}
+	}
+
+	/**
+	 * Get the active alerts associated with a tag
+	 * @param tag the tag to search for
+	 */
+	def activeAlerts(tag: String) = AuthAction.maybeAuthenticatedUser { implicit user =>
+		AppAction { implicit request =>
+			val alertIds = AlertTagModel.findAlertsByTag(tag).map(_.recordId)
+			val sickTargets = AlertTargetStateModel.getSickTargets(alertIds).map { target =>
+				(target.alertId, target)
+			}.toMap
+			val alerts = AlertModel.findAlertByID(sickTargets.keys.toList)
+			val result = alerts.map { alert =>
+				val target = sickTargets(alert.id)
+				SickTarget(
+					alert.id,
+					alert.name,
+					target.target,
+					target.state,
+					target.lastUpdated
+				)
+			}
+			Ok(views.html.alerttags.activeAlerts(tag, result))
 		}
 	}
 }

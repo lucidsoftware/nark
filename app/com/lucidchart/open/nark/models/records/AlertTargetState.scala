@@ -14,3 +14,11 @@ case class AlertTargetState(
 	 */
 	def this(alertId: UUID, target: String, state: AlertState.Value) = this(alertId, target, state, new Date())
 }
+
+case class SickTarget(
+	alertId: UUID,
+	alertName: String,
+	target: String,
+	state: AlertState.Value,
+	lastUpdated: Date
+) extends AppRecord

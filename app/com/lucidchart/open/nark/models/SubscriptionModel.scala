@@ -229,4 +229,24 @@ class SubscriptionModel extends AppModel {
 			}
 		}
 	}
+
+	/**
+	 * Get all of a user's alert subscriptions
+	 * @param user the user to look for
+	 * @param includeInactive whether to include inactive records
+	 * @return a list of all user subscriptions
+	 */
+	def getAllSubscriptionsByUser[T <: HasId](user: User, includeInactive: Boolean = false): List[Subscription] = {
+		DB.withConnection("main") { connection =>
+			val includeClause = if (includeInactive) "" else " AND active = TRUE"
+
+			SQL("""
+				SELECT *
+				FROM `alert_subscriptions`
+				WHERE `user_id` = {user_id}
+			""" + includeClause).on(
+				"user_id" -> user.id
+			).as(subscriptionsRowParser *)(connection)
+		}
+	}
 }

@@ -119,7 +119,7 @@ trait AlertTagSubscriptionModel extends AppModel {
 	}
 
 	 /**
-	 * Get all subscriptions for a certain user
+	 * Get a page of subscriptions for a certain user
 	 */
 	def getSubscriptionsByUser(user: User, page: Int) = {
 		DB.withConnection("main") { connection =>
@@ -151,6 +151,26 @@ trait AlertTagSubscriptionModel extends AppModel {
 				}
 				(found, subscriptionRecords)
 			}
+		}
+	}
+
+	/**
+	 * Get all subscriptions for a user
+	 * @param user the user to look for
+	 * @param includeInactive whether to include inactive subscriptions
+	 * @return a list of subscriptions
+	 */
+	def getAllSubscriptionsByUser(user: User, includeInactive: Boolean = false): List[AlertTagSubscription] = {
+		DB.withConnection("main") { connection =>
+			val includeClause = if (includeInactive) ""  else " AND active = TRUE"
+
+			SQL("""
+				SELECT *
+				FROM """ + table + """
+				WHERE `user_id` = {user_id}
+			""" + includeClause).on(
+				"user_id" -> user.id
+			).as(tagSubscriptionRowParser *)(connection)
 		}
 	}
 }

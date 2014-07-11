@@ -1,0 +1,44 @@
+@(pagination: com.lucidchart.open.nark.models.records.Pagination[com.lucidchart.open.nark.models.records.SickTarget])(
+	implicit
+	request: com.lucidchart.open.nark.request.AppRequest[_],
+	user: Option[com.lucidchart.open.nark.models.records.User]
+)
+
+@import com.lucidchart.open.nark.controllers.{routes=>narkRoutes}
+@import com.lucidchart.open.nark.views.html.helpers
+@import helper._
+
+@com.lucidchart.open.nark.views.html.layouts.main("Active Alerts", userOption=user) {
+	<h3>All Active Alerts</h3>
+	<br />
+
+	@helpers.paginationMaxPage(pagination.found, pagination.limit) { maxPage =>
+		@if(pagination.matches.isEmpty) {
+			<div class="alert alert-info">No active alerts :)</div>
+		} else {
+			<div class="results">
+				<table class="table table-bordered table-hover">
+					<thead>
+						<tr>
+							<th>Alert</th>
+							<th>Target</th>
+							<th>State</th>
+							<th>Last Checked</th>
+						</tr>
+					</thead>
+					<tbody>
+						@pagination.matches.sortWith(_.alertName.toLowerCase < _.alertName.toLowerCase).map { target =>
+							<tr>
+								<td><a href="@narkRoutes.AlertsController.view(target.alertId)">@target.alertName</a></td>
+								<td>@target.target</td>
+								<td>@target.state</td>
+								<td>@target.lastUpdated</td>
+							</tr>
+						}
+					</tbody>
+				</table>
+				@{ helpers.paginationLinks(pagination.page, maxPage) { i => narkRoutes.AlertsController.active(i).toString } }
+			</div>
+		}
+	}
+}

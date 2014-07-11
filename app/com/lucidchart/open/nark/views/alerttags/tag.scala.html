@@ -51,7 +51,16 @@
 			}
 		</tr>
 	</table>
-	<h4>Alerts with Tag</h4>
+	<table>
+		<tr>
+			<td><h4>Alerts with Tag</h4></td>
+			<td>
+				@helper.form(action=narkRoutes.AlertTagsController.activeAlerts(tag)) {
+					<input class="btn" name="ignored" type="submit" value='View Active Alerts with "@tag"' />
+				}
+			</td>
+		</tr>
+	</table>
 	<div>
 		<div class="row">
 			<div class="span1" />

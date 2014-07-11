@@ -107,6 +107,8 @@
 									<li><a href='@narkRoutes.AlertsController.search("")'>Search by Name</a></li>
 									<li><a href='@narkRoutes.AlertTagsController.search("")'>Search by Tag</a></li>
 									<li><a href="@narkRoutes.AlertsController.deleted()">Recover Deleted</a></li>
+									<li class="divider"></li>
+									<li><a href="@narkRoutes.AlertsController.active()">Active Alerts</a></li>
 								</ul>
 							</li>
 							<li class="dropdown">
@@ -137,6 +139,8 @@
 										<li class="divider"></li>
 										<li><a href="@narkRoutes.SubscriptionsController.allDynamicAlertSubscriptionsForUser()">Dynamic Alert Subscriptions</a></li>
 										<li><a href="@narkRoutes.DynamicAlertTagSubscriptionsController.allSubscriptionsForUser()">Dynamic Alert Tag Subscriptions</a></li>
+										<li class="divider"></li>
+										<li><a href="@narkRoutes.AlertsController.activeForUser()">Active Alerts</a></li>
 										<li class="divider"></li>
 										<li><a href="@narkRoutes.UsersController.addresses()">Edit Alert Addresses</a></li>
 										<li class="divider"></li>

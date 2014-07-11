@@ -72,4 +72,47 @@ class AlertTargetStateModel extends AppModel {
 			).as(AlertTargetStateRowParser * )(connection)
 		}
 	}
+
+	/**
+	 * Get paginated results of sick targets
+	 * @param alertIds the alerts for which to get sick targets
+	 * @param page the page to get
+	 * @return a page of sick targets
+	 */
+	def getSickTargets(page: Int): List[AlertTargetState] = {
+		DB.withConnection("main") { connection =>
+			SQL("""
+				SELECT *
+				FROM `alert_target_state`
+				WHERE `state` IN ({error}, {warn})
+				ORDER BY `alert_id` ASC
+				LIMIT {limit} OFFSET {offset}
+			""").on(
+				"error" -> AlertState.error.id,
+				"warn" -> AlertState.warn.id,
+				"limit" -> configuredLimit,
+				"offset" -> configuredLimit * page
+			).as(AlertTargetStateRowParser *)(connection)
+		}	
+	}
+
+	/**
+	 * Get all sick targets for the alerts
+	 * @param alertIds the alerts for which to get sick targets
+	 * @return a list of sick targets
+	 */
+	def getSickTargets(alertIds: List[UUID]): List[AlertTargetState] = {
+		DB.withConnection("main") { connection =>
+			RichSQL("""
+				SELECT *
+				FROM `alert_target_state`
+				WHERE `alert_id` IN ({ids}) AND `state` IN ({error}, {warn})
+			""").onList(
+				"ids" -> alertIds
+			).toSQL.on(
+				"error" -> AlertState.error.id,
+				"warn" -> AlertState.warn.id
+			).as(AlertTargetStateRowParser *)(connection)
+		}
+	}
 }

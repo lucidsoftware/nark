@@ -1,7 +1,7 @@
 package com.lucidchart.open.nark.controllers
 
-import com.lucidchart.open.nark.models.{AlertModel, AlertHistoryModel, AlertTagModel, SubscriptionModel, TagConverter, UserModel}
-import com.lucidchart.open.nark.models.records.{Alert, AlertHistory, Comparisons, AlertState, Pagination, TagMap}
+import com.lucidchart.open.nark.models.{AlertModel, AlertHistoryModel, AlertTagModel, AlertTagSubscriptionModel, AlertTargetStateModel, SubscriptionModel, TagConverter, UserModel}
+import com.lucidchart.open.nark.models.records.{Alert, AlertHistory, Comparisons, AlertState, Pagination, SickTarget, TagMap}
 import com.lucidchart.open.nark.request.{AlertAction, AppFlash, AppAction, AuthAction}
 import com.lucidchart.open.nark.views
 import com.lucidchart.open.nark.Global
@@ -247,6 +247,57 @@ object AlertsController extends AppController {
 				AlertModel.editAlert(alert.copy(deleted = true))
 				Redirect(routes.HomeController.index()).flashing(AppFlash.success("Alert was deleted successfully."))
 			}
+		}
+	}
+
+	/**
+	 * Get all active alerts
+	 * @param page the page of active alerts to get
+	 */
+	def active(page: Int) = AuthAction.maybeAuthenticatedUser { implicit user =>
+		AppAction { implicit request =>
+			val realPage = page.max(1)
+			val sickTargets = AlertTargetStateModel.getSickTargets(realPage - 1).map { target =>
+				(target.alertId, target)
+			}.toMap
+			val alerts = AlertModel.findAlertByID(sickTargets.keys.toList)
+			val result = alerts.map { alert =>
+				val target = sickTargets(alert.id)
+				SickTarget(
+					alert.id,
+					alert.name,
+					target.target,
+					target.state,
+					target.lastUpdated
+				)
+			}
+			Ok(views.html.alerts.active(Pagination[SickTarget](realPage, result.size, AlertTargetStateModel.configuredLimit, result)))
+		}
+	}
+
+	/**
+	 * Get all active alerts for a user
+	 */
+	def activeForUser() = AuthAction.authenticatedUser { implicit user =>
+		AppAction { implicit request =>
+			val alertIds = SubscriptionModel.getAllSubscriptionsByUser(user).map(_.alertId) ++
+				AlertTagModel.findAlertsByTag(AlertTagSubscriptionModel.getAllSubscriptionsByUser(user).map(_.tag)).map(_.recordId)
+			val sickTargets = AlertTargetStateModel.getSickTargets(alertIds).map { target =>
+				(target.alertId, target)
+			}.toMap
+			val alerts = AlertModel.findAlertByID(sickTargets.keys.toList)
+			val result = alerts.map { alert =>
+				val target = sickTargets(alert.id)
+				SickTarget(
+					alert.id,
+					alert.name,
+					target.target,
+					target.state,
+					target.lastUpdated
+				)
+			}
+
+			Ok(views.html.alerts.activeForUser(result))
 		}
 	}
 }

@@ -1,0 +1,33 @@
+@(sickTargets: List[com.lucidchart.open.nark.models.records.SickTarget])(
+	implicit
+	request: com.lucidchart.open.nark.request.AppRequest[_],
+	user: com.lucidchart.open.nark.models.records.User
+)
+
+@import com.lucidchart.open.nark.controllers.{routes=>narkRoutes}
+
+@com.lucidchart.open.nark.views.html.layouts.main("Active Alerts", userOption=Some(user)) {
+	<h3>Active Alerts for @user.name</h3>
+	<br />
+
+	<table class="table table-bordered table-hover">
+		<thead>
+			<tr>
+				<th>Alert</th>
+				<th>Target</th>
+				<th>State</th>
+				<th>Last Check</th>
+			</tr>
+		</thead>
+		<tbody>
+			@sickTargets.map { target =>
+			<tr>
+				<td><a href="@narkRoutes.AlertsController.view(target.alertId)">@target.alertName</a></td>
+				<td>@target.target</td>
+				<td>@target.state</td>
+				<td>@target.lastUpdated</td>
+			</tr>
+			}
+		</tbody>
+	</table>
+}

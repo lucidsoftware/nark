@@ -60,11 +60,14 @@ GET     /alert/:uuid/view                    com.lucidchart.open.nark.controller
 GET     /alert/:uuid/edit                    com.lucidchart.open.nark.controllers.AlertsController.edit(uuid: java.util.UUID)
 POST    /alert/:uuid/edit                    com.lucidchart.open.nark.controllers.AlertsController.editSubmit(uuid: java.util.UUID)
 GET     /alerts/deleted                      com.lucidchart.open.nark.controllers.AlertsController.deleted(term: String ?= "", page: Int ?= 1)
+GET     /alerts/active                       com.lucidchart.open.nark.controllers.AlertsController.active(page: Int ?= 1)
+GET     /alerts/activeForUser                com.lucidchart.open.nark.controllers.AlertsController.activeForUser
 
 # Alert Tags
 GET     /alert/tags/searchjson               com.lucidchart.open.nark.controllers.AlertTagsController.searchToJson(q: String ?= "")
 GET     /alert/tags/search                   com.lucidchart.open.nark.controllers.AlertTagsController.search(term: String ?= "", page: Int ?= 1)
 GET     /at/:tag                             com.lucidchart.open.nark.controllers.AlertTagsController.tag(tag:String)
+GET     /at/:tag/activeAlerts                com.lucidchart.open.nark.controllers.AlertTagsController.activeAlerts(tag: String)
 
 # Dynamic Alerts
 GET     /dynamicalert/create                 com.lucidchart.open.nark.controllers.DynamicAlertsController.create()
