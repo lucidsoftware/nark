@@ -1,0 +1,20 @@
+@(normal:Boolean,
+	currentTarget: com.lucidchart.open.nark.utils.GraphiteTarget,
+	alert:com.lucidchart.open.nark.models.records.Alert,
+	prevState:String,
+	curState:String,
+	url:String
+)
+<div style="border-radius: 10px;background-color:#eee;width: 80%;">
+  <div style="border-radius: 10px;z-index: 90; height: 17%;box-shadow: 0px 0px 8px rgba(0,0,0,0.3);position: relative;"> 
+    <div style="background-color: @if(normal){#009900} else{#FF3300};height:20%;width:100%;border-radius: 5px;z-index: 190;position:relative;"><span style="margin-left:5px;color:white"<h4> NARK ALERT:@alert.name</h4></span></div>
+    <div style="position:relative;top:20%;left:5%;display:block">
+      <table >
+        <tr><td><b>Target:</b></td><td>@currentTarget.target</td> 
+      	<tr><td><b>Value:</b></td><td>@currentTarget.datapoints.last.value.get </td>
+     	  <tr><td><b>Event:</b></td><td> [ @prevState -> <b>@curState</b> ]</td> 
+        <tr><td colspan="2"  align="left">View the alert <a href="http://@url/alert/@alert.id/view">here</a> </td>
+    	</table>
+    </div>
+  </div>
+</div>

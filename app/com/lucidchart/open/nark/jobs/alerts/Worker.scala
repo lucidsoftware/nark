@@ -2,6 +2,7 @@ package com.lucidchart.open.nark.jobs.alerts
 
 import com.lucidchart.open.nark.models.{AlertModel, AlertTagModel, AlertHistoryModel, SubscriptionModel, AlertTagSubscriptionModel, AlertTargetStateModel}
 import com.lucidchart.open.nark.models.records.{Alert,AlertHistory,AlertState, AlertStatus, AlertType,Comparisons, AlertTargetState, User}
+import com.lucidchart.open.nark.views
 import com.lucidchart.open.nark.utils.Graphite
 import akka.actor.Actor
 import akka.actor.Props
@@ -122,13 +123,16 @@ class Worker extends Actor {
 							case Some(email) => email
 						}
 
-						val message = ((currentState) match {
-							case (AlertState.normal) => (currentTarget.target + " recovered. \n Went from " + previousState.toString + " to " + currentState.toString)
-							case (_) => (currentState + " : " + currentTarget.target + " went from " + previousState.toString + " to " + currentState.toString) 
-						}) + "\n <a href='" + AlertWorker.url + "alert/" + alert.id + "/view'>View Alert</a>"
-
-						val subject = (currentState.toString + " : " + alert.name + " : " + currentTarget.target)
-						val emailsSent = sendEmails(emails, subject, message)
+						val htmlMessage = ((currentState) match {
+							case (AlertState.normal) => views.html.emails.alert(true,currentTarget,alert,previousState.toString,currentState.toString,AlertWorker.url).toString
+							case (_) => views.html.emails.alert(false,currentTarget,alert,previousState.toString,currentState.toString,AlertWorker.url) .toString
+						})
+						val textMessage = ((currentState) match {
+							case (AlertState.normal) =>views.txt.emails.alert(true,currentTarget,alert,previousState.toString,currentState.toString,AlertWorker.url).toString.trim
+							case (_) => (views.txt.emails.alert(false,currentTarget,alert,previousState.toString,currentState.toString,AlertWorker.url).toString ) .toString.trim
+						})
+						val subject = "["+currentState.toString+"] "+alert.name+":"+currentTarget.datapoints.last.value.get
+						val emailsSent = sendEmails(emails, subject, textMessage, htmlMessage)
 						new AlertHistory(alert.id, currentTarget.target, currentState, emailsSent)
 					}
 
@@ -157,7 +161,8 @@ class Worker extends Actor {
 						}.collect {
 							case Some(email) => email
 						}
-						sendEmails(emails, "error: Failed to check alert " + alert.name + " .", "Check for alert " + alert.name + " has failed " + AlertWorker.maxConsecutiveFailures + " times.")
+						val failed_text =  "Check for alert " + alert.name + " has failed " + AlertWorker.maxConsecutiveFailures + " times."
+						sendEmails(emails,"error: Failed to check alert " + alert.name + " .", failed_text, failed_text )
 					}
 					(alert, AlertStatus.failure)
 				}
@@ -165,7 +170,7 @@ class Worker extends Actor {
 		}.toMap
 	}
 
-	private def sendEmails(toEmails: List[String], subject: String, body: String) : Int = {
+	private def sendEmails(toEmails: List[String], subject: String, textBody: String, htmlBody:String) : Int = {
 		if(AlertWorker.mailerEnabled && !toEmails.isEmpty) {
 			val mailSession = Session.getInstance(AlertWorker.props, AlertWorker.auth)
 
@@ -182,13 +187,19 @@ class Worker extends Actor {
 
 			toEmails.map{email => message.addRecipient(Message.RecipientType.TO, new InternetAddress(email, ""))}
 
-			message.setContent(body, "text/html")
+			val textPart = new MimeBodyPart()
+			textPart.setContent(textBody,"text/plain")
+			val htmlPart = new MimeBodyPart()
+			htmlPart.setContent(htmlBody,"text/html")
+			val mp = new MimeMultipart("alternative")
+			mp.addBodyPart(textPart)
+			mp.addBodyPart(htmlPart)
+			message.setContent(mp)
 			message.saveChanges()
 			transport.connect()
 			transport.sendMessage(message, message.getRecipients(Message.RecipientType.TO))
 			transport.close()
 			// no exceptions = success
-			
 			toEmails.length
 		} else {
 			0

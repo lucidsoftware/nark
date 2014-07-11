@@ -1,0 +1,12 @@
+@(normal:Boolean,
+	currentTarget: com.lucidchart.open.nark.utils.GraphiteTarget,
+	alert:com.lucidchart.open.nark.models.records.Alert,
+	prevState:String,
+	curState:String,
+		url:String
+)
+@if( normal ) {	@alert.name. recovered. 
+[ @prevState  ->  @curState]
+} else {	Event: [@prevState -> @curState ] 
+http://@url/alert/@alert.id/view
+}
