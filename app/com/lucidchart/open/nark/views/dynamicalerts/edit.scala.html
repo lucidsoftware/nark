@@ -89,7 +89,7 @@
 					@helper.inputText(formEdit("frequency"), 'class -> "input-xlarge", '_label -> "Frequency in Seconds", 'placeholder -> "0", 'required -> true, '_showConstraints -> false)
 					@helper.inputText(formEdit("data_seconds"), 'class -> "input-xlarge", '_label -> "Data to Query in Seconds", 'placeholder -> "60", 'required -> true, '_showConstraints -> false)
 					@helper.inputText(formEdit("drop_null_points"), 'class -> "input-xlarge", '_label -> "Null Data Points to Drop", 'placeholder -> "60", 'required -> true, '_showConstraints -> false)
-					@helper.checkbox(formEdit("drop_null_targets"), 'class -> "input-xlarge", '_label -> "Drop Targets without Data", 'required -> true, '_showConstraints -> false)
+					@helper.checkbox(formEdit("drop_null_targets"), 'class -> "input-xlarge", '_label -> "Drop Targets without Data", '_showConstraints -> false)
 					@helper.checkbox(formEdit("active"), 'class -> "input-xlarge", '_label -> "Active", 'placeholder -> true, '_text -> "", '_help -> "")
 					<br />
 				</fieldset>
