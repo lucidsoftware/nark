@@ -46,7 +46,7 @@ class AlertTargetStateModel extends AppModel {
 
 			//delete all old targets of this alert that have not been updated in 100 intervals
 			val now = new Date
-			val hundredIntervals = new Date(now.getTime - (100000 * alert.dataSeconds))
+			val hundredIntervals = new Date(now.getTime - (100000 * alert.frequency))
 			SQL("""
 				DELETE FROM `alert_target_state`
 				WHERE `alert_id` = {alert_id} AND `last_updated` < {limit}
