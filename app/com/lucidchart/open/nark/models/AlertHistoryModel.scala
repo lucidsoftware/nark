@@ -1,5 +1,5 @@
 package com.lucidchart.open.nark.models
-
+import java.math.BigDecimal
 import anorm._
 import anorm.SqlParser._
 import AnormImplicits._
@@ -17,9 +17,10 @@ class AlertHistoryModel extends AppModel {
 		get[String]("target") ~
 		get[Date]("date") ~
 		get[Int]("state") ~
-		get[Int]("messages_sent") map {
-			case alert_id ~ target ~ date ~ state ~ messages_sent =>
-				new AlertHistory(alert_id, target, date, AlertState(state), messages_sent)
+		get[Int]("messages_sent") ~
+		get[BigDecimal]("alert_value") map {
+			case alert_id ~ target ~ date ~ state ~ messages_sent ~ alert_value =>
+				new AlertHistory(alert_id, target, date, AlertState(state), messages_sent,alert_value)
 		}
 	}
 
@@ -33,20 +34,22 @@ class AlertHistoryModel extends AppModel {
 		if (!alerts.isEmpty) {
 			DB.withConnection("main") { connection =>
 				RichSQL("""
-					INSERT INTO `alert_history` (`alert_id`, `target`, `date`, `state`, `messages_sent`)
+					INSERT INTO `alert_history` (`alert_id`, `target`, `date`, `state`, `messages_sent`, `alert_value`)
 					VALUES ({fields})
 				""").multiInsert(alerts.size, Seq(
 					"alert_id",
 					"target",
 					"date",
 					"state",
-					"messages_sent"
+					"messages_sent",
+					"alert_value"
 				))(
 					"alert_id"      -> alerts.map(alert => toParameterValue(alert.alertId)),
 					"target"        -> alerts.map(alert => toParameterValue(alert.target)),
 					"date"          -> alerts.map(alert => toParameterValue(alert.date)),
 					"state"         -> alerts.map(alert => toParameterValue(alert.state.id)),
-					"messages_sent" -> alerts.map(alert => toParameterValue(alert.messagesSent))
+					"messages_sent" -> alerts.map(alert => toParameterValue(alert.messagesSent)),
+					"alert_value" 	-> alerts.map(alert => toParameterValue(alert.alertValue))
 				).toSQL.executeUpdate()(connection)
 			}
 		}

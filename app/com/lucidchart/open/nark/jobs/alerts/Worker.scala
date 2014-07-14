@@ -107,7 +107,7 @@ class Worker extends Actor {
 					val alertHistories = changedStates.map { currentTarget =>
 						val previousState = previousStates(currentTarget)
 						val currentState = currentStates(currentTarget)
-
+						val last_datapoint = currentTarget.datapoints.last.value.get
 						//filter out subscribers that actually care about this.
 						val emails = subscribers.map { subscriber =>
 							val includeError = (previousState == AlertState.error || currentState == AlertState.error) && subscriber.errorEnable
@@ -131,9 +131,9 @@ class Worker extends Actor {
 							case (AlertState.normal) =>views.txt.emails.alert(true,currentTarget,alert,previousState.toString,currentState.toString,AlertWorker.url).toString.trim
 							case (_) => (views.txt.emails.alert(false,currentTarget,alert,previousState.toString,currentState.toString,AlertWorker.url).toString ) .toString.trim
 						})
-						val subject = "["+currentState.toString+"] "+alert.name+":"+currentTarget.datapoints.last.value.get
+						val subject = "["+currentState.toString+"] "+alert.name+":"+ last_datapoint
 						val emailsSent = sendEmails(emails, subject, textMessage, htmlMessage)
-						new AlertHistory(alert.id, currentTarget.target, currentState, emailsSent)
+						new AlertHistory(alert.id, currentTarget.target, currentState, emailsSent, last_datapoint)
 					}
 
 					AlertHistoryModel.createAlertHistory(alertHistories)
