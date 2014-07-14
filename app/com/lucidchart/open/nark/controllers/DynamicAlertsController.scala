@@ -2,7 +2,7 @@ package com.lucidchart.open.nark.controllers
 
 import com.lucidchart.open.nark.Global
 import com.lucidchart.open.nark.models.{AlertModel, DynamicAlertModel, DynamicAlertTagModel, SubscriptionModel, TagConverter, UserModel}
-import com.lucidchart.open.nark.models.records.{Comparisons, DynamicAlert, Pagination}
+import com.lucidchart.open.nark.models.records.{Comparisons, DynamicAlert, Pagination, Subscription, AlertType}
 import com.lucidchart.open.nark.request.{AppAction, AppFlash, AuthAction, DynamicAlertAction}
 import com.lucidchart.open.nark.views
 
@@ -30,7 +30,8 @@ class DynamicAlertsController extends AppController {
 		frequency: Int,
 		dataSeconds: Int,
 		dropNullPoints: Int,
-		dropNullTargets: Boolean
+		dropNullTargets: Boolean,
+		subscribe: Boolean
 	)
 
 	private case class EditFormSubmission(
@@ -72,7 +73,8 @@ class DynamicAlertsController extends AppController {
 			"frequency" -> number.verifying(Constraints.min(1)),
 			"data_seconds" -> number.verifying("Must be positive", x => x > 0),
 			"drop_null_points" -> number.verifying("Must be positive", x => x >= 0),
-			"drop_null_targets" -> boolean
+			"drop_null_targets" -> boolean,
+			"subscribe" -> boolean
 		)(CreateFormSubmission.apply)(CreateFormSubmission.unapply)
 	)
 
@@ -101,7 +103,7 @@ class DynamicAlertsController extends AppController {
 	 */
 	def create() = AuthAction.authenticatedUser { implicit user =>
 		AppAction { implicit request =>
-			val form = createAlertForm.fill(CreateFormSubmission("", Nil, "", "", "", 0, 0, Comparisons.<, 60, configuration.getInt("alerts.secondsToCheckData").get, 1, true))
+			val form = createAlertForm.fill(CreateFormSubmission("", Nil, "", "", "", 0, 0, Comparisons.<, 60, configuration.getInt("alerts.secondsToCheckData").get, 1, true,true))
 			Ok(views.html.dynamicalerts.create(form))
 		}
 	}
@@ -132,8 +134,13 @@ class DynamicAlertsController extends AppController {
 					)
 					DynamicAlertModel.createDynamicAlert(alert)
 					DynamicAlertTagModel.updateTagsForAlert(alert.id, data.tags)
-
-					Redirect(routes.DynamicAlertsController.view(alert.id)).flashing(AppFlash.success("Dynamic Alert created successfully."))
+					var msg = "Dynamic Alert created successfully."
+					if (data.subscribe) {
+						val subscription = new Subscription(user.id, alert.id, AlertType(1))
+						SubscriptionModel.createSubscription(subscription)
+						msg = msg.concat(" Subscribed to this alert.")
+					}
+					Redirect(routes.DynamicAlertsController.view(alert.id)).flashing(AppFlash.success(msg))
 				}
 			)
 		}

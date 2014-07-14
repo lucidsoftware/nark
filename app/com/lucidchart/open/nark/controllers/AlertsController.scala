@@ -1,7 +1,7 @@
 package com.lucidchart.open.nark.controllers
 
 import com.lucidchart.open.nark.models.{AlertModel, AlertHistoryModel, AlertTagModel, AlertTagSubscriptionModel, AlertTargetStateModel, SubscriptionModel, TagConverter, UserModel}
-import com.lucidchart.open.nark.models.records.{Alert, AlertHistory, Comparisons, AlertState, Pagination, SickTarget, TagMap}
+import com.lucidchart.open.nark.models.records.{Alert, AlertHistory, Comparisons, AlertState, Pagination, SickTarget, TagMap, Subscription, AlertType}
 import com.lucidchart.open.nark.request.{AlertAction, AppFlash, AppAction, AuthAction}
 import com.lucidchart.open.nark.views
 import com.lucidchart.open.nark.Global
@@ -25,7 +25,8 @@ object AlertsController extends AppController {
 		frequency: Int,
 		dataSeconds: Int,
 		dropNullPoints: Int,
-		dropNullTargets: Boolean
+		dropNullTargets: Boolean,
+		subscribe:Boolean
 	)
 
 	private case class EditFormSubmission(
@@ -55,7 +56,8 @@ object AlertsController extends AppController {
 			"frequency" -> number.verifying(Constraints.min(1)),
 			"data_seconds" -> number.verifying("Must be positive", x => x > 0),
 			"drop_null_points" -> number.verifying("Must be positive", x => x >= 0),
-			"drop_null_targets" -> boolean
+			"drop_null_targets" -> boolean,
+			"subscribe" -> boolean
 		)(AlertFormSubmission.apply)(AlertFormSubmission.unapply)
 	)
 
@@ -82,7 +84,7 @@ object AlertsController extends AppController {
 	 */
 	def create = AuthAction.authenticatedUser { implicit user =>
 		AppAction { implicit request =>
-			val form = createAlertForm.fill(AlertFormSubmission("", Nil, "", 0, 0, Comparisons.<, 60, configuration.getInt("alerts.secondsToCheckData").get, 1, true))
+			val form = createAlertForm.fill(AlertFormSubmission("", Nil, "", 0, 0, Comparisons.<, 60, configuration.getInt("alerts.secondsToCheckData").get, 1, true,true))
 			Ok(views.html.alerts.create(form))
 		}
 	}
@@ -112,7 +114,13 @@ object AlertsController extends AppController {
 
 					AlertModel.createAlert(alert)
 					AlertTagModel.updateTagsForAlert(alert.id, data.tags)
-					Redirect(routes.AlertsController.view(alert.id)).flashing(AppFlash.success("Alert was successfully created."))
+					var msg = "Alert was successfully created."
+					if (data.subscribe) {
+						val subscription = new Subscription(user.id, alert.id, AlertType(0))
+						SubscriptionModel.createSubscription(subscription)
+						msg = msg.concat(" Subscribed to this alert.")
+					}
+					Redirect(routes.AlertsController.view(alert.id)).flashing(AppFlash.success(msg))
 				}
 			)
 		}
