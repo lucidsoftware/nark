@@ -2,24 +2,22 @@ package com.lucidchart.open.nark.models
 
 import com.lucidchart.open.nark.models.records.Target
 import com.lucidchart.open.nark.models.records.TargetSummarizer
-import anorm.SqlParser._
+import com.lucidchart.open.relate._
+import com.lucidchart.open.relate.Query._
 import java.util.UUID
-import anorm._
 import play.api.db.DB
 import play.api.Play.current
-import AnormImplicits._
 
 class TargetModel extends AppModel {
-	protected val targetsRowParser = {
-		get[UUID]("id") ~
-		get[UUID]("graph_id") ~
-		get[String]("name") ~
-		get[String]("target") ~
-		get[Boolean]("deleted") ~
-		get[Int]("summarizer") map {
-			case id ~ graphId ~ name ~ target ~ deleted ~ summarizer =>
-				new Target(id, graphId, name, target, TargetSummarizer(summarizer), deleted)
-		}
+	protected val targetsRowParser = RowParser { row =>
+		Target(
+			row.uuid("id"),
+			row.uuid("graph_id"),
+			row.string("name"),
+			row.string("target"),
+			TargetSummarizer(row.int("summarizer")),
+			row.bool("deleted")
+		)
 	}
 
 	/**
@@ -29,15 +27,15 @@ class TargetModel extends AppModel {
 	 * @return target
 	 */
 	def findTargetByID(id: UUID): Option[Target] = {
-		DB.withConnection("main") { connection =>
+		DB.withConnection("main") { implicit connection =>
 			SQL("""
 				SELECT *
 				FROM `graph_targets`
 				WHERE `id` = {id}
 				LIMIT 1
-			""").on(
-				"id" -> id
-			).as(targetsRowParser.singleOpt)(connection)
+			""").on { implicit query =>
+				uuid("id", id)
+			}.asSingleOption(targetsRowParser)
 		}
 	}
 
@@ -60,14 +58,16 @@ class TargetModel extends AppModel {
 			Nil
 		}
 		else {
-			DB.withConnection("main") { connection =>
-				RichSQL("""
+			DB.withConnection("main") { implicit connection =>
+				SQL("""
 					SELECT *
 					FROM `graph_targets`
 					WHERE `graph_id` IN ({graph_ids})
-				""").onList(
-					"graph_ids" -> graphIds
-				).toSQL.as(targetsRowParser *)(connection)
+				""").expand { implicit query =>
+					commaSeparated("graph_ids", graphIds.size)
+				}.on { implicit query =>
+					uuids("graph_ids", graphIds)
+				}.asList(targetsRowParser)
 			}
 		}
 	}
@@ -79,18 +79,18 @@ class TargetModel extends AppModel {
 	 * @param target
 	 */
 	def createTarget(target: Target) {
-		DB.withConnection("main") { connection =>
+		DB.withConnection("main") { implicit connection =>
 			SQL("""
 				INSERT INTO `graph_targets` (`id`, `graph_id`, `name`, `target`, `deleted`, `summarizer`)
 				VALUES ({id}, {graph_id}, {name}, {target}, {deleted}, {summarizer})
-			""").on(
-				"id"         -> target.id,
-				"graph_id"   -> target.graphId,
-				"name"       -> target.name,
-				"target"     -> target.target,
-				"deleted"    -> target.deleted,
-				"summarizer" -> target.summarizer.id
-			).executeUpdate()(connection)
+			""").on { implicit query =>
+				uuid("id", target.id)
+				uuid("graph_id", target.graphId)
+				string("name", target.name)
+				string("target", target.target)
+				bool("deleted", target.deleted)
+				int("summarizer", target.summarizer.id)
+			}.executeUpdate()
 		}
 	}
 
@@ -101,16 +101,16 @@ class TargetModel extends AppModel {
 	 * @param target
 	 */
 	def editTarget(target: Target) {
-		DB.withConnection("main") { connection =>
+		DB.withConnection("main") { implicit connection =>
 			SQL("""
 				UPDATE `graph_targets` SET `name` = {name}, `target` = {target}, `deleted` = {deleted}, `summarizer` = {summarizer} WHERE `id` = {id}
-			""").on(
-				"id"         -> target.id,
-				"name"       -> target.name,
-				"target"     -> target.target,
-				"deleted"    -> target.deleted,
-				"summarizer" -> target.summarizer.id
-			).executeUpdate()(connection)
+			""").on { implicit query =>
+				uuid("id", target.id)
+				string("name", target.name)
+				string("target", target.target)
+				bool("deleted", target.deleted)
+				int("summarizer", target.summarizer.id)
+			}.executeUpdate()
 		}
 	}
 }

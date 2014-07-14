@@ -1,10 +1,9 @@
 package com.lucidchart.open.nark.models
 
 import com.lucidchart.open.nark.models.records.{DynamicAlert, Comparisons}
+import com.lucidchart.open.relate._
+import com.lucidchart.open.relate.Query._
 
-import anorm._
-import anorm.SqlParser._
-import AnormImplicits._
 import java.math.BigDecimal
 import java.util.{Date, UUID}
 import play.api.Play.current
@@ -14,26 +13,25 @@ import play.api.db.DB
 object DynamicAlertModel extends DynamicAlertModel
 class DynamicAlertModel extends AppModel {
 
-	protected val dynamicAlertsRowParser = {
-		get[UUID]("id") ~
-		get[String]("name") ~
-		get[UUID]("user_id") ~
-		get[Date]("created") ~
-		get[String]("search_target") ~
-		get[String]("match") ~
-		get[String]("build_target") ~
-		get[BigDecimal]("error_threshold") ~
-		get[BigDecimal]("warn_threshold") ~
-		get[Int]("comparison") ~
-		get[Boolean]("active") ~
-		get[Boolean]("deleted") ~
-		get[Int]("frequency") ~
-		get[Int]("data_seconds") ~
-		get[Int]("drop_null_points") ~
-		get[Boolean]("drop_null_targets") map {
-			case id ~ name ~ userId ~ created ~ searchTarget ~ matchExpr ~ buildTarget ~ errorThreshold ~ warnThreshold ~ comparison ~ active ~ deleted ~ frequency ~ dataSeconds ~ dropNullPoints ~ dropNullTargets =>
-				new DynamicAlert(id, name, userId, searchTarget, matchExpr, buildTarget, Comparisons(comparison), active, deleted, created, frequency, warnThreshold, errorThreshold, dataSeconds, dropNullPoints, dropNullTargets)
-		}
+	protected val dynamicAlertsRowParser = RowParser { row =>
+		DynamicAlert(
+			row.uuid("id"),
+			row.string("name"),
+			row.uuid("user_id"),
+			row.string("search_target"),
+			row.string("match"),
+			row.string("build_target"),
+			Comparisons(row.int("comparison")),
+			row.bool("active"),
+			row.bool("deleted"),
+			row.date("created"),
+			row.int("frequency"),
+			row.bigDecimal("error_threshold"),
+			row.bigDecimal("warn_threshold"),
+			row.int("data_seconds"),
+			row.int("drop_null_points"),
+			row.bool("drop_null_targets")
+		)
 	}
 
 	/**
@@ -42,28 +40,28 @@ class DynamicAlertModel extends AppModel {
 	 * @param alert the dynamic alert to create
 	 */
 	def createDynamicAlert(alert: DynamicAlert): Unit = {
-		DB.withConnection("main") { connection =>
+		DB.withConnection("main") { implicit connection =>
 			SQL("""
 				INSERT INTO `dynamic_alerts` (`id`, `name`, `user_id`, `created`, `search_target`, `match`, `build_target`, `error_threshold`, `warn_threshold`, `comparison`, `active`, `deleted`, `frequency`, `data_seconds`, `drop_null_points`, `drop_null_targets`)
 				VALUES ({id}, {name}, {user_id}, {created}, {search_target}, {match}, {build_target}, {error_threshold}, {warn_threshold}, {comparison}, {active}, {deleted}, {frequency}, {data_seconds}, {drop_null_points}, {drop_null_targets})
-			""").on(
-				"id" -> alert.id,
-				"name" -> alert.name,
-				"user_id" -> alert.userId,
-				"created" -> alert.created,
-				"search_target" -> alert.searchTarget,
-				"match" -> alert.matchExpr,
-				"build_target" -> alert.buildTarget,
-				"error_threshold" -> alert.errorThreshold,
-				"warn_threshold" -> alert.warnThreshold,
-				"comparison" -> alert.comparison.id,
-				"active" -> alert.active,
-				"deleted" -> alert.deleted,
-				"frequency" -> alert.frequency,
-				"data_seconds" -> alert.dataSeconds,
-				"drop_null_points" -> alert.dropNullPoints,
-				"drop_null_targets" -> alert.dropNullTargets
-			).executeUpdate()(connection)
+			""").on { implicit query =>
+				uuid("id", alert.id)
+				string("name", alert.name)
+				uuid("user_id", alert.userId)
+				date("created", alert.created)
+				string("search_target", alert.searchTarget)
+				string("match", alert.matchExpr)
+				string("build_target", alert.buildTarget)
+				bigDecimal("error_threshold", alert.errorThreshold)
+				bigDecimal("warn_threshold", alert.warnThreshold)
+				int("comparison", alert.comparison.id)
+				bool("active", alert.active)
+				bool("deleted", alert.deleted)
+				int("frequency", alert.frequency)
+				int("data_seconds", alert.dataSeconds)
+				int("drop_null_points", alert.dropNullPoints)
+				bool("drop_null_targets", alert.dropNullTargets)
+			}.executeUpdate()
 		}
 	}
 
@@ -74,24 +72,24 @@ class DynamicAlertModel extends AppModel {
 	 * @return a List of DynamicAlert records
 	 */
 	def search(name: String, page: Int) = {
-		DB.withConnection("main") { connection =>
+		DB.withConnection("main") { implicit connection =>
 			val found = SQL("""
 				SELECT COUNT(1) FROM `dynamic_alerts`
 				WHERE `name` LIKE {name} AND `deleted` = FALSE
-			""").on(
-				"name" -> name
-			).as(scalar[Long].single)(connection)
+			""").on { implicit query =>
+				string("name", name)
+			}.asScalar[Long]
 
 			val matches = SQL("""
 				SELECT * FROM `dynamic_alerts`
 				WHERE `name` LIKE {name} AND `deleted` = FALSE
 				ORDER BY `name` ASC
 				LIMIT {limit} OFFSET {offset}
-			""").on(
-				"name" -> name,
-				"limit" -> configuredLimit,
-				"offset" -> configuredLimit * page
-			).as(dynamicAlertsRowParser *)(connection)
+			""").on { implicit query =>
+				string("name", name)
+				int("limit", configuredLimit)
+				int("offset", configuredLimit * page)
+			}.asList(dynamicAlertsRowParser)
 
 			(found, matches)
 		}
@@ -105,26 +103,26 @@ class DynamicAlertModel extends AppModel {
 	 * @return the number of matching dynamic alerts and a list of matching dynamic alerts
 	 */
 	def searchDeleted(userId: UUID, name: String, page: Int): (Long, List[DynamicAlert]) = {
-		DB.withConnection("main") { connection =>
+		DB.withConnection("main") { implicit connection =>
 			val found = SQL("""
 				SELECT COUNT(1) FROM `dynamic_alerts`
 				WHERE `name` LIKE {name} AND `deleted` = TRUE AND `user_id` = {user_id}
-			""").on(
-				"name" -> name,
-				"user_id" -> userId
-			).as(scalar[Long].single)(connection)
+			""").on { implicit query =>
+				string("name", name)
+				uuid("user_id", userId)
+			}.asScalar[Long]
 
 			val matches = SQL("""
 				SELECT * FROM `dynamic_alerts`
 				WHERE `name` LIKE {name} AND `deleted` = TRUE AND `user_id` = {user_id}
 				ORDER BY `name` ASC
 				LIMIT {limit} OFFSET {offset}
-			""").on(
-				"name" -> name,
-				"user_id" -> userId,
-				"limit" -> configuredLimit,
-				"offset" -> configuredLimit * page
-			).as(dynamicAlertsRowParser *)(connection)
+			""").on { implicit query =>
+				string("name", name)
+				uuid("user_id", userId)
+				int("limit", configuredLimit)
+				int("offset", configuredLimit * page)
+			}.asList(dynamicAlertsRowParser)
 
 			(found, matches)
 		}
@@ -149,14 +147,16 @@ class DynamicAlertModel extends AppModel {
 			Nil
 		}
 		else {
-			DB.withConnection("main") { connection =>
-				RichSQL("""
+			DB.withConnection("main") { implicit connection =>
+				SQL("""
 					SELECT *
 					FROM `dynamic_alerts`
 					WHERE `id` IN ({ids})
-				""").onList(
-					"ids" -> ids
-				).toSQL.as(dynamicAlertsRowParser *)(connection)
+				""").expand { implicit query =>
+					commaSeparated("ids", ids.size)
+				}.on { implicit query =>
+					uuids("ids", ids)
+				}.asList(dynamicAlertsRowParser)
 			}
 		}
 	}
@@ -166,12 +166,12 @@ class DynamicAlertModel extends AppModel {
 	 * @return the list of active non deleted dynamic alerts
 	 */
 	def findActiveDynamicAlerts(): List[DynamicAlert] = {
-		DB.withConnection("main") { connection =>
+		DB.withConnection("main") { implicit connection =>
 			SQL("""
 				SELECT *
 				FROM `dynamic_alerts`
 				WHERE `active` = TRUE AND `deleted` = FALSE
-			""").as(dynamicAlertsRowParser *)(connection)
+			""").asList(dynamicAlertsRowParser)
 		}
 	}
 
@@ -180,27 +180,27 @@ class DynamicAlertModel extends AppModel {
 	 * @param alert the edited alert
 	 */
 	def editDynamicAlert(alert: DynamicAlert) = {
-		DB.withConnection("main") { connection =>
+		DB.withConnection("main") { implicit connection =>
 			SQL("""
 				UPDATE `dynamic_alerts`
 				SET `name`={name}, `search_target`={search_target}, `match`={match_expr}, `build_target`={build_target}, `error_threshold`={error_threshold}, `warn_threshold`={warn_threshold}, `comparison`={comparison}, `active`={active}, `deleted`={deleted}, `frequency`={frequency}, `data_seconds`={data_seconds}, `drop_null_points`={drop_null_points}, `drop_null_targets`={drop_null_targets}
 				WHERE `id`={id}
-			""").on(
-				"name" -> alert.name,
-				"search_target" -> alert.searchTarget,
-				"match_expr" -> alert.matchExpr,
-				"build_target" -> alert.buildTarget,
-				"error_threshold" -> alert.errorThreshold,
-				"warn_threshold" -> alert.warnThreshold,
-				"comparison" -> alert.comparison.id,
-				"active" -> alert.active,
-				"deleted" -> alert.deleted,
-				"frequency" -> alert.frequency,
-				"data_seconds" -> alert.dataSeconds,
-				"drop_null_points" -> alert.dropNullPoints,
-				"drop_null_targets" -> alert.dropNullTargets,
-				"id" -> alert.id
-			).executeUpdate()(connection)
+			""").on { implicit query =>
+				string("name", alert.name)
+				string("search_target", alert.searchTarget)
+				string("match_expr", alert.matchExpr)
+				string("build_target", alert.buildTarget)
+				bigDecimal("error_threshold", alert.errorThreshold)
+				bigDecimal("warn_threshold", alert.warnThreshold)
+				int("comparison", alert.comparison.id)
+				bool("active", alert.active)
+				bool("deleted", alert.deleted)
+				int("frequency", alert.frequency)
+				int("data_seconds", alert.dataSeconds)
+				int("drop_null_points", alert.dropNullPoints)
+				bool("drop_null_targets", alert.dropNullTargets)
+				uuid("id", alert.id)
+			}.executeUpdate()
 		}
 	}
 }
