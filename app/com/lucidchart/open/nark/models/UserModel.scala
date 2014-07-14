@@ -4,26 +4,24 @@ import java.util.Date
 import java.util.UUID
 
 import com.lucidchart.open.nark.models.records.User
+import com.lucidchart.open.relate._
+import com.lucidchart.open.relate.Query._
 
-import AnormImplicits._
-import anorm._
-import anorm.SqlParser._
 import play.api.Play.current
 import play.api.db.DB
 
 class UserModel extends AppModel {
-	protected val usersRowParser = {
-		get[UUID]("id") ~
-		get[String]("email") ~
-		get[Date]("created") ~
-		get[String]("name") ~
-		get[String]("warn_address") ~
-		get[Boolean]("warn_enable") ~
-		get[String]("error_address") ~
-		get[Boolean]("error_enable") map {
-			case id ~ email ~ created ~ name ~ warn_address ~ warn_enable ~ error_address ~ error_enable=>
-				new User(id, email, created, name, warn_address, warn_enable, error_address, error_enable)
-		}
+	protected val usersRowParser = RowParser { row =>
+		User(
+			row.uuid("id"),
+			row.string("email"),
+			row.date("created"),
+			row.string("name"),
+			row.string("warn_address"),
+			row.bool("warn_enable"),
+			row.string("error_address"),
+			row.bool("error_enable")
+		)
 	}
 	
 	/**
@@ -39,14 +37,16 @@ class UserModel extends AppModel {
 	 * @param userIds the ids of the users to find
 	 */
 	def findUsersByID(userIds: List[UUID]): List[User] = {
-		DB.withConnection("main") { connection =>
-			RichSQL("""
+		DB.withConnection("main") { implicit connection =>
+			SQL("""
 				SELECT *
 				FROM `users`
 				WHERE `id` IN ({user_ids})
-			""").onList(
-				"user_ids" -> userIds
-			).toSQL.as(usersRowParser *)(connection)
+			""").expand { implicit query =>
+				commaSeparated("user_ids", userIds.size)
+			}.on { implicit query =>
+				uuids("user_ids", userIds)
+			}.asList(usersRowParser)
 		}
 	}
 	
@@ -57,15 +57,15 @@ class UserModel extends AppModel {
 	 * @return user
 	 */
 	def findUserByEmail(email: String): Option[User] = {
-		DB.withConnection("main") { connection =>
+		DB.withConnection("main") { implicit connection =>
 			SQL("""
 				SELECT *
 				FROM `users`
 				WHERE `email` = {email}
 				LIMIT 1
-			""").on(
-				"email" -> email
-			).as(usersRowParser.singleOpt)(connection)
+			""").on { implicit query =>
+				string("email", email)
+			}.asSingleOption(usersRowParser)
 		}
 	}
 	
@@ -76,20 +76,20 @@ class UserModel extends AppModel {
 	 * @param user
 	 */
 	def createUser(user: User) {
-		DB.withConnection("main") { connection =>
+		DB.withConnection("main") { implicit connection =>
 			SQL("""
 				INSERT INTO `users` (`id`, `email`, `created`, `name`, `warn_address`, `warn_enable`, `error_address`, `error_enable`)
 				VALUES ({id}, {email}, {created}, {name}, {warn_address}, {warn_enable}, {error_address}, {error_enable})
-			""").on(
-				"id"         -> user.id,
-				"email"      -> user.email,
-				"created"    -> user.created,
-				"name"       -> user.name,
-				"warn_address"	-> user.warnAddress,
-				"warn_enable"	-> user.warnEnable,
-				"error_address"	-> user.errorAddress,
-				"error_enable"	-> user.errorEnable
-			).executeUpdate()(connection)
+			""").on { implicit query =>
+				uuid("id", user.id)
+				string("email", user.email)
+				date("created", user.created)
+				string("name", user.name)
+				string("warn_address", user.warnAddress)
+				bool("warn_enable", user.warnEnable)
+				string("error_address", user.errorAddress)
+				bool("error_enable", user.errorEnable)
+			}.executeUpdate()
 		}
 	}
 
@@ -98,18 +98,18 @@ class UserModel extends AppModel {
 	 * @param user the edited User to put into the database
 	 */
 	def editUser(user: User) {
-		DB.withConnection("main") { connection =>
+		DB.withConnection("main") { implicit connection =>
 			SQL("""
 				UPDATE `users`
 				SET `error_address`={error_address}, `error_enable`={error_enable}, `warn_address`={warn_address}, `warn_enable`={warn_enable}
 				WHERE `id`={id}
-			""").on(
-				"id" -> user.id,
-				"error_address" -> user.errorAddress,
-				"error_enable" -> user.errorEnable,
-				"warn_address" -> user.warnAddress,
-				"warn_enable" -> user.warnEnable
-			).executeUpdate()(connection)
+			""").on { implicit query =>
+				uuid("id", user.id)
+				string("error_address", user.errorAddress)
+				bool("error_enable", user.errorEnable)
+				string("warn_address", user.warnAddress)
+				bool("warn_enable", user.warnEnable)
+			}.executeUpdate()
 		}
 	}
 }

@@ -5,50 +5,48 @@ import java.util.UUID
 
 import com.lucidchart.open.nark.models.records.Host
 import com.lucidchart.open.nark.models.records.HostState
+import com.lucidchart.open.relate._
+import com.lucidchart.open.relate.Query._
 
-import AnormImplicits._
-import anorm._
-import anorm.SqlParser._
 import play.api.Play.current
 import play.api.db.DB
 
 class HostModel extends AppModel {
-	protected val hostsRowParser = {
-		get[String]("name") ~
-		get[Int]("state") ~
-		get[Date]("last_confirmed") map {
-			case name ~ state ~ lastConfirmed =>
-				new Host(name, HostState(state), lastConfirmed)
-		}
+	protected val hostsRowParser = RowParser { row =>
+		Host(
+			row.string("name"),
+			HostState(row.int("state")),
+			row.date("last_confirmed")
+		)
 	}
 
 	/**
 	 * upsert a host record
 	 */
 	def upsert(host: Host) {
-		DB.withConnection("main") { connection =>
+		DB.withConnection("main") { implicit connection =>
 			SQL("""
 				INSERT INTO `hosts` (`name`, `state`, `last_confirmed`)
 				VALUES ({name}, {state}, {last_confirmed})
 				ON DUPLICATE KEY UPDATE `state` = {state}, `last_confirmed` = {last_confirmed}
-			""").on(
-				"name"           -> host.name,
-				"state"          -> host.state.id,
-				"last_confirmed" -> host.lastConfirmed
-			).executeUpdate()(connection)
+			""").on { implicit query =>
+				string("name", host.name)
+				int("state", host.state.id)
+				date("last_confirmed", host.lastConfirmed)
+			}.executeUpdate()
 		}
 	}
 
 	/**
 	 * delete any host records that haven't been updated since before date
 	 */
-	def cleanBefore(date: Date) {
-		DB.withConnection("main") { connection =>
+	def cleanBefore(before: Date) {
+		DB.withConnection("main") { implicit connection =>
 			SQL("""
 				DELETE FROM `hosts` WHERE `last_confirmed` < {date}
-			""").on(
-				"date" -> date
-			).executeUpdate()(connection)
+			""").on { implicit query =>
+				date("date", before)
+			}.executeUpdate()
 		}
 	}
 
@@ -56,24 +54,24 @@ class HostModel extends AppModel {
 	 * Find all the hosts that match the name
 	 */
 	def search(name: String, page: Int) = {
-		DB.withConnection("main") { connection =>
+		DB.withConnection("main") { implicit connection =>
 			val found = SQL("""
 				SELECT COUNT(1) FROM `hosts`
 				WHERE `name` LIKE {name}
-			""").on(
-				"name" -> name
-			).as(scalar[Long].single)(connection)
+			""").on { implicit query =>
+				string("name", name)
+			}.asScalar[Long]
 
 			val matches = SQL("""
 				SELECT * FROM `hosts`
 				WHERE `name` LIKE {name}
 				ORDER BY `name` ASC
 				LIMIT {limit} OFFSET {offset}
-			""").on(
-				"name" -> name,
-				"limit" -> configuredLimit,
-				"offset" -> configuredLimit * page
-			).as(hostsRowParser *)(connection)
+			""").on { implicit query =>
+				string("name", name)
+				int("limit", configuredLimit)
+				int("offset", configuredLimit * page)
+			}.asList(hostsRowParser)
 
 			(found, matches)
 		}
@@ -87,15 +85,16 @@ class HostModel extends AppModel {
 			Nil
 		}
 		else {
-			DB.withConnection("main") { connection =>
-				RichSQL("""
+			DB.withConnection("main") { implicit connection =>
+				SQL("""
 					SELECT * FROM `hosts`
 					WHERE `name` LIKE {name} AND `state` IN ({states})
-				""").onList(
-					"states" -> states.map(_.id)
-				).toSQL.on(
-					"name" -> name
-				).as(hostsRowParser *)(connection)
+				""").expand { implicit query =>
+					commaSeparated("states", states.size)
+				}.on { implicit query =>
+					ints("states", states.map(_.id))
+					string("name", name)
+				}.asList(hostsRowParser)
 			}
 		}
 	}

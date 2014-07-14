@@ -1,9 +1,8 @@
 package com.lucidchart.open.nark.models
 
-import anorm._
-import anorm.SqlParser._
-import AnormImplicits._
 import com.lucidchart.open.nark.models.records.{Alert, Tag}
+import com.lucidchart.open.relate._
+import com.lucidchart.open.relate.Query._
 import java.util.UUID
 import play.api.db.DB
 import play.api.Play.current
@@ -13,11 +12,11 @@ object AlertTagModel extends AlertTagModel
 trait AlertTagModel extends AppModel {
 	protected val table = "alert_tags"
 
-	protected val tagsRowParser = {
-		get[UUID]("alert_id") ~
-		get[String]("tag") map {
-			case alertId ~ tag => new Tag(alertId, tag)
-		}
+	protected val tagsRowParser = RowParser { row =>
+		Tag(
+			row.uuid("alert_id"),
+			row.string("tag")
+		)
 	}
 
 	/**
@@ -26,13 +25,13 @@ trait AlertTagModel extends AppModel {
 	 * @return the list of matched tags
 	 */
 	def search(tag: String, page: Int) = {
-		DB.withConnection("main") { connection =>
+		DB.withConnection("main") { implicit connection =>
 			val found = SQL("""
 				SELECT COUNT(distinct(`tag`)) FROM `""" + table + """`
 				WHERE `tag` LIKE {tag}
-			""").on(
-				"tag" -> tag
-			).as(scalar[Long].single)(connection)
+			""").on { implicit query =>
+				string("tag", tag)
+			}.asScalar[Long]
 
 			val matches = SQL("""
 				SELECT * FROM `""" + table + """`
@@ -40,11 +39,11 @@ trait AlertTagModel extends AppModel {
 				GROUP BY `tag`
 				ORDER BY `tag` ASC
 				LIMIT {limit} OFFSET {offset}
-			""").on(
-				"tag" -> tag,
-				"limit" -> configuredLimit,
-				"offset" -> configuredLimit * page
-			).as(tagsRowParser *)(connection)
+			""").on { implicit query =>
+				string("tag", tag)
+				int("limit", configuredLimit)
+				int("offset", configuredLimit * page)
+			}.asList(tagsRowParser)
 
 			(found, matches)
 		}
@@ -68,14 +67,16 @@ trait AlertTagModel extends AppModel {
 			Nil
 		}
 		else {
-			DB.withConnection("main") { connection =>
-				RichSQL("""
+			DB.withConnection("main") { implicit connection =>
+				SQL("""
 					SELECT *
 					FROM `""" + table + """`
 					WHERE `alert_id` IN ({ids})
-				""").onList(
-					"ids" -> ids
-				).toSQL.as(tagsRowParser *)(connection)
+				""").expand { implicit query =>
+					commaSeparated("ids", ids.size)
+				}.on { implicit query =>
+					uuids("ids", ids)
+				}.asList(tagsRowParser)
 			}
 		}
 	}
@@ -99,14 +100,16 @@ trait AlertTagModel extends AppModel {
 			Nil
 		}
 		else {
-			DB.withConnection("main") { connection =>
-				RichSQL("""
+			DB.withConnection("main") { implicit connection =>
+				SQL("""
 					SELECT *
 					FROM `""" + table + """`
 					WHERE `tag` in ({tags})
-				""").onList(
-					"tags" -> tags
-				).toSQL.as(tagsRowParser *)(connection)
+				""").expand { implicit query =>
+					commaSeparated("tags", tags.size)
+				}.on { implicit query =>
+					strings("tags", tags)
+				}.asList(tagsRowParser)
 			}
 		}
 	}
@@ -117,32 +120,35 @@ trait AlertTagModel extends AppModel {
 	 * @param tags the new tags to associate with the alert
 	 */
 	def updateTagsForAlert(id: UUID, tags: List[String]) = {
-		DB.withTransaction("main") { connection =>
+		DB.withTransaction("main") { implicit connection =>
 			if (tags.isEmpty) {
 				SQL("""
 					DELETE FROM `""" + table + """`
 					WHERE `alert_id` = {alert_id}
-				""").on(
-					"alert_id" -> id
-				).executeUpdate()(connection)
+				""").on { implicit query =>
+					uuid("alert_id", id)
+				}.executeUpdate()
 			}
 			else {
-				RichSQL("""
+				SQL("""
 					DELETE FROM `""" + table + """`
 					WHERE `alert_id` = {alert_id} AND `tag` NOT IN ({tags})
-				""").onList(
-					"tags" -> tags
-				).toSQL.on(
-					"alert_id" -> id
-				).executeUpdate()(connection)
+				""").expand { implicit query =>
+					commaSeparated("tags", tags.size)
+				}.on { implicit query =>
+					strings("tags", tags)
+					uuid("alert_id", id)
+				}.executeUpdate()
 
-				RichSQL("""
+				SQL("""
 					INSERT IGNORE INTO `""" + table + """` (`alert_id`, `tag`)
-					VALUES ({fields})
-				""").multiInsert(tags.size, Seq("alert_id", "tag"))(
-					"alert_id" -> tags.map(_ => toParameterValue(id)),
-					"tag" -> tags.map(toParameterValue(_))
-				).toSQL.executeUpdate()(connection)
+					VALUES {fields}
+				""").expand { implicit query =>
+					tupled("fields", List("alert_id", "tag"), tags.size)
+				}.onTuples("fields", tags) { (tag, query) =>
+					query.uuid("alert_id", id)
+					query.string("tag", tag)
+				}.executeUpdate()
 			}
 		}
 	}

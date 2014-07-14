@@ -1,9 +1,8 @@
 package com.lucidchart.open.nark.models
 
-import anorm._
-import anorm.SqlParser._
-import AnormImplicits._
 import com.lucidchart.open.nark.models.records.{Alert, AlertState, AlertStatus, Comparisons}
+import com.lucidchart.open.relate._
+import com.lucidchart.open.relate.Query._
 import java.math.BigDecimal
 import java.util.{Date, UUID}
 import play.api.Logger
@@ -17,32 +16,31 @@ class AlertModel extends AppModel {
 	private val maxConsecutiveFailures = configuration.getInt("alerts.maxConsecutiveFailures").get
 	private val consecutiveFailuresMultiplier = configuration.getInt("alerts.consecutiveFailuresMultiplier").get
 
-	protected val alertsRowParser = {
-		get[UUID]("id") ~ 
-		get[String]("name") ~
-		get[UUID]("user_id") ~
-		get[String]("target") ~
-		get[Int]("comparison") ~
-		get[Option[UUID]]("dynamic_alert_id") ~
-		get[Boolean]("active") ~
-		get[Boolean]("deleted") ~
-		get[Date]("created") ~
-		get[Date]("updated") ~
-		get[Option[UUID]]("thread_id") ~
-		get[Option[Date]]("thread_start") ~
-		get[Date]("last_checked") ~
-		get[Date]("next_check") ~
-		get[Int]("frequency") ~
-		get[BigDecimal]("warn_threshold") ~
-		get[BigDecimal]("error_threshold") ~
-		get[Int]("worst_state") ~
-		get[Int]("consecutive_failures") ~
-		get[Int]("data_seconds") ~
-		get[Int]("drop_null_points") ~
-		get[Boolean]("drop_null_targets") map {
-			case id ~ name ~ user_id ~ target ~ comparison ~ dynamic_alert_id ~ active ~ deleted ~ created ~ updated ~ thread_id ~ thread_start ~ last_checked ~ next_check ~ frequency ~ warn_threshold ~ error_threshold ~ worst_state ~ consecutive_failures ~ data_seconds ~ drop_null_points ~ drop_null_targets=>
-				new Alert(id, name, user_id, target, Comparisons(comparison), dynamic_alert_id, active, deleted, created, updated, thread_id, thread_start, last_checked, next_check, frequency, warn_threshold, error_threshold, AlertState(worst_state), consecutive_failures, data_seconds, drop_null_points, drop_null_targets)
-		}
+	protected val alertsRowParser = RowParser { implicit row =>
+		Alert(
+			row.uuid("id"),
+			row.string("name"),
+			row.uuid("user_id"),
+			row.string("target"),
+			Comparisons(row.int("comparison")),
+			row.uuidOption("dynamic_alert_id"),
+			row.bool("active"),
+			row.bool("deleted"),
+			row.date("created"),
+			row.date("updated"),
+			row.uuidOption("thread_id"),
+			row.dateOption("thread_start"),
+			row.date("last_checked"),
+			row.date("next_check"),
+			row.int("frequency"),
+			row.bigDecimal("warn_threshold"),
+			row.bigDecimal("error_threshold"),
+			AlertState(row.int("worst_state")),
+			row.int("consecutive_failures"),
+			row.int("data_seconds"),
+			row.int("drop_null_points"),
+			row.bool("drop_null_targets")
+		)
 	}
 
 	/**
@@ -52,34 +50,34 @@ class AlertModel extends AppModel {
 	 * @param alert the Alert to create
 	 */
 	def createAlert(alert: Alert) {
-		DB.withConnection("main") { connection =>
+		DB.withConnection("main") { implicit connection =>
 			SQL("""
 				INSERT INTO `alerts` (`id`, `name`, `user_id`, `target`, `comparison`, `dynamic_alert_id`, `active`, `deleted`, `created`, `updated`, `thread_id`, `thread_start`, `last_checked`, `next_check`, `frequency`, `warn_threshold`, `error_threshold`, `worst_state`, `consecutive_failures`, `data_seconds`, `drop_null_points`, `drop_null_targets`)
 				VALUES ({id}, {name}, {user_id}, {target}, {comparison}, {dynamic_alert_id}, {active}, {deleted}, {created}, {updated}, {thread_id}, {thread_start}, {last_checked}, {next_check}, {frequency}, {warn_threshold}, {error_threshold}, {worst_state}, {consecutive_failures}, {data_seconds}, {drop_null_points}, {drop_null_targets})
-			""").on(
-				"id"                    -> alert.id,
-				"name"                  -> alert.name,
-				"user_id"               -> alert.userId,
-				"target"                -> alert.target,
-				"comparison"            -> alert.comparison.id,
-				"dynamic_alert_id"      -> alert.dynamicAlertId,
-				"active"                -> alert.active,
-				"deleted"               -> alert.deleted,
-				"created"               -> alert.created,
-				"updated"               -> alert.updated,
-				"thread_id"             -> alert.threadId,
-				"thread_start"          -> alert.threadStart,
-				"last_checked"          -> alert.lastChecked,
-				"next_check"            -> alert.nextCheck,
-				"frequency"             -> alert.frequency,
-				"warn_threshold"        -> alert.warnThreshold,
-				"error_threshold"       -> alert.errorThreshold,
-				"worst_state"           -> alert.worstState.id,
-				"consecutive_failures"  -> alert.consecutiveFailures,
-				"data_seconds"          -> alert.dataSeconds,
-				"drop_null_points"      -> alert.dropNullPoints,
-				"drop_null_targets"     -> alert.dropNullTargets
-			).executeUpdate()(connection)
+			""").on { implicit query =>
+				uuid("id", alert.id)
+				string("name", alert.name)
+				uuid("user_id", alert.userId)
+				string("target", alert.target)
+				int("comparison", alert.comparison.id)
+				uuidOption("dynamic_alert_id", alert.dynamicAlertId)
+				bool("active", alert.active)
+				bool("deleted", alert.deleted)
+				date("created", alert.created)
+				date("updated", alert.updated)
+				uuidOption("thread_id", alert.threadId)
+				dateOption("thread_start", alert.threadStart)
+				date("last_checked", alert.lastChecked)
+				date("next_check", alert.nextCheck)
+				int("frequency", alert.frequency)
+				bigDecimal("warn_threshold", alert.warnThreshold)
+				bigDecimal("error_threshold", alert.errorThreshold)
+				int("worst_state", alert.worstState.id)
+				int("consecutive_failures", alert.consecutiveFailures)
+				int("data_seconds", alert.dataSeconds)
+				int("drop_null_points", alert.dropNullPoints)
+				bool("drop_null_targets", alert.dropNullTargets)
+			}.executeUpdate()
 		}
 	}
 
@@ -102,14 +100,16 @@ class AlertModel extends AppModel {
 			Nil
 		}
 		else {
-			DB.withConnection("main") { connection =>
-				RichSQL("""
+			DB.withConnection("main") { implicit connection =>
+				SQL("""
 					SELECT *
 					FROM `alerts`
 					WHERE `id` IN ({ids})
-				""").onList(
-					"ids" -> ids
-				).toSQL.as(alertsRowParser *)(connection)
+				""").expand { implicit query =>
+					commaSeparated("ids", ids.size)
+				}.on { implicit query =>
+					uuids("ids", ids)
+				}.asList(alertsRowParser)
 			}
 		}
 	}
@@ -120,14 +120,14 @@ class AlertModel extends AppModel {
 	 * @return the list of alerts
 	 */
 	def findAlertByDynamicAlert(id: UUID): List[Alert] = {
-		DB.withConnection("main") { connection =>
+		DB.withConnection("main") { implicit connection =>
 			SQL("""
 				SELECT *
 				FROM `alerts`
 				WHERE `dynamic_alert_id`={id}
-			""").on(
-				"id" -> id
-			).as(alertsRowParser *)(connection)
+			""").on { implicit query =>
+				uuid("id", id)
+			}.asList(alertsRowParser)
 		}
 	}
 
@@ -137,24 +137,24 @@ class AlertModel extends AppModel {
 	 * @return a List of Alert records
 	 */
 	def search(name: String, page: Int) = {
-		DB.withConnection("main") { connection =>
+		DB.withConnection("main") { implicit connection =>
 			val found = SQL("""
 				SELECT COUNT(1) FROM `alerts`
 				WHERE `name` LIKE {name} AND `deleted` = FALSE
-			""").on(
-				"name" -> name
-			).as(scalar[Long].single)(connection)
+			""").on { implicit query =>
+				string("name", name)
+			}.asScalar[Long]
 
 			val matches = SQL("""
 				SELECT * FROM `alerts`
 				WHERE `name` LIKE {name} AND `deleted` = FALSE
 				ORDER BY `name` ASC
 				LIMIT {limit} OFFSET {offset}
-			""").on(
-				"name" -> name,
-				"limit" -> configuredLimit,
-				"offset" -> configuredLimit * page
-			).as(alertsRowParser *)(connection)
+			""").on { implicit query =>
+				string("name", name)
+				int("limit", configuredLimit)
+				int("offset", configuredLimit * page)
+			}.asList(alertsRowParser)
 
 			(found, matches)
 		}
@@ -168,26 +168,26 @@ class AlertModel extends AppModel {
 	 * @return the number of matching alerts and a list of matching alerts
 	 */
 	def searchDeleted(userId: UUID, name: String, page: Int): (Long, List[Alert]) = {
-		DB.withConnection("main") { connection =>
+		DB.withConnection("main") { implicit connection =>
 			val found = SQL("""
 				SELECT COUNT(1) FROM `alerts`
 				WHERE `name` LIKE {name} AND `deleted` = TRUE AND `user_id` = {user_id}
-			""").on(
-				"name" -> name,
-				"user_id" -> userId
-			).as(scalar[Long].single)(connection)
+			""").on { implicit query =>
+				string("name", name)
+				uuid("user_id", userId)
+			}.asScalar[Long]
 
 			val matches = SQL("""
 				SELECT * FROM `alerts`
 				WHERE `name` LIKE {name} AND `deleted` = TRUE AND `user_id` = {user_id}
 				ORDER BY `name` ASC
 				LIMIT {limit} OFFSET {offset}
-			""").on(
-				"name" -> name,
-				"user_id" -> userId,
-				"limit" -> configuredLimit,
-				"offset" -> configuredLimit * page
-			).as(alertsRowParser *)(connection)
+			""").on { implicit query =>
+				string("name", name)
+				uuid("user_id", userId)
+				int("limit", configuredLimit)
+				int("offset", configuredLimit * page)
+			}.asList(alertsRowParser)
 
 			(found, matches)
 		}
@@ -198,33 +198,33 @@ class AlertModel extends AppModel {
 	 * @param alert the edited values
 	 */
 	def editAlert(alert: Alert) = {
-		DB.withConnection("main") { connection =>
+		DB.withConnection("main") { implicit connection =>
 			SQL("""
 				UPDATE `alerts`
 				SET name={name}, target={target}, comparison={comparison}, active = {active}, deleted = {deleted}, updated = {updated},
 					frequency={frequency}, error_threshold={error_threshold}, warn_threshold={warn_threshold}, data_seconds={data_seconds},
 					drop_null_points={drop_null_points}, drop_null_targets={drop_null_targets}
 				WHERE id={id}
-			""").on(
-				"id"							-> alert.id,
-				"name"						-> alert.name,
-				"target"						-> alert.target,
-				"comparison"				-> alert.comparison.id,
-				"active"						-> alert.active,
-				"deleted"					-> alert.deleted,
-				"updated"					-> alert.updated,
-				"frequency"					-> alert.frequency,
-				"warn_threshold"			-> alert.warnThreshold,
-				"error_threshold"			-> alert.errorThreshold,
-				"data_seconds"				-> alert.dataSeconds,
-				"drop_null_points"			-> alert.dropNullPoints,
-				"drop_null_targets"			-> alert.dropNullTargets
-			).executeUpdate()(connection)
+			""").on { implicit query =>
+				uuid("id", alert.id)
+				string("name", alert.name)
+				string("target", alert.target)
+				int("comparison", alert.comparison.id)
+				bool("active", alert.active)
+				bool("deleted", alert.deleted)
+				date("updated", alert.updated)
+				int("frequency", alert.frequency)
+				bigDecimal("warn_threshold", alert.warnThreshold)
+				bigDecimal("error_threshold", alert.errorThreshold)
+				int("data_seconds", alert.dataSeconds)
+				int("drop_null_points", alert.dropNullPoints)
+				bool("drop_null_targets", alert.dropNullTargets)
+			}.executeUpdate()
 		}
 	}
 
 	private def handleAlertErrors(threadId: UUID, alerts: List[Alert])(implicit connection: Connection) {
-		RichSQL("""
+		SQL("""
 			UPDATE `alerts`
 			SET
 				`consecutive_failures` = LEAST(`consecutive_failures` + 1, {max_failures}),
@@ -233,13 +233,14 @@ class AlertModel extends AppModel {
 				`last_checked` = NOW(),
 				`next_check` = DATE_ADD(NOW(), INTERVAL (`frequency` * `consecutive_failures` * {failure_multiplier}) SECOND)
 			WHERE `id` IN ({ids}) AND `thread_id` = {thread_id}
-		""").onList(
-			"ids" -> alerts.map(_.id)
-		).toSQL.on(
-			"thread_id"          -> threadId,
-			"max_failures"       -> maxConsecutiveFailures,
-			"failure_multiplier" -> consecutiveFailuresMultiplier
-		).executeUpdate()(connection)
+		""").expand { implicit query =>
+			commaSeparated("ids", alerts.size)
+		}.on {implicit query =>
+			uuids("ids", alerts.map(_.id))
+			uuid("thread_id", threadId)
+			int("max_failures", maxConsecutiveFailures)
+			int("failure_multiplier", consecutiveFailuresMultiplier)
+		}.executeUpdate()
 	}
 
 	/**
@@ -250,7 +251,7 @@ class AlertModel extends AppModel {
 	 */
 	def takeNextAlertsToCheck(threadId: UUID, limit: Integer)(worker: (List[Alert]) => Map[Alert, AlertStatus.Value]) = {
 		val start = new Date()
-		val alertsForWorker = DB.withTransaction("main") { connection =>
+		val alertsForWorker = DB.withTransaction("main") { implicit connection =>
 			val selectedAlertIds = SQL("""
 				SELECT `id` FROM `alerts`
 				WHERE
@@ -263,36 +264,38 @@ class AlertModel extends AppModel {
 					`id` ASC
 				LIMIT {limit}
 				FOR UPDATE
-			""").on(
-				"limit" -> limit
-			).as(scalar[UUID] *)(connection)
+			""").on { implicit query =>
+				int("limit", limit)
+			}.asList(RowParser { row => row.uuid("id") })
 
 			if (selectedAlertIds.isEmpty) {
 				Nil
 			}
 			else {
-				val updated = RichSQL("""
+				val updated = SQL("""
 					UPDATE `alerts`
 					SET `thread_id` = {thread_id},
 						`thread_start` = {thread_start}
 					WHERE `id` IN ({ids})
-				""").onList(
-					"ids" -> selectedAlertIds
-				).toSQL.on(
-					"thread_id" -> threadId,
-					"thread_start" -> start
-				).executeUpdate()(connection)
+				""").expand { implicit query =>
+					commaSeparated("ids", selectedAlertIds.size)
+				}.on { implicit query =>
+					uuids("ids", selectedAlertIds)
+					uuid("thread_id", threadId)
+					date("thread_start", start)
+				}.executeUpdate()
 
-				RichSQL("""
+				SQL("""
 					SELECT * FROM `alerts`
 					WHERE
 						`thread_id` = {thread_id}
 						AND `id` IN ({ids})
-				""").onList(
-					"ids" -> selectedAlertIds
-				).toSQL.on(
-					"thread_id" -> threadId
-				).as(alertsRowParser *)(connection)
+				""").expand { implicit query =>
+					commaSeparated("ids", selectedAlertIds.size)
+				}.on { implicit query =>
+					uuids("ids", selectedAlertIds)
+					uuid("thread_id", threadId)
+				}.asList(alertsRowParser)
 			}
 		}
 
@@ -301,13 +304,15 @@ class AlertModel extends AppModel {
 			require(completedAlertStatus.size == alertsForWorker.size)
 
 			if (!alertsForWorker.isEmpty) {
-				DB.withConnection("main"){ connection =>
+				DB.withConnection("main"){ implicit connection =>
 					completedAlertStatus.groupBy { case (alert, status) => status }.map { case (status, records) =>
 						val alerts = records.map(_._1).toList
 						status match {
 							case AlertStatus.success => {
 								alerts.groupBy { alert => alert.worstState }.map { case (worstState, sameAlerts) =>
-									RichSQL("""
+									val sameAlertIds = sameAlerts.map(_.id)
+
+									SQL("""
 										UPDATE `alerts` 
 										SET
 											`consecutive_failures` = 0,
@@ -317,16 +322,17 @@ class AlertModel extends AppModel {
 											`last_checked` = NOW(),
 											`next_check` = DATE_ADD(NOW(), INTERVAL `frequency` SECOND)
 										WHERE `id` IN ({ids}) AND `thread_id` = {thread_id}
-									""").onList(
-										"ids" -> sameAlerts.map(_.id)
-									).toSQL.on(
-										"thread_id"   -> threadId,
-										"worst_state" -> worstState.id
-									).executeUpdate()(connection)
+									""").expand { implicit query =>
+										commaSeparated("ids", sameAlertIds.size)
+									}.on { implicit query =>
+										uuids("ids", sameAlertIds)
+										uuid("thread_id", threadId)
+										int("worst_state", worstState.id)
+									}.executeUpdate()
 								}
 							}
 							case AlertStatus.failure => {
-								handleAlertErrors(threadId, alerts)(connection)
+								handleAlertErrors(threadId, alerts)
 							}
 						}
 					}
@@ -353,17 +359,17 @@ class AlertModel extends AppModel {
 	/**
 	 * Clean up after broken alert threads
 	 */
-	def cleanAlertThreadsBefore(date: Date) {
-		DB.withConnection("main") { connection =>
+	def cleanAlertThreadsBefore(before: Date) {
+		DB.withConnection("main") { implicit connection =>
 			SQL("""
 				UPDATE `alerts` 
 				SET `thread_id` = NULL,
 					`thread_start` = NULL
 				WHERE `thread_id` IS NOT NULL
 				AND `thread_start` < {date}
-			""").on(
-				"date" -> date
-			).executeUpdate() (connection)
+			""").on { implicit query =>
+				date("date", before)
+			}.executeUpdate()
 		}
 	}
 
@@ -374,15 +380,15 @@ class AlertModel extends AppModel {
 	 * @return optionally return the alert
 	 */
 	def findPropagatedAlert(id: UUID, target: String): Option[Alert] = {
-		DB.withConnection("main") { connection =>
+		DB.withConnection("main") { implicit connection =>
 			val alerts = SQL("""
 				SELECT *
 				FROM `alerts`
 				WHERE `dynamic_alert_id`={dynamic_alert_id} AND `target`={target}
-			""").on(
-				"dynamic_alert_id" -> id,
-				"target" -> target
-			).as(alertsRowParser *)(connection)
+			""").on { implicit query =>
+				uuid("dynamic_alert_id", id)
+				string("target", target)
+			}.asList(alertsRowParser)
 
 			alerts.headOption
 		}
@@ -394,14 +400,14 @@ class AlertModel extends AppModel {
 	 * @return the propagated alerts
 	 */
 	def findPropagatedAlerts(id: UUID): List[Alert] = {
-		DB.withConnection("main") { connection =>
+		DB.withConnection("main") { implicit connection =>
 			SQL("""
 				SELECT *
 				FROM `alerts`
 				WHERE `dynamic_alert_id`={dynamic_alert_id}
-			""").on(
-				"dynamic_alert_id" -> id
-			).as(alertsRowParser *)(connection)
+			""").on { implicit query =>
+				uuid("dynamic_alert_id", id)
+			}.asList(alertsRowParser)
 		}
 	}
 
@@ -411,14 +417,14 @@ class AlertModel extends AppModel {
 	 * @param target the target of the alert
 	 */
 	def deletePropagatedAlert(id: UUID, target: String): Unit = {
-		DB.withConnection("main") { connection =>
+		DB.withConnection("main") { implicit connection =>
 			SQL("""
 				DELETE FROM `alerts`
 				WHERE `dynamic_alert_id`={dynamic_alert_id} AND `target`={target}
-			""").on(
-				"dynamic_alert_id" -> id,
-				"target" -> target
-			).executeUpdate()(connection)
+			""").on { implicit query =>
+				uuid("dynamic_alert_id", id)
+				string("target", target)
+			}.executeUpdate()
 		}
 	}
 
@@ -429,22 +435,22 @@ class AlertModel extends AppModel {
 	 * @return the deleted alerts
 	 */
 	def deletePropagatedAlerts(id: UUID, updated: Date): List[Alert] = {
-		DB.withConnection("main") { connection =>
+		DB.withConnection("main") { implicit connection =>
 			val deleted = SQL("""
 				SELECT * FROM `alerts`
 				WHERE `dynamic_alert_id`={dynamic_alert_id} AND `updated` < {updated}
-			""").on(
-				"dynamic_alert_id" -> id,
-				"updated" -> updated
-			).as(alertsRowParser *)(connection)
+			""").on { implicit query =>
+				uuid("dynamic_alert_id", id)
+				date("updated", updated)
+			}.asList(alertsRowParser)
 
 			SQL("""
 				DELETE FROM `alerts`
 				WHERE `dynamic_alert_id`={dynamic_alert_id} AND `updated` < {updated}
-			""").on(
-				"dynamic_alert_id" -> id,
-				"updated" -> updated
-			).executeUpdate()(connection)
+			""").on { implicit query =>
+				uuid("dynamic_alert_id", id)
+				date("updated", updated)
+			}.executeUpdate()
 
 			deleted
 		}

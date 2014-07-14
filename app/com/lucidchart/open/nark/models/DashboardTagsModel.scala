@@ -2,22 +2,21 @@ package com.lucidchart.open.nark.models
 
 import com.lucidchart.open.nark.models.records.{Tag}
 import com.lucidchart.open.nark.models.records.Dashboard
+import com.lucidchart.open.relate._
+import com.lucidchart.open.relate.Query._
 
 import java.util.UUID
-import AnormImplicits._
-import anorm._
-import anorm.SqlParser._
 import play.api.Play.current
 import play.api.Play.configuration
 import play.api.db.DB
 
 object DashboardTagsModel extends DashboardTagsModel
 class DashboardTagsModel extends AppModel {
-	protected val tagsRowParser =  {
-		get[UUID]("dashboard_id") ~
-		get[String]("tag") map {
-			case dashboardId ~ tag => new Tag(dashboardId, tag)
-		}
+	protected val tagsRowParser = RowParser { row =>
+		Tag(
+			row.uuid("dashboard_id"),
+			row.string("tag")
+		)
 	}
 
 	/**
@@ -25,13 +24,13 @@ class DashboardTagsModel extends AppModel {
 	 * @return tags
 	 */
 	def search(tag: String, page: Int) = {
-		DB.withConnection("main") { connection =>
+		DB.withConnection("main") { implicit connection =>
 			val found = SQL("""
 				SELECT COUNT(DISTINCT(`tag`)) FROM `dashboard_tags`
 				WHERE `tag` LIKE {tag}
-			""").on(
-				"tag" -> tag
-			).as(scalar[Long].single)(connection)
+			""").on { implicit query =>
+				string("tag", tag)
+			}.asScalar[Long]
 
 			val matches = SQL("""
 				SELECT * FROM `dashboard_tags`
@@ -39,11 +38,11 @@ class DashboardTagsModel extends AppModel {
 				GROUP BY `tag`
 				ORDER BY `tag` ASC
 				LIMIT {limit} OFFSET {offset}
-			""").on(
-				"tag" -> tag,
-				"limit" -> configuredLimit,
-				"offset" -> configuredLimit * page
-			).as(get[String]("tag") *)(connection)
+			""").on { implicit query =>
+				string("tag", tag)
+				int("limit", configuredLimit)
+				int("offset", configuredLimit * page)
+			}.asList(RowParser.string("tag"))
 
 			(found, matches)
 		}
@@ -68,14 +67,16 @@ class DashboardTagsModel extends AppModel {
 			Nil
 		}
 		else {
-			DB.withConnection("main") { connection =>
-				RichSQL("""
+			DB.withConnection("main") { implicit connection =>
+				SQL("""
 					SELECT * 
 					FROM `dashboard_tags` 
 					WHERE `tag` in ({tags})
-				""").onList(
-					"tags" -> tags
-				).toSQL.as(tagsRowParser *)(connection)
+				""").expand { implicit query =>
+					commaSeparated("tags", tags.size)
+				}.on { implicit query =>
+					strings("tags", tags)
+				}.asList(tagsRowParser)
 			}
 		}
 	}
@@ -100,15 +101,17 @@ class DashboardTagsModel extends AppModel {
 			Nil
 		}
 		else {
-			DB.withConnection("main") {connection =>
-				RichSQL("""
+			DB.withConnection("main") { implicit connection =>
+				SQL("""
 					SELECT * 
 					FROM `dashboard_tags` 
 					WHERE `dashboard_id` IN ({dashboardIds})
 					ORDER BY `dashboard_id`
-				""").onList(
-					"dashboardIds" -> dashboardIds
-				).toSQL.as(tagsRowParser *)(connection)
+				""").expand { implicit query =>
+					commaSeparated("dashboardIds", dashboardIds.size)
+				}.on { implicit query =>
+					uuids("dashboardIds", dashboardIds)
+				}.asList(tagsRowParser)
 			}
 		}
 	}
@@ -119,32 +122,35 @@ class DashboardTagsModel extends AppModel {
 	 * @param tags the new tags to associate with the dashboard
 	 */
 	def updateTagsForDashboard(id: UUID, tags: List[String]) = {
-		DB.withTransaction("main") { connection =>
+		DB.withTransaction("main") { implicit connection =>
 			if (tags.isEmpty) {
 				SQL("""
 					DELETE FROM `dashboard_tags`
 					WHERE `dashboard_id` = {dashboard_id}
-				""").on(
-					"dashboard_id" -> id
-				).executeUpdate()(connection)
+				""").on { implicit query =>
+					uuid("dashboard_id", id)
+				}.executeUpdate()
 			}
 			else {
-				RichSQL("""
+				SQL("""
 					DELETE FROM `dashboard_tags`
 					WHERE `dashboard_id` = {dashboard_id} AND `tag` NOT IN ({tags})
-				""").onList(
-					"tags" -> tags
-				).toSQL.on(
-					"dashboard_id" -> id
-				).executeUpdate()(connection)
+				""").expand { implicit query =>
+					commaSeparated("tags", tags.size)
+				}.on { implicit query =>
+					strings("tags", tags)
+					uuid("dashboard_id", id)
+				}.executeUpdate()
 
-				RichSQL("""
+				SQL("""
 					INSERT IGNORE INTO `dashboard_tags` (`dashboard_id`, `tag`)
-					VALUES ({fields})
-				""").multiInsert(tags.size, Seq("dashboard_id", "tag"))(
-					"dashboard_id" -> tags.map(_ => toParameterValue(id)),
-					"tag" -> tags.map(toParameterValue(_))
-				).toSQL.executeUpdate()(connection)
+					VALUES {fields}
+				""").expand { implicit query =>
+					tupled("fields", List("dashboard_id", "tag"), tags.size)
+				}.onTuples("fields", tags) { (tag, query) =>
+					query.uuid("dashboard_id", id)
+					query.string("tag", tag)
+				}.executeUpdate()
 			}
 		}
 	}

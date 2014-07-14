@@ -1,16 +1,14 @@
 package com.lucidchart.open.nark.models
 
-import AnormImplicits._
-import anorm._
-import anorm.SqlParser._
+import com.lucidchart.open.relate._
+import com.lucidchart.open.relate.Query._
+
 import play.api.Play.current
 import play.api.db.DB
 
 class MutexModelLockTakenException(name: String) extends Exception(name)
 
 class MutexModel extends AppModel {
-	private val lockParser = scalar[Long].singleOpt
-
 	/**
 	 * Lock a mutex, and call the callback
 	 *
@@ -31,13 +29,13 @@ class MutexModel extends AppModel {
 	 * If the mutex cannot be locked within timeout, noLockReturn will be returned
 	 */
 	def lock[A](name: String, timeoutSeconds: Int, noLockReturn: => A)(callback: => A): A = {
-		DB.withConnection("main") { connection =>
+		DB.withConnection("main") { implicit connection =>
 			val locked = SQL("""
 				SELECT GET_LOCK({name}, {timeout})
-			""").on(
-				"name"    -> name,
-				"timeout" -> timeoutSeconds
-			).as(lockParser)(connection) match {
+			""").on { implicit query =>
+				string("name", name)
+				int("timeout", timeoutSeconds)
+			}.asScalarOption[Long] match {
 				case Some(x) if (x == 1) => true
 				case _ => false
 			}
@@ -47,7 +45,7 @@ class MutexModel extends AppModel {
 					callback
 				}
 				finally {
-					SQL("SELECT RELEASE_LOCK({lock})").on('lock -> name).as(lockParser)(connection)
+					SQL("SELECT RELEASE_LOCK({lock})").on { implicit query => string("lock", name) }.asScalarOption[Long]
 				}
 			}
 			else {

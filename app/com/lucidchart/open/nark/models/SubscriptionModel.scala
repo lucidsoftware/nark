@@ -1,9 +1,8 @@
 package com.lucidchart.open.nark.models
 
-import anorm._
-import anorm.SqlParser._
-import AnormImplicits._
 import com.lucidchart.open.nark.models.records.{HasId, Subscription, SubscriptionRecord, AlertType, User}
+import com.lucidchart.open.relate._
+import com.lucidchart.open.relate.Query._
 import java.util.UUID
 import play.api.Play.current
 import play.api.Play.configuration
@@ -11,14 +10,13 @@ import play.api.db.DB
 
 object SubscriptionModel extends SubscriptionModel
 class SubscriptionModel extends AppModel {
-	protected val subscriptionsRowParser = {
-		get[UUID]("user_id") ~
-		get[UUID]("alert_id") ~
-		get[Int]("alert_type") ~
-		get[Boolean]("active") map {
-			case user_id ~ alert_id ~ alert_type ~ active =>
-			new Subscription(user_id, alert_id, AlertType(alert_type), active)
-		}
+	protected val subscriptionsRowParser = RowParser { row =>
+		Subscription(
+			row.uuid("user_id"),
+			row.uuid("alert_id"),
+			AlertType(row.int("alert_type")),
+			row.bool("active")
+		)
 	}
 
 	/**
@@ -37,16 +35,18 @@ class SubscriptionModel extends AppModel {
 	 */
 	def createSubscriptions(subscriptions: List[Subscription]): Unit = {
 		if (subscriptions.size > 0) {
-			DB.withConnection("main") { connection =>
-				RichSQL("""
+			DB.withConnection("main") { implicit connection =>
+				SQL("""
 					INSERT IGNORE INTO `alert_subscriptions` (`user_id`, `alert_id`, `alert_type`, `active`)
-					VALUES ({fields})
-				""").multiInsert(subscriptions.size, Seq("user_id", "alert_id", "alert_type", "active"))(
-					"user_id" -> subscriptions.map(s => toParameterValue(s.userId)),
-					"alert_id" -> subscriptions.map(s => toParameterValue(s.alertId)),
-					"alert_type" -> subscriptions.map(s => toParameterValue(s.alertType.id)),
-					"active" -> subscriptions.map(s => toParameterValue(s.active))
-				).toSQL.executeUpdate()(connection)
+					VALUES {fields}
+				""").expand { implicit query =>
+					tupled("fields", List("user_id", "alert_id", "alert_type", "active"), subscriptions.size)
+				}.onTuples("fields", subscriptions) { (subscription, query) =>
+					query.uuid("user_id", subscription.userId)
+					query.uuid("alert_id", subscription.alertId)
+					query.int("alert_type", subscription.alertType.id)
+					query.bool("active", subscription.active)
+				}.executeUpdate()
 			}
 		}
 	}
@@ -58,16 +58,16 @@ class SubscriptionModel extends AppModel {
 	 * @param subscription the new subscription values
 	 */
 	def editSubscription(alertId: UUID, userId: UUID, subscription: Subscription) {
-		DB.withConnection("main") { connection =>
+		DB.withConnection("main") { implicit connection =>
 			SQL("""
 				UPDATE `alert_subscriptions`
 				SET `active`= {active}
 				WHERE `alert_id`={alert_id} AND `user_id`={user_id}
-			""").on(
-				"alert_id" -> alertId,
-				"user_id" -> userId,
-				"active" -> subscription.active
-			).executeUpdate()(connection)
+			""").on { implicit query =>
+				uuid("alert_id", alertId)
+				uuid("user_id", userId)
+				bool("active", subscription.active)
+			}.executeUpdate()(connection)
 		}
 	}
 
@@ -77,14 +77,14 @@ class SubscriptionModel extends AppModel {
 	 * @param userId the id of the user for whom to delete it
 	 */
 	def deleteSubscription(alertId: UUID, userId: UUID) {
-		DB.withConnection("main") { connection =>
+		DB.withConnection("main") { implicit connection =>
 			SQL("""
 				DELETE FROM `alert_subscriptions`
 				WHERE `alert_id`={alert_id} AND `user_id`={user_id}
-			""").on(
-				"alert_id" -> alertId,
-				"user_id" -> userId
-			).executeUpdate()(connection)
+			""").on { implicit query =>
+				uuid("alert_id", alertId)
+				uuid("user_id", userId)
+			}.executeUpdate()
 		}
 	}
 
@@ -93,13 +93,13 @@ class SubscriptionModel extends AppModel {
 	 * @param alertId the id of the alert to delete
 	 */
 	def deleteSubscriptionsByAlert(alertId: UUID) {
-		DB.withConnection("main") { connection =>
+		DB.withConnection("main") { implicit connection =>
 			SQL("""
 				DELETE FROM `alert_subscriptions`
 				WHERE `alert_id`={alert_id}
-			""").on(
-				"alert_id" -> alertId
-			).executeUpdate()(connection)
+			""").on { implicit query =>
+				uuid("alert_id", alertId)
+			}.executeUpdate()
 		}
 	}
 
@@ -109,28 +109,31 @@ class SubscriptionModel extends AppModel {
 	 */
 	def deleteSubscriptionsByAlert(alertIds: List[UUID]) {
 		if (alertIds.size > 0) {
-			DB.withConnection("main") { connection =>
-				RichSQL("""
+			DB.withConnection("main") { implicit connection =>
+				SQL("""
 					DELETE FROM `alert_subscriptions`
 					WHERE `alert_id` IN ({alert_ids})
-				""").onList(
-					"alert_ids" -> alertIds
-				).toSQL.executeUpdate()(connection)
+				""").expand { implicit query =>
+					commaSeparated("alert_ids", alertIds.size)
+				}.on { implicit query =>
+					uuids("alert_ids", alertIds)
+				}.executeUpdate()
 			}
 		}
 	}
 
 	def deleteSubscriptions(alertId: UUID, userIds: List[UUID]) = {
 		if (userIds.size > 0) {
-			DB.withConnection("main") { connection =>
-				RichSQL("""
+			DB.withConnection("main") { implicit connection =>
+				SQL("""
 					DELETE FROM `alert_subscriptions`
 					WHERE `alert_id` = {alert_id} AND `user_id` IN ({user_ids}) 
-				""").onList(
-					"user_ids" -> userIds
-				).toSQL.on(
-					"alert_id" -> alertId
-				).executeUpdate()(connection)
+				""").expand { implicit query =>
+					commaSeparated("user_ids", userIds.size)
+				}.on { implicit query =>
+					uuids("user_ids", userIds)
+					uuid("alert_id", alertId)
+				}.executeUpdate()
 			}
 		}
 	}
@@ -151,14 +154,16 @@ class SubscriptionModel extends AppModel {
 			Nil
 		}
 		else {
-			val subscriptions: List[Subscription] = DB.withConnection("main") { connection =>
-				RichSQL("""
+			val subscriptions: List[Subscription] = DB.withConnection("main") { implicit connection =>
+				SQL("""
 					SELECT *
 					FROM `alert_subscriptions`
 					WHERE `alert_id` IN ({alert_ids})
-				""").onList(
-					"alert_ids" -> ids
-				).toSQL.as(subscriptionsRowParser *)(connection)
+				""").expand { implicit query =>
+					commaSeparated("alert_ids", ids.size)
+				}.on { implicit query =>
+					uuids("alert_ids", ids)
+				}.asList(subscriptionsRowParser)
 			}
 
 			if (subscriptions.size == 0) {
@@ -185,14 +190,14 @@ class SubscriptionModel extends AppModel {
 	 * @param alertType the type of alert subscription to look for
 	 */
 	def getSubscriptionsByUser[T <: HasId](user: User, page: Int, alertType: AlertType.Value): (Long, List[SubscriptionRecord[T]]) = {
-		DB.withConnection("main") { connection =>
+		DB.withConnection("main") { implicit connection =>
 			val found = SQL("""
 				SELECT COUNT(1) FROM `alert_subscriptions`
 				WHERE `user_id` = {user_id} AND `alert_type`={alert_type}
-			""").on(
-				"user_id" -> user.id,
-				"alert_type" -> alertType.id
-			).as(scalar[Long].single)(connection)
+			""").on { implicit query =>
+				uuid("user_id", user.id)
+				int("alert_type", alertType.id)
+			}.asScalar[Long]
 
 			val subscriptions = SQL("""
 				SELECT *
@@ -200,12 +205,12 @@ class SubscriptionModel extends AppModel {
 				WHERE `user_id` = {user_id} AND `alert_type`={alert_type}
 				ORDER BY `alert_id` ASC
 				LIMIT {limit} OFFSET {offset}
-			""").on(
-				"user_id" -> user.id,
-				"alert_type" -> alertType.id,
-				"limit" -> configuredLimit,
-				"offset" -> configuredLimit * page
-			).as(subscriptionsRowParser *)(connection)
+			""").on { implicit query =>
+				uuid("user_id", user.id)
+				int("alert_type", alertType.id)
+				int("limit", configuredLimit)
+				int("offset", configuredLimit * page)
+			}.asList(subscriptionsRowParser)
 
 			if (subscriptions.size == 0) {
 				(found, Nil)
@@ -237,16 +242,16 @@ class SubscriptionModel extends AppModel {
 	 * @return a list of all user subscriptions
 	 */
 	def getAllSubscriptionsByUser[T <: HasId](user: User, includeInactive: Boolean = false): List[Subscription] = {
-		DB.withConnection("main") { connection =>
+		DB.withConnection("main") { implicit connection =>
 			val includeClause = if (includeInactive) "" else " AND active = TRUE"
 
 			SQL("""
 				SELECT *
 				FROM `alert_subscriptions`
 				WHERE `user_id` = {user_id}
-			""" + includeClause).on(
-				"user_id" -> user.id
-			).as(subscriptionsRowParser *)(connection)
+			""" + includeClause).on { implicit query =>
+				uuid("user_id", user.id)
+			}.asList(subscriptionsRowParser)
 		}
 	}
 }

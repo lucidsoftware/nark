@@ -3,27 +3,24 @@ package com.lucidchart.open.nark.models
 import java.util.Date
 import java.util.UUID
 
+import com.lucidchart.open.relate._
+import com.lucidchart.open.relate.Query._
 import records.Dashboard
-
-import AnormImplicits._
-import anorm._
-import anorm.SqlParser._
 import play.api.Play.current
 import play.api.Play.configuration
 import play.api.db.DB
 import com.lucidchart.open.nark.views.html.dashboards.dashboard
 
 class DashboardModel extends AppModel {
-	protected val dashboardsRowParser = {
-		get[UUID]("id") ~
-		get[String]("name") ~
-		get[String]("url") ~
-		get[Date]("created") ~
-		get[UUID]("user_id") ~
-		get[Boolean]("deleted") map {
-			case id ~ name ~ url ~ created ~ userId ~ deleted =>
-				new Dashboard(id, name, url, created, userId, deleted)
-		}
+	protected val dashboardsRowParser = RowParser { row =>
+		Dashboard(
+			row.uuid("id"),
+			row.string("name"),
+			row.string("url"),
+			row.date("created"),
+			row.uuid("user_id"),
+			row.bool("deleted")
+		)
 	}
 	
 	/**
@@ -45,14 +42,16 @@ class DashboardModel extends AppModel {
 	def findDashboardByID(ids: List[UUID]): List[Dashboard] = {
 		if(ids.isEmpty)
 			return Nil
-		DB.withConnection("main") { connection =>
-			RichSQL("""
+		DB.withConnection("main") { implicit connection =>
+			SQL("""
 				SELECT *
 				FROM `dashboards`
 				WHERE `id` in ({ids})
-			""").onList(
-				"ids" -> ids
-			).toSQL.as(dashboardsRowParser *)(connection)
+			""").expand { implicit query =>
+				commaSeparated("ids", ids.size)
+			}.on { implicit query =>
+				uuids("ids", ids)
+			}.asList(dashboardsRowParser)
 		}
 	}	
 
@@ -63,15 +62,15 @@ class DashboardModel extends AppModel {
 	 * @return dashboard
 	 */
 	def findDashboardByURL(url: String): Option[Dashboard] = {
-		DB.withConnection("main") { connection =>
+		DB.withConnection("main") { implicit connection =>
 			SQL("""
 				SELECT *
 				FROM `dashboards`
 				WHERE `url` = {url}
 				LIMIT 1
-			""").on(
-				"url" -> url
-			).as(dashboardsRowParser.singleOpt)(connection)
+			""").on { implicit query =>
+				string("url", url)
+			}.asSingleOption(dashboardsRowParser)
 		}
 	}
 
@@ -79,24 +78,24 @@ class DashboardModel extends AppModel {
 	 * Search for dashboards by name
 	 */
 	def search(name: String, page: Int) = {
-		DB.withConnection("main") { connection =>
+		DB.withConnection("main") { implicit connection =>
 			val found = SQL("""
 				SELECT COUNT(1) FROM `dashboards`
 				WHERE `name` LIKE {name} AND `deleted` = FALSE
-			""").on(
-				"name" -> name
-			).as(scalar[Long].single)(connection)
+			""").on { implicit query =>
+				string("name", name)
+			}.asScalar[Long]
 
 			val matches = SQL("""
 				SELECT * FROM `dashboards`
 				WHERE `name` LIKE {name} AND `deleted` = FALSE
 				ORDER BY `name` ASC
 				LIMIT {limit} OFFSET {offset}
-			""").on(
-				"name" -> name,
-				"limit" -> configuredLimit,
-				"offset" -> configuredLimit * page
-			).as(dashboardsRowParser *)(connection)
+			""").on { implicit query =>
+				string("name", name)
+				int("limit", configuredLimit)
+				int("offset", configuredLimit * page)
+			}.asList(dashboardsRowParser)
 
 			(found, matches)
 		}
@@ -108,26 +107,26 @@ class DashboardModel extends AppModel {
 	 * @return dashboards
 	 */
 	def searchDeleted(userId: UUID, name: String, page: Int) = {
-		DB.withConnection("main") { connection =>
+		DB.withConnection("main") { implicit connection =>
 			val found = SQL("""
 				SELECT COUNT(1) FROM `dashboards`
 				WHERE `name` LIKE {name} AND `deleted` = TRUE AND `user_id` = {user_id}
-			""").on(
-				"name" -> name,
-				"user_id" -> userId
-			).as(scalar[Long].single)(connection)
+			""").on { implicit query =>
+				string("name", name)
+				uuid("user_id", userId)
+			}.asScalar[Long]
 
 			val matches = SQL("""
 				SELECT * FROM `dashboards`
 				WHERE `name` LIKE {name} AND `deleted` = TRUE AND `user_id` = {user_id}
 				ORDER BY `name` ASC
 				LIMIT {limit} OFFSET {offset}
-			""").on(
-				"name" -> name,
-				"user_id" -> userId,
-				"limit" -> configuredLimit,
-				"offset" -> configuredLimit * page
-			).as(dashboardsRowParser *)(connection)
+			""").on { implicit query =>
+				string("name", name)
+				uuid("user_id", userId)
+				int("limit", configuredLimit)
+				int("offset", configuredLimit * page)
+			}.asList(dashboardsRowParser)
 
 			(found, matches)
 		}
@@ -140,18 +139,18 @@ class DashboardModel extends AppModel {
 	 * @param dashboard
 	 */
 	def createDashboard(dashboard: Dashboard) {
-		DB.withConnection("main") { connection =>
+		DB.withConnection("main") { implicit connection =>
 			SQL("""
 				INSERT INTO `dashboards` (`id`, `name`, `url`, `created`, `user_id`, `deleted`)
 				VALUES ({id}, {name}, {url}, {created}, {user_id}, {deleted})
-			""").on(
-				"id"         -> dashboard.id,
-				"name"       -> dashboard.name,
-				"url"        -> dashboard.url,
-				"created"    -> new Date(),
-				"user_id"    -> dashboard.userId,
-				"deleted"    -> dashboard.deleted
-			).executeUpdate()(connection)
+			""").on { implicit query =>
+				uuid("id", dashboard.id)
+				string("name", dashboard.name)
+				string("url", dashboard.url)
+				date("created", new Date())
+				uuid("user_id", dashboard.userId)
+				bool("deleted", dashboard.deleted)
+			}.executeUpdate()
 		}
 	}
 
@@ -162,15 +161,15 @@ class DashboardModel extends AppModel {
 	 * @param dashboard
 	 */
 	def editDashboard(dashboard: Dashboard) {
-		DB.withConnection("main") { connection =>
+		DB.withConnection("main") { implicit connection =>
 			SQL("""
 				UPDATE `dashboards` SET `name` = {name}, `url` = {url}, `deleted` = {deleted} WHERE `id` = {id}
-			""").on(
-				"id"         -> dashboard.id,
-				"name"       -> dashboard.name,
-				"url"        -> dashboard.url,
-				"deleted"    -> dashboard.deleted
-			).executeUpdate()(connection)
+			""").on { implicit query =>
+				uuid("id", dashboard.id)
+				string("name", dashboard.name)
+				string("url", dashboard.url)
+				bool("deleted", dashboard.deleted)
+			}.executeUpdate()
 		}
 	}
 }

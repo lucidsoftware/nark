@@ -1,29 +1,28 @@
 package com.lucidchart.open.nark.models
 
+import com.lucidchart.open.relate._
+import com.lucidchart.open.relate.Query._
+
 import java.util.UUID
 
 import records.Graph
 import records.GraphType
 import records.GraphAxisLabel
 
-import AnormImplicits._
-import anorm._
-import anorm.SqlParser._
 import play.api.Play.current
 import play.api.db.DB
 
 class GraphModel extends AppModel {
-	protected val graphsRowParser = {
-		get[UUID]("id") ~
-		get[String]("name") ~
-		get[UUID]("dashboard_id") ~
-		get[Int]("sort") ~
-		get[Int]("type") ~
-		get[Int]("axis_label") ~
-		get[Boolean]("deleted") map {
-			case id ~ name ~ dashboardId ~ sort ~ typeGraph ~ axisLabel ~ deleted =>
-				new Graph(id, name, dashboardId, sort, GraphType(typeGraph), GraphAxisLabel(axisLabel), deleted)
-		}
+	protected val graphsRowParser = RowParser { row =>
+		Graph(
+			row.uuid("id"),
+			row.string("name"),
+			row.uuid("dashboard_id"),
+			row.int("sort"),
+			GraphType(row.int("type")),
+			GraphAxisLabel(row.int("axis_label")),
+			row.bool("deleted")
+		)
 	}
 	
 	/**
@@ -33,15 +32,15 @@ class GraphModel extends AppModel {
 	 * @return graph
 	 */
 	def findGraphByID(id: UUID): Option[Graph] = {
-		DB.withConnection("main") { connection =>
+		DB.withConnection("main") { implicit connection =>
 			SQL("""
 				SELECT *
 				FROM `graphs`
 				WHERE `id` = {id}
 				LIMIT 1
-			""").on(
-				"id" -> id
-			).as(graphsRowParser.singleOpt)(connection)
+			""").on { implicit query =>
+				uuid("id", id)
+			}.asSingleOption(graphsRowParser)
 		}
 	}
 
@@ -52,14 +51,14 @@ class GraphModel extends AppModel {
 	 * @return List of graphs
 	 */
 	def findGraphsByDashboardId(dashboardId: UUID): List[Graph] = {
-		DB.withConnection("main") { connection =>
+		DB.withConnection("main") { implicit connection =>
 			SQL("""
 				SELECT *
 				FROM `graphs`
 				WHERE `dashboard_id` = {dashboard_id}
-			""").on(
-				"dashboard_id" -> dashboardId
-			).as(graphsRowParser *)(connection)
+			""").on { implicit query =>
+				uuid("dashboard_id", dashboardId)
+			}.asList(graphsRowParser)
 		}
 	}
 
@@ -70,19 +69,19 @@ class GraphModel extends AppModel {
 	 * @param graph
 	 */
 	def createGraph(graph: Graph) {
-		DB.withConnection("main") { connection =>
+		DB.withConnection("main") { implicit connection =>
 			SQL("""
 				INSERT INTO `graphs` (`id`, `name`, `dashboard_id`, `sort`, `type`, `axis_label`, `deleted`)
 				VALUES ({id}, {name}, {dashboard_id}, {sort}, {type}, {axis_label}, {deleted})
-			""").on(
-				"id"         -> graph.id,
-				"name"       -> graph.name,
-				"dashboard_id" -> graph.dashboardId,
-				"sort"       -> graph.sort,
-				"type"       -> graph.typeGraph.id,
-				"axis_label" -> graph.axisLabel.id,
-				"deleted"    -> graph.deleted
-			).executeUpdate()(connection)
+			""").on { implicit query =>
+				uuid("id", graph.id)
+				string("name", graph.name)
+				uuid("dashboard_id", graph.dashboardId)
+				int("sort", graph.sort)
+				int("type", graph.typeGraph.id)
+				int("axis_label", graph.axisLabel.id)
+				bool("deleted", graph.deleted)
+			}.executeUpdate()
 		}
 	}
 
@@ -93,7 +92,7 @@ class GraphModel extends AppModel {
 	 * @param graph
 	 */
 	def editGraph(graph: Graph) {
-		DB.withConnection("main") { connection =>
+		DB.withConnection("main") { implicit connection =>
 			SQL("""
 				UPDATE `graphs` SET
 				`name` = {name},
@@ -102,14 +101,14 @@ class GraphModel extends AppModel {
 				`axis_label` = {axis_label},
 				`deleted` = {deleted}
 				WHERE `id` = {id}
-			""").on(
-				"id"         -> graph.id,
-				"name"       -> graph.name,
-				"sort"       -> graph.sort,
-				"type"       -> graph.typeGraph.id,
-				"axis_label" -> graph.axisLabel.id,
-				"deleted"    -> graph.deleted
-			).executeUpdate()(connection)
+			""").on { implicit query =>
+				uuid("id", graph.id)
+				string("name", graph.name)
+				int("sort", graph.sort)
+				int("type", graph.typeGraph.id)
+				int("axis_label", graph.axisLabel.id)
+				bool("deleted", graph.deleted)
+			}.executeUpdate()
 		}
 	}
 }

@@ -6,24 +6,22 @@ import java.util.Date
 import com.lucidchart.open.nark.models.records.OpenIDAssociation
 import com.lucidchart.open.nark.models.records.OpenIDAssociationType
 import com.lucidchart.open.nark.models.records.OpenIDNonce
+import com.lucidchart.open.relate._
+import com.lucidchart.open.relate.Query._
 
-import AnormImplicits._
-import anorm._
-import anorm.SqlParser._
 import play.api.Play.current
 import play.api.db.DB
 
 class OpenIDModel extends AppModel {
-	protected val associationsRowParser = {
-		get[String]("provider") ~
-		get[String]("handle") ~
-		get[Date]("created") ~
-		get[Date]("expire") ~
-		get[Int]("type") ~
-		get[Array[Byte]]("secret") map {
-			case provider ~ handle ~ created ~ expires ~ typeInt ~ secret =>
-				new OpenIDAssociation(provider, handle, created, expires, OpenIDAssociationType(typeInt), secret)
-		}
+	protected val associationsRowParser = RowParser { row =>
+		OpenIDAssociation(
+			row.string("provider"),
+			row.string("handle"),
+			row.date("created"),
+			row.date("expire"),
+			OpenIDAssociationType(row.int("type")),
+			row.byteArray("secret")
+		)
 	}
 	
 	/**
@@ -33,16 +31,16 @@ class OpenIDModel extends AppModel {
 	 * @return seen
 	 */
 	def seenNonce(nonce: OpenIDNonce) = {
-		DB.withConnection("main") { connection =>
+		DB.withConnection("main") { implicit connection =>
 			try {
 				SQL("""
 					INSERT INTO `openid_nonces` (`provider`, `nonce`, `created`)
 					VALUES ({provider}, {nonce}, {created})
-				""").on(
-					"provider" -> nonce.provider,
-					"nonce"    -> nonce.nonce,
-					"created"  -> nonce.created
-				).executeUpdate()(connection)
+				""").on { implicit query =>
+					string("provider", nonce.provider)
+					string("nonce", nonce.nonce)
+					date("created", nonce.created)
+				}.executeUpdate()
 				
 				false
 			}
@@ -58,13 +56,13 @@ class OpenIDModel extends AppModel {
 	 * @param date cutoff
 	 * @return count of cleaned up rows
 	 */
-	def cleanNoncesBefore(date: Date) = {
-		DB.withConnection("main") { connection =>
+	def cleanNoncesBefore(before: Date) = {
+		DB.withConnection("main") { implicit connection =>
 			SQL("""
 				DELETE FROM `openid_nonces` WHERE `created` < {date}
-			""").on(
-				"date" -> date
-			).executeUpdate()(connection)
+			""").on { implicit query =>
+				date("date", before)
+			}.executeUpdate()
 		}
 	}
 	
@@ -72,7 +70,7 @@ class OpenIDModel extends AppModel {
 	 * Save, or resave, an association to the database
 	 */
 	def saveAssociation(association: OpenIDAssociation) {
-		DB.withConnection("main") { connection =>
+		DB.withConnection("main") { implicit connection =>
 			SQL("""
 				INSERT INTO `openid_associations` (`provider`, `handle`, `created`, `expire`, `type`, `secret`)
 				VALUES ({provider}, {handle}, {created}, {expire}, {type}, {secret})
@@ -81,14 +79,14 @@ class OpenIDModel extends AppModel {
 					`expire` = {expire},
 					`type` = {type},
 					`secret` = {secret}
-			""").on(
-				"provider" -> association.provider,
-				"handle"   -> association.handle,
-				"created"  -> association.created,
-				"expire"   -> association.expires,
-				"type"     -> association.associationType.id,
-				"secret"   -> association.secret
-			).executeUpdate()(connection)
+			""").on { implicit query =>
+				string("provider", association.provider)
+				string("handle", association.handle)
+				date("created", association.created)
+				date("expire", association.expires)
+				int("type", association.associationType.id)
+				byteArray("secret", association.secret)
+			}.executeUpdate()
 		}
 	}
 	
@@ -96,16 +94,16 @@ class OpenIDModel extends AppModel {
 	 * Find a specific association
 	 */
 	def findAssociation(provider: String, handle: String) = {
-		DB.withConnection("main") { connection =>
+		DB.withConnection("main") { implicit connection =>
 			SQL("""
 				SELECT *
 				FROM `openid_associations`
 				WHERE `provider` = {provider} AND `handle` = {handle}
 				LIMIT 1
-			""").on(
-				"provider" -> provider,
-				"handle"   -> handle
-			).as(associationsRowParser.singleOpt)(connection)
+			""").on { implicit query =>
+				string("provider", provider)
+				string("handle", handle)
+			}.asSingleOption(associationsRowParser)
 		}
 	}
 	
@@ -113,16 +111,16 @@ class OpenIDModel extends AppModel {
 	 * Find the association that expires last out of the set
 	 */
 	def findLastAssociation(provider: String) = {
-		DB.withConnection("main") { connection =>
+		DB.withConnection("main") { implicit connection =>
 			SQL("""
 				SELECT *
 				FROM `openid_associations`
 				WHERE `provider` = {provider}
 				ORDER BY `expire` DESC
 				LIMIT 1
-			""").on(
-				"provider" -> provider
-			).as(associationsRowParser.singleOpt)(connection)
+			""").on { implicit query =>
+				string("provider", provider)
+			}.asSingleOption(associationsRowParser)
 		}
 	}
 	
@@ -130,30 +128,30 @@ class OpenIDModel extends AppModel {
 	 * Remove an existing association
 	 */
 	def removeAssociation(provider: String, handle: String) {
-		DB.withConnection("main") { connection =>
+		DB.withConnection("main") { implicit connection =>
 			SQL("""
 				DELETE FROM `openid_associations`
 				WHERE `provider` = {provider} AND `handle` = {handle}
 				LIMIT 1
-			""").on(
-				"provider" -> provider,
-				"handle"   -> handle
-			).executeUpdate()(connection)
+			""").on { implicit query =>
+				string("provider", provider)
+				string("handle", handle)
+			}.executeUpdate()
 		}
 	}
 	
 	/**
 	 * Cleanup all the associations that expired before the date
 	 */
-	def cleanAssociationsBefore(date: Date) {
-		DB.withConnection("main") { connection =>
+	def cleanAssociationsBefore(before: Date) {
+		DB.withConnection("main") { implicit connection =>
 			SQL("""
 				DELETE FROM `openid_associations`
 				WHERE `expire` < {date}
 				LIMIT 1
-			""").on(
-				"date" -> date
-			).executeUpdate()(connection)
+			""").on { implicit query =>
+				date("date", before)
+			}.executeUpdate()
 		}
 	}
 }

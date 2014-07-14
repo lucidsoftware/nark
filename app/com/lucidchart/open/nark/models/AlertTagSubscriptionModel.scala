@@ -1,9 +1,8 @@
 package com.lucidchart.open.nark.models
 
-import anorm._
-import anorm.SqlParser._
-import AnormImplicits._
 import com.lucidchart.open.nark.models.records.{AlertTagSubscription, AlertTagSubscriptionRecord, AlertType, User}
+import com.lucidchart.open.relate._
+import com.lucidchart.open.relate.Query._
 import java.util.UUID
 import play.api.Play.current
 import play.api.Play.configuration
@@ -13,12 +12,12 @@ object AlertTagSubscriptionModel extends AlertTagSubscriptionModel
 trait AlertTagSubscriptionModel extends AppModel {
 	protected val table = "alert_tag_subscriptions"
 
-	protected val tagSubscriptionRowParser = {
-		get[UUID]("user_id") ~
-		get[String]("tag") ~
-		get[Boolean]("active") map {
-			case user_id ~ tag ~ active => new AlertTagSubscription(user_id, tag, active)
-		}
+	protected val tagSubscriptionRowParser = RowParser { row =>
+		AlertTagSubscription(
+			row.uuid("user_id"),
+			row.string("tag"),
+			row.bool("active")
+		)
 	}
 
 	/**
@@ -28,15 +27,15 @@ trait AlertTagSubscriptionModel extends AppModel {
 	 * @param subscription the Subscription to create
 	 */
 	def createSubscription(subscription: AlertTagSubscription) {
-		DB.withConnection("main") { connection =>
+		DB.withConnection("main") { implicit connection =>
 			SQL("""
 				INSERT INTO """ + table + """ (`user_id`, `tag`, `active`)
 				VALUES ({user_id}, {tag}, {active})
-			""").on(
-				"user_id"   -> subscription.userId,
-				"tag"       -> subscription.tag,
-				"active"    -> subscription.active
-			).executeUpdate()(connection)
+			""").on { implicit query =>
+				uuid("user_id", subscription.userId)
+				string("tag", subscription.tag)
+				bool("active", subscription.active)
+			}.executeUpdate()
 		}
 	}
 
@@ -45,16 +44,16 @@ trait AlertTagSubscriptionModel extends AppModel {
 	 * @param subscription the new subscription values
 	 */
 	def editSubscription(subscription: AlertTagSubscription) {
-		DB.withConnection("main") { connection =>
+		DB.withConnection("main") { implicit connection =>
 			SQL("""
 				UPDATE """ + table + """
 				SET `active`= {active}
 				WHERE `tag`={tag} AND `user_id`={user_id}
-			""").on(
-				"tag"     -> subscription.tag,
-				"user_id" -> subscription.userId,
-				"active"  -> subscription.active
-			).executeUpdate()(connection)
+			""").on { implicit query =>
+				string("tag", subscription.tag)
+				uuid("user_id", subscription.userId)
+				bool("active", subscription.active)
+			}.executeUpdate()
 		}
 	}
 
@@ -64,14 +63,14 @@ trait AlertTagSubscriptionModel extends AppModel {
 	 * @param userId the id of the user for whom to delete it
 	 */
 	def deleteSubscription(tag: String, userId: UUID) {
-		DB.withConnection("main") { connection =>
+		DB.withConnection("main") { implicit connection =>
 			SQL("""
 				DELETE FROM """ + table + """
 				WHERE `tag` = {tag} AND `user_id`={user_id}
-			""").on(
-				"tag"      -> tag,
-				"user_id"  -> userId
-			).executeUpdate()(connection)
+			""").on { implicit query =>
+				string("tag", tag)
+				uuid("user_id", userId)
+			}.executeUpdate()
 		}
 	}
 
@@ -92,14 +91,16 @@ trait AlertTagSubscriptionModel extends AppModel {
 			Nil
 		}
 		else {
-			val subscriptions = DB.withConnection("main") { connection =>
-				RichSQL("""
+			val subscriptions = DB.withConnection("main") { implicit connection =>
+				SQL("""
 					SELECT *
 					FROM """ + table + """
 					WHERE `tag` IN ({tags})
-				""").onList(
-					"tags" -> tags
-				).toSQL.as(tagSubscriptionRowParser *)(connection)
+				""").expand { implicit query =>
+					commaSeparated("tags", tags.size)
+				}.on { implicit query =>
+					strings("tags", tags)
+				}.asList(tagSubscriptionRowParser)
 			}
 
 			if (subscriptions.size == 0) {
@@ -122,13 +123,13 @@ trait AlertTagSubscriptionModel extends AppModel {
 	 * Get a page of subscriptions for a certain user
 	 */
 	def getSubscriptionsByUser(user: User, page: Int) = {
-		DB.withConnection("main") { connection =>
+		DB.withConnection("main") { implicit connection =>
 			val found = SQL("""
 				SELECT COUNT(1) FROM """ + table + """
 				WHERE `user_id` = {user_id}
-			""").on(
-				"user_id" -> user.id
-			).as(scalar[Long].single)(connection)
+			""").on { implicit query =>
+				uuid("user_id", user.id)
+			}.asScalar[Long]
 
 			val subscriptions = SQL("""
 				SELECT *
@@ -136,11 +137,11 @@ trait AlertTagSubscriptionModel extends AppModel {
 				WHERE `user_id` = {user_id}
 				ORDER BY `tag` ASC
 				LIMIT {limit} OFFSET {offset}
-			""").on(
-				"user_id" -> user.id,
-				"limit" -> configuredLimit,
-				"offset" -> configuredLimit * page
-			).as(tagSubscriptionRowParser *)(connection)
+			""").on { implicit query =>
+				uuid("user_id", user.id)
+				int("limit", configuredLimit)
+				int("offset", configuredLimit * page)
+			}.asList(tagSubscriptionRowParser)
 			
 			if (subscriptions.size == 0) {
 				(found, Nil)
@@ -161,16 +162,16 @@ trait AlertTagSubscriptionModel extends AppModel {
 	 * @return a list of subscriptions
 	 */
 	def getAllSubscriptionsByUser(user: User, includeInactive: Boolean = false): List[AlertTagSubscription] = {
-		DB.withConnection("main") { connection =>
+		DB.withConnection("main") { implicit connection =>
 			val includeClause = if (includeInactive) ""  else " AND active = TRUE"
 
 			SQL("""
 				SELECT *
 				FROM """ + table + """
 				WHERE `user_id` = {user_id}
-			""" + includeClause).on(
-				"user_id" -> user.id
-			).as(tagSubscriptionRowParser *)(connection)
+			""" + includeClause).on { implicit query =>
+				uuid("user_id", user.id)
+			}.asList(tagSubscriptionRowParser)
 		}
 	}
 }
