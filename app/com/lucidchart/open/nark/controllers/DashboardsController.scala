@@ -215,7 +215,8 @@ class DashboardsController extends AppController {
 		DashboardAction.dashboardManagementAccess(dashboardId, user.id) { dashboard =>
 			AppAction { implicit request =>
 				DashboardModel.editDashboard(dashboard.copy(deleted = true))
-				Redirect(routes.HomeController.index()).flashing(AppFlash.success("Dashboard was deleted successfully."))
+				val newHistoryCookie = DashboardHistory.removeFromHistory(request,dashboard.url )
+				Redirect(routes.HomeController.index()).flashing(AppFlash.success("Dashboard was deleted successfully.")).withCookies(newHistoryCookie)
 			}
 		}
 	}
