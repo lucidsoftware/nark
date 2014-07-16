@@ -54,17 +54,18 @@ class AlertTagsController extends AppController {
 			val alertIds = AlertTagModel.findAlertsByTag(tag).map(_.recordId)
 			val sickTargets = AlertTargetStateModel.getSickTargets(alertIds).map { target =>
 				(target.alertId, target)
-			}.toMap
+			}.groupBy { t => t._1 }.mapValues(_.map(_._2))
 			val alerts = AlertModel.findAlertByID(sickTargets.keys.toList)
-			val result = alerts.map { alert =>
-				val target = sickTargets(alert.id)
-				SickTarget(
-					alert.id,
-					alert.name,
-					target.target,
-					target.state,
-					target.lastUpdated
-				)
+			val result = alerts.flatMap { alert =>
+				sickTargets(alert.id).map { target =>
+					SickTarget(
+						alert.id,
+						alert.name,
+						target.target,
+						target.state,
+						target.lastUpdated
+					)
+				}
 			}
 			Ok(views.html.alerttags.activeAlerts(tag, result))
 		}

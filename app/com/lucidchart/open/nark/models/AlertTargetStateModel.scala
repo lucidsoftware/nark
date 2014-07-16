@@ -102,17 +102,22 @@ class AlertTargetStateModel extends AppModel {
 	 * @return a list of sick targets
 	 */
 	def getSickTargets(alertIds: List[UUID]): List[AlertTargetState] = {
-		DB.withConnection("main") { connection =>
-			RichSQL("""
-				SELECT *
-				FROM `alert_target_state`
-				WHERE `alert_id` IN ({ids}) AND `state` IN ({error}, {warn})
-			""").onList(
-				"ids" -> alertIds
-			).toSQL.on(
-				"error" -> AlertState.error.id,
-				"warn" -> AlertState.warn.id
-			).as(AlertTargetStateRowParser *)(connection)
+		if (alertIds.isEmpty){
+			Nil
+		}
+		else {
+			DB.withConnection("main") { connection =>
+				RichSQL("""
+					SELECT *
+					FROM `alert_target_state`
+					WHERE `alert_id` IN ({ids}) AND `state` IN ({error}, {warn})
+				""").onList(
+					"ids" -> alertIds
+				).toSQL.on(
+					"error" -> AlertState.error.id,
+					"warn" -> AlertState.warn.id
+				).as(AlertTargetStateRowParser *)(connection)
+			}
 		}
 	}
 }

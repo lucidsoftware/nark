@@ -267,17 +267,18 @@ object AlertsController extends AppController {
 			val realPage = page.max(1)
 			val sickTargets = AlertTargetStateModel.getSickTargets(realPage - 1).map { target =>
 				(target.alertId, target)
-			}.toMap
+			}.groupBy { t => t._1 }.mapValues(_.map(_._2))
 			val alerts = AlertModel.findAlertByID(sickTargets.keys.toList)
-			val result = alerts.map { alert =>
-				val target = sickTargets(alert.id)
-				SickTarget(
-					alert.id,
-					alert.name,
-					target.target,
-					target.state,
-					target.lastUpdated
-				)
+			val result = alerts.flatMap { alert =>
+				sickTargets(alert.id).map { target =>
+					SickTarget(
+						alert.id,
+						alert.name,
+						target.target,
+						target.state,
+						target.lastUpdated
+					)
+				}
 			}
 			Ok(views.html.alerts.active(Pagination[SickTarget](realPage, result.size, AlertTargetStateModel.configuredLimit, result)))
 		}
@@ -292,17 +293,18 @@ object AlertsController extends AppController {
 				AlertTagModel.findAlertsByTag(AlertTagSubscriptionModel.getAllSubscriptionsByUser(user).map(_.tag)).map(_.recordId)
 			val sickTargets = AlertTargetStateModel.getSickTargets(alertIds).map { target =>
 				(target.alertId, target)
-			}.toMap
+			}.groupBy { t => t._1 }.mapValues(_.map(_._2))
 			val alerts = AlertModel.findAlertByID(sickTargets.keys.toList)
-			val result = alerts.map { alert =>
-				val target = sickTargets(alert.id)
-				SickTarget(
-					alert.id,
-					alert.name,
-					target.target,
-					target.state,
-					target.lastUpdated
-				)
+			val result = alerts.flatMap { alert =>
+				sickTargets(alert.id).map { target =>
+					SickTarget(
+						alert.id,
+						alert.name,
+						target.target,
+						target.state,
+						target.lastUpdated
+					)
+				}
 			}
 
 			Ok(views.html.alerts.activeForUser(result))
