@@ -51,7 +51,8 @@ GET     /dashboard/tags/search               com.lucidchart.open.nark.controller
 GET     /dt/:tag                             com.lucidchart.open.nark.controllers.DashboardTagsController.tag(tag: String)
 
 # Alerts
-GET     /alert/create                        com.lucidchart.open.nark.controllers.AlertsController.create
+GET     /alert/create                        com.lucidchart.open.nark.controllers.AlertsController.create(target:String ?= "")
+GET     /alert/create/:target                com.lucidchart.open.nark.controllers.AlertsController.create(target:String)
 POST    /alert/createSubmit                  com.lucidchart.open.nark.controllers.AlertsController.createSubmit
 GET     /alert/search                        com.lucidchart.open.nark.controllers.AlertsController.search(term: String ?= "", page: Int ?= 1)
 POST    /alert/:uuid/recover                 com.lucidchart.open.nark.controllers.AlertsController.recover(uuid: java.util.UUID)

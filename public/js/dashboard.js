@@ -275,6 +275,14 @@ function refreshData(graphIds) {
 		}
 
 		$('#graph-link-' + graph['id']).attr('href', graphUrl);
+		$('#graph-'+graph['id']+'-alert').html("")
+		var matchingTargets = targets.filter(function(target){ return (target['graphId'] == graph['id']) })
+
+		matchingTargets.forEach(function(target){
+						var curTarget ="/"+target['target'].trim();
+						var curTargetName = target['name'];
+						$('#graph-'+graph['id']+'-alert').append("<a href=\"/alert/create"+curTarget+"\" class=\"btn btn-mini\" target=\"_blank\">Create Alert-<b>"+curTargetName+"</b></a>");
+			})
 
 		//show that the graph is reloading
 		$('#loading-' + graph['id']).show(250);

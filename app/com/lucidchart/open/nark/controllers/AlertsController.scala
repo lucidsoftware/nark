@@ -82,9 +82,9 @@ object AlertsController extends AppController {
 	/**
 	 * Create a new alert
 	 */
-	def create = AuthAction.authenticatedUser { implicit user =>
+	def create(target:String="") = AuthAction.authenticatedUser { implicit user =>
 		AppAction { implicit request =>
-			val form = createAlertForm.fill(AlertFormSubmission("", Nil, "", 0, 0, Comparisons.<, 60, configuration.getInt("alerts.secondsToCheckData").get, 1, true,true))
+			val form = createAlertForm.fill(AlertFormSubmission("", Nil, target, 0, 0, Comparisons.<, 60, configuration.getInt("alerts.secondsToCheckData").get, 1, true,true))
 			Ok(views.html.alerts.create(form))
 		}
 	}
