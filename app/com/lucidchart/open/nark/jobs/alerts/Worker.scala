@@ -2,6 +2,8 @@ package com.lucidchart.open.nark.jobs.alerts
 
 import com.lucidchart.open.nark.models.{AlertModel, AlertTagModel, AlertHistoryModel, SubscriptionModel, AlertTagSubscriptionModel, AlertTargetStateModel}
 import com.lucidchart.open.nark.models.records.{Alert,AlertHistory,AlertState, AlertStatus, AlertType,Comparisons, AlertTargetState, User}
+import com.lucidchart.open.nark.plugins
+import com.lucidchart.open.nark.plugins.{AlertEvent, PluginManager}
 import com.lucidchart.open.nark.views
 import com.lucidchart.open.nark.utils.Graphite
 import akka.actor.Actor
@@ -12,9 +14,6 @@ import play.api.Play.configuration
 import scala.concurrent.{Future,Await}
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration._
-import java.util.Properties
-import javax.mail._
-import internet._
 
 import java.util.{Date, UUID}
 
@@ -25,33 +24,9 @@ object AlertWorker {
 	private[alerts] val maxConsecutiveFailures = configuration.getInt("alerts.maxConsecutiveFailures").get
 	private[alerts] val secondsToCheck = configuration.getInt("alerts.secondsToCheckData").get
 	private[alerts] val url = configuration.getString("application.domain").get
-
-	private[alerts] val fromEmail  = configuration.getString("mailer.fromemail").get
-	private[alerts] val mailerEnabled = configuration.getBoolean("mailer.enabled").get
-	private[alerts] val mailerDebug = configuration.getBoolean("mailer.debug").get
-
-	private[alerts] class SMTPAuthenticator extends javax.mail.Authenticator {
-		override def getPasswordAuthentication() = {
-			val username = configuration.getString("mailer.smtp.user").get
-			val password = configuration.getString("mailer.smtp.pass").get
-			new PasswordAuthentication(username, password)
-		}
-	}
-
-	private[alerts] val props = {
-		val p = new Properties()
-		val port: java.lang.Integer = configuration.getInt("mailer.smtp.port").get
-		p.put("mail.transport.protocol", "smtp")
-		p.put("mail.smtp.host", configuration.getString("mailer.smtp.host").get)
-		p.put("mail.smtp.port", port)
-		p.put("mail.smtp.auth", "true")
-		p
-	}
-
-	private[alerts] val auth = new SMTPAuthenticator()
 }
 
-class Worker extends Actor {
+class Worker extends Actor with Mailer {
 	private val threadId = UUID.randomUUID()
 
 	def receive = {
@@ -107,7 +82,7 @@ class Worker extends Actor {
 					val alertHistories = changedStates.map { currentTarget =>
 						val previousState = previousStates(currentTarget)
 						val currentState = currentStates(currentTarget)
-						val last_datapoint = currentTarget.datapoints.last.value.get
+						val lastValue = currentTarget.datapoints.last.value.get
 						//filter out subscribers that actually care about this.
 						val emails = subscribers.map { subscriber =>
 							val includeError = (previousState == AlertState.error || currentState == AlertState.error) && subscriber.errorEnable
@@ -131,10 +106,33 @@ class Worker extends Actor {
 							case (AlertState.normal) =>views.txt.emails.alert(true,currentTarget,alert,previousState.toString,currentState.toString,AlertWorker.url).toString.trim
 							case (_) => (views.txt.emails.alert(false,currentTarget,alert,previousState.toString,currentState.toString,AlertWorker.url).toString ) .toString.trim
 						})
-						val subject = "["+currentState.toString+"] "+alert.name+":"+ last_datapoint
+						val subject = "["+currentState.toString+"] "+alert.name+":"+ lastValue
 						val emailsSent = sendEmails(emails, subject, textMessage, htmlMessage)
-						new AlertHistory(alert.id, currentTarget.target, currentState, emailsSent, last_datapoint)
+						
+						// send alerts to the plugins
+						val alertTags = AlertTagModel.findTagsForAlert(alert.id).map(_.tag).toSet
+						val alertEvent = AlertEvent(
+							alert.id,
+							alert.name,
+							alert.target,
+							currentTarget.target,
+							plugins.Comparisons(alert.comparison.id),
+							alert.warnThreshold,
+							alert.errorThreshold,
+							lastValue,
+							plugins.AlertState(previousState.id),
+							plugins.AlertState(currentState.id)
+						)
+
+						PluginManager.alertPlugins.foreach { plugin =>
+							if (plugin.tags.intersect(alertTags).size > 0) {
+								PluginMaster.send(PluginRequest(plugin, alertEvent))
+							}
+						}
+
+						new AlertHistory(alert.id, currentTarget.target, currentState, emailsSent, lastValue)
 					}
+
 
 					AlertHistoryModel.createAlertHistory(alertHistories)
 				}
@@ -168,42 +166,6 @@ class Worker extends Actor {
 				}
 			}
 		}.toMap
-	}
-
-	private def sendEmails(toEmails: List[String], subject: String, textBody: String, htmlBody:String) : Int = {
-		if(AlertWorker.mailerEnabled && !toEmails.isEmpty) {
-			val mailSession = Session.getInstance(AlertWorker.props, AlertWorker.auth)
-
-			if (AlertWorker.mailerDebug) {
-				mailSession.setDebug(true)
-			}
-
-			val transport = mailSession.getTransport()
-			val message = new MimeMessage(mailSession)
-
-			message.setFrom(new InternetAddress(AlertWorker.fromEmail, "nark"))
-			message.setReplyTo(Array(new InternetAddress(AlertWorker.fromEmail, "nark")))
-			message.setSubject(subject)
-
-			toEmails.map{email => message.addRecipient(Message.RecipientType.TO, new InternetAddress(email, ""))}
-
-			val textPart = new MimeBodyPart()
-			textPart.setContent(textBody,"text/plain")
-			val htmlPart = new MimeBodyPart()
-			htmlPart.setContent(htmlBody,"text/html")
-			val mp = new MimeMultipart("alternative")
-			mp.addBodyPart(textPart)
-			mp.addBodyPart(htmlPart)
-			message.setContent(mp)
-			message.saveChanges()
-			transport.connect()
-			transport.sendMessage(message, message.getRecipients(Message.RecipientType.TO))
-			transport.close()
-			// no exceptions = success
-			toEmails.length
-		} else {
-			0
-		}
 	}
 
 	private def getWorstState(states: List[AlertState.Value]) : AlertState.Value = {
