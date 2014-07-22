@@ -149,7 +149,7 @@
 					<td>
 						@helper.form(action=narkRoutes.DynamicAlertsController.edit(alert.id)) {
 							@helpers.csrfHiddenInput()
-							<input class="btn @if(ownerOption.isDefined && userOption.get.id != ownerOption.get.id){ disabled }" type="submit" @if(ownerOption.isDefined && userOption.get.id != ownerOption.get.id){ disabled } value='Manage Alert' />
+							<input class="btn @if(ownerOption.isDefined && ( (userOption.get.id != ownerOption.get.id ) && (!userOption.get.admin) )){ disabled }" type="submit" @if(ownerOption.isDefined && ( (userOption.get.id != ownerOption.get.id) && (!userOption.get.admin) ) ){ disabled } value='Manage Alert' />
 						}
 					</td>
 					@if(subscription.isDefined) {

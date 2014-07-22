@@ -152,7 +152,7 @@
 								<input class="btn" type="submit" value="Dynamic Alert" />
 							}
 						} else {
-							@if(userOption.isDefined && userOption.get.id == alert.userId) {
+							@if(userOption.isDefined && (userOption.get.id == alert.userId || userOption.get.admin)) {
 								@helper.form(action=narkRoutes.AlertsController.edit(alert.id)) {
 									<input class="btn" type="submit" value="Manage Alert" />
 								}

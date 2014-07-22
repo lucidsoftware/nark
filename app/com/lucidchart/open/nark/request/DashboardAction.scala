@@ -14,6 +14,7 @@ import com.lucidchart.open.nark.models.records.Graph
 import com.lucidchart.open.nark.models.records.Target
 import com.lucidchart.open.nark.models.DashboardModel
 import com.lucidchart.open.nark.models.GraphModel
+import com.lucidchart.open.nark.models.UserModel
 import com.lucidchart.open.nark.models.TargetModel
 import com.lucidchart.open.nark.controllers.routes
 import com.lucidchart.open.nark.utils.DashboardHistory
@@ -58,7 +59,7 @@ trait DashboardActionBuilder {
 	 */
 	def dashboardManagementAccess(dashboardId: UUID, userId: UUID, allowDeleted: Boolean = false)(block: (Dashboard) => EssentialAction): EssentialAction = existingDashboard(dashboardId, allowDeleted) { dashboard =>
 		EssentialAction { requestHeader =>
-			if (dashboard.userId == userId) {
+			if ( (dashboard.userId == userId) || UserModel.isAdmin(userId) ) {
 				block(dashboard)(requestHeader)
 			}
 			else {

@@ -36,7 +36,7 @@ trait AlertActionBuilder {
 	 */
 	def alertManagementAccess(alertId: UUID, userId: UUID, allowDeleted: Boolean = false)(block: (Alert) => EssentialAction): EssentialAction = existingAlert(alertId, allowDeleted) { alert =>
 		EssentialAction { requestHeader =>
-			if (alert.userId == userId) {
+			if ( (alert.userId == userId) || UserModel.isAdmin(userId) ) {
 				block(alert)(requestHeader)
 			}
 			else {

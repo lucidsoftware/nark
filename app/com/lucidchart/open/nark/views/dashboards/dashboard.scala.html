@@ -17,6 +17,7 @@
 @import com.lucidchart.open.nark.models.records.Graph
 @import com.lucidchart.open.nark.models.records.Dashboard
 @import com.lucidchart.open.nark.utils.Graphite
+@import com.lucidchart.open.nark.models.AlertModel
 
 @com.lucidchart.open.nark.views.html.layouts.main(dashboard.name, List("js/dashboard.js", "js/dygraph-helper.js", "jquery-timepicker-1.3.1/jquery-ui-timepicker-addon.js", "js/dygraph-combined.js"), List("css/dashboard.css", "jquery-timepicker-1.3.1/jquery-ui-timepicker-addon.css" ), userOption = userOption){
 	<script type="text/javascript">
@@ -41,7 +42,7 @@
 
 	<h3>
 		@dashboard.name
-		@if(userOption.isDefined && userOption.get.id == dashboard.userId) {
+		@if(userOption.isDefined && ( (userOption.get.id == dashboard.userId) || userOption.get.admin ) ) {
 			<a href="@narkRoutes.DashboardsController.manage(dashboard.id)" class="btn">Manage</a>
 		}
 		<a href="#" id="optiontoggler" class="btn">Options</a>

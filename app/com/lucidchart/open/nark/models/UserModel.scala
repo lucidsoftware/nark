@@ -20,9 +20,10 @@ class UserModel extends AppModel {
 		get[String]("warn_address") ~
 		get[Boolean]("warn_enable") ~
 		get[String]("error_address") ~
-		get[Boolean]("error_enable") map {
-			case id ~ email ~ created ~ name ~ warn_address ~ warn_enable ~ error_address ~ error_enable=>
-				new User(id, email, created, name, warn_address, warn_enable, error_address, error_enable)
+		get[Boolean]("error_enable")~
+		get[Boolean]("admin") map {
+			case id ~ email ~ created ~ name ~ warn_address ~ warn_enable ~ error_address ~ error_enable ~ admin =>
+				new User(id, email, created, name, warn_address, warn_enable, error_address, error_enable, admin)
 		}
 	}
 	
@@ -78,8 +79,8 @@ class UserModel extends AppModel {
 	def createUser(user: User) {
 		DB.withConnection("main") { connection =>
 			SQL("""
-				INSERT INTO `users` (`id`, `email`, `created`, `name`, `warn_address`, `warn_enable`, `error_address`, `error_enable`)
-				VALUES ({id}, {email}, {created}, {name}, {warn_address}, {warn_enable}, {error_address}, {error_enable})
+				INSERT INTO `users` (`id`, `email`, `created`, `name`, `warn_address`, `warn_enable`, `error_address`, `error_enable`, `admin`)
+				VALUES ({id}, {email}, {created}, {name}, {warn_address}, {warn_enable}, {error_address}, {error_enable}, {admin})
 			""").on(
 				"id"         -> user.id,
 				"email"      -> user.email,
@@ -88,7 +89,8 @@ class UserModel extends AppModel {
 				"warn_address"	-> user.warnAddress,
 				"warn_enable"	-> user.warnEnable,
 				"error_address"	-> user.errorAddress,
-				"error_enable"	-> user.errorEnable
+				"error_enable"	-> user.errorEnable,
+				"admin" -> user.admin
 			).executeUpdate()(connection)
 		}
 	}
@@ -110,6 +112,54 @@ class UserModel extends AppModel {
 				"warn_address" -> user.warnAddress,
 				"warn_enable" -> user.warnEnable
 			).executeUpdate()(connection)
+		}
+	}
+
+	def isAdmin(userId:UUID):Boolean = {
+		DB.withConnection("main") { connection =>
+			SQL("""
+				SELECT `admin`
+				FROM `users`
+				WHERE `id` = {userId}
+			""").on(
+				"userId" -> userId
+			).as(scalar[Boolean].single)(connection)
+		}
+	}
+
+	def getAdminUserId():List[UUID] = {
+		DB.withConnection("main") { connection =>
+			SQL("""
+				SELECT `id` from `users` where `admin`=1
+				""").as(scalar[UUID] *)(connection)
+		}
+	}
+
+	def manageAdmin(userId:UUID,admin:Boolean) = {
+		DB.withConnection("main") { connection =>
+			SQL("""
+				UPDATE `users` set `admin`= {admin} WHERE `id` = {userId}
+				""").on(
+				"userId" -> userId,
+				"admin" -> admin
+
+				).executeUpdate()(connection)
+		}
+	}
+
+	def getAllUsers(page: Int, except:UUID) = {
+		DB.withConnection("main") { connection =>
+		 val found = SQL("""
+				SELECT COUNT(1) FROM `users` WHERE `id` != {userId}
+				""").on( "userId" -> except ).as(scalar[Long].single)(connection)
+
+
+		val matches =  SQL("""SELECT * from `users` WHERE  `id` != {userId} ORDER BY `name` LIMIT {limit} OFFSET {offset}""").on(
+				"userId" -> except,
+				"limit" -> configuredLimit,
+				"offset" -> configuredLimit * page
+				).as(usersRowParser *)(connection)
+		(found,matches)
 		}
 	}
 }

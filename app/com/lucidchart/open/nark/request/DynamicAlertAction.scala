@@ -3,6 +3,7 @@ package com.lucidchart.open.nark.request
 import com.lucidchart.open.nark.Global
 import com.lucidchart.open.nark.controllers.routes
 import com.lucidchart.open.nark.models.DynamicAlertModel
+import com.lucidchart.open.nark.models.UserModel
 import com.lucidchart.open.nark.models.records.DynamicAlert
 
 import java.util.UUID
@@ -42,7 +43,7 @@ trait DynamicAlertActionBuilder {
 	 */
 	def alertManagementAccess(alertId: UUID, userId: UUID, allowDeleted: Boolean = false)(block: (DynamicAlert) => EssentialAction): EssentialAction = existingAlert(alertId, allowDeleted) { alert =>
 		EssentialAction { requestHeader =>
-			if (alert.userId == userId) {
+			if ( (alert.userId == userId) || UserModel.isAdmin(userId) ) {
 				block(alert)(requestHeader)
 			}
 			else {

@@ -1,9 +1,10 @@
 package com.lucidchart.open.nark.controllers
 
 import com.lucidchart.open.nark.models.UserModel
+import com.lucidchart.open.nark.models.records.{Pagination,User}
 import com.lucidchart.open.nark.request.{AppAction, AppFlash, AuthAction}
 import com.lucidchart.open.nark.views
-
+import java.util.UUID
 import play.api.data._
 import play.api.data.Forms._
 import play.api.data.format.Formats._
@@ -36,6 +37,45 @@ class UsersController extends AppController {
 			Ok(views.html.users.addresses(form))
 		}
 	}
+
+	def manageAdmin(page: Int) = AuthAction.authenticatedUser { implicit user =>
+		AppAction { implicit request =>
+			val ids = UserModel.getAdminUserId()
+			val realPage = page.max(1)
+			if ( ids.length > 0 ) {
+				if( ids.contains(user.id) ){
+					val (found,matches) = UserModel.getAllUsers( realPage-1, user.id )
+					Ok( views.html.users.admin(Pagination[User](realPage, found, UserModel.configuredLimit , matches),false) )
+				}	else {
+					Redirect(routes.HomeController.index).flashing(AppFlash.error("Please Contact the administrator to gain Admin Privileges."))
+				}
+			}
+			else {
+				Ok(views.html.users.admin(Pagination[User](realPage,0,UserModel.configuredLimit,Nil),true))
+			}
+		}
+	}
+
+	def manageAdminSubmit = AuthAction.authenticatedUser { implicit user =>
+		AppAction { implicit request =>
+			println( UserModel.getAdminUserId().length )
+			if ( UserModel.isAdmin(user.id) || (UserModel.getAdminUserId().length == 0) ){
+				val formData = request.body.asFormUrlEncoded
+				val userIds = formData.get("userIds")
+				val action = formData.get("action").head
+				val admin = action match {
+											case "Revoke" => false
+											case "Grant" | "Yes" => true
+										}
+				userIds.map { id =>
+									UserModel.manageAdmin( UUID.fromString(id), admin )
+				}
+				Redirect(routes.UsersController.manageAdmin()).flashing(AppFlash.success("Administrative Privileges Changed Successfully"))
+			}	else {
+			Redirect(routes.HomeController.index).flashing(AppFlash.error("Please Contact the administrator to gain Admin Privileges"))
+		}
+	}
+}
 
 	/**
 	 * Handle the form submitted by the user and edit the addresses

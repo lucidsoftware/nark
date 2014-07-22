@@ -16,7 +16,7 @@ class AlertTagsController extends AppController {
 			val alertIds = AlertTagModel.findAlertsByTag(tag).map(_.recordId)
 			val alerts = AlertModel.findAlertByID(alertIds)
 			val subscriptions = AlertTagSubscriptionModel.getSubscriptionsByTag(tag)
-			Ok(views.html.alerttags.tag(tag, alerts, subscriptions))
+			Ok(views.html.alerttags.tag(tag, alerts.filter(!_.deleted), subscriptions))
 		}
 	}
 

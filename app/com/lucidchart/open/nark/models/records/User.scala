@@ -11,15 +11,16 @@ case class User(
 	warnAddress: String,
 	warnEnable: Boolean,
 	errorAddress: String,
-	errorEnable: Boolean
+	errorEnable: Boolean,
+	admin:Boolean
 ) extends AppRecord {
 	/**
 	 * Create a new User record for inserting into the database
 	 */
-	def this(email: String, name: String) = this(UUID.randomUUID(), email, new Date(), name, email, true, email, true)
+	def this(email: String, name: String) = this(UUID.randomUUID(), email, new Date(), name, email, true, email, true, false)
 
 	/**
 	 * Create a new User record for inserting into the database
 	 */
-	def this(email: String, name: String, warnAddress: String, warnEnable: Boolean, errorAddress: String, errorEnable: Boolean) = this(UUID.randomUUID(), email, new Date(), name, warnAddress, warnEnable, errorAddress, errorEnable)
+	def this(email: String, name: String, warnAddress: String, warnEnable: Boolean, errorAddress: String, errorEnable: Boolean) = this(UUID.randomUUID(), email, new Date(), name, warnAddress, warnEnable, errorAddress, errorEnable, false)
 }

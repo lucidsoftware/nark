@@ -1,0 +1,68 @@
+@(
+	pagination:com.lucidchart.open.nark.models.records.Pagination[com.lucidchart.open.nark.models.records.User],
+	self:Boolean
+)(
+	implicit
+	request: com.lucidchart.open.nark.request.AppRequest[_],
+	user: com.lucidchart.open.nark.models.records.User
+)
+@import com.lucidchart.open.nark.controllers.{routes=>narkRoutes}
+@import com.lucidchart.open.nark.views
+@import com.lucidchart.open.nark.views.html.helpers
+@import helper.twitterBootstrap._
+@import helper._
+
+
+@com.lucidchart.open.nark.views.html.layouts.main("Admin Settings", userOption=Some(user)) {
+	<h3>Admin Settings</h3>
+
+	<br />
+	<div class="row-fluid">
+		@helper.form(action=narkRoutes.UsersController.manageAdminSubmit()) {
+			<fieldset>	
+				@helpers.csrfHiddenInput()
+				@if(self){
+					No admin User has been assigned Yet. Become Admin? <br/> <br/>
+					<input type="checkbox" name="userIds" value="@user.id" checked hidden></input>
+					<input type="submit" class='btn' name="action" value="Yes"/>	
+				<a href="@narkRoutes.HomeController.index"><button type="button" class='btn' name="action">Cancel</button>	</a>
+				} else{
+					@if(pagination.matches.size == 0){
+							No Non-admin Users in the System
+					 
+					 } else {
+					 Select Users to Grant/Revoke admin privileges.<br/><br/>
+						@helpers.paginationMaxPage(pagination.found, pagination.limit) { maxPage =>
+					<table class="table table-hover table-striped">
+						<thead>
+							<tr>
+								<th></th>
+								<th>Name</th>
+								<th>Email</th>
+								<th>Privileges</th>
+							</tr>
+						</thead>
+						<tbody>
+				
+					@pagination.matches.map {  u =>
+						<tr>
+							<td><input type="checkbox" name="userIds" value="@u.id" /></td>
+							<td>@u.name</td>	
+							<td>@u.email</td>
+							<td>@if(u.admin){Admin}else{Standard}</td>
+						</tr>					
+				}
+			</tbody>
+		</table>
+		
+	@{ helpers.paginationLinks(pagination.page, maxPage) { i => narkRoutes.UsersController.manageAdmin(i).toString } }
+		<input type="submit" class='btn' name='action' value="Grant">
+		<input type="submit" class='btn' name='action' value="Revoke">	
+		}
+	}
+				
+}
+			</fieldset>
+			}
+	</div>
+}
