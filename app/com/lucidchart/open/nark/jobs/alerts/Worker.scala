@@ -23,7 +23,7 @@ case class CleanupMessage(seconds: Int)
 object AlertWorker {
 	private[alerts] val maxConsecutiveFailures = configuration.getInt("alerts.maxConsecutiveFailures").get
 	private[alerts] val secondsToCheck = configuration.getInt("alerts.secondsToCheckData").get
-	private[alerts] val url = configuration.getString("application.domain").get
+	private[alerts] val url = configuration.getString("application.domain").get.stripSuffix("/")
 }
 
 class Worker extends Actor with Mailer {
