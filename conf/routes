@@ -108,8 +108,8 @@ GET     /user/datagsubscriptions             com.lucidchart.open.nark.controller
 GET     /user/tagsubscriptions               com.lucidchart.open.nark.controllers.TagSubscriptionsController.allSubscriptionsForUser(page: Int ?= 1)
 GET     /user/addresses                      com.lucidchart.open.nark.controllers.UsersController.addresses()
 POST    /user/addresses                      com.lucidchart.open.nark.controllers.UsersController.addressesSubmit()
-GET     /user/admin			     com.lucidchart.open.nark.controllers.UsersController.manageAdmin(page: Int ?= 1)
-POST    /user/adminSubmit		     com.lucidchart.open.nark.controllers.UsersController.manageAdminSubmit()
+GET     /user/admin                          com.lucidchart.open.nark.controllers.UsersController.manageAdmin(page: Int ?= 1)
+POST    /user/adminSubmit                    com.lucidchart.open.nark.controllers.UsersController.manageAdminSubmit()
 # Hosts
 GET     /hosts/search                        com.lucidchart.open.nark.controllers.HostsController.search(term: String ?= "", page: Int ?= 1)
 GET     /hosts/target-builder                com.lucidchart.open.nark.controllers.HostsController.buildGraphiteTarget(searchName: String ?= "", searchState: String ?= "all")
