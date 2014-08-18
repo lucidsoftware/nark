@@ -78,6 +78,11 @@ function redrawGraph(id) {
 			default:
 				break;
 		}
+		//DyGraph objects must be destroyed here
+		if (lineGraphs[graph["id"]] != undefined){
+			lineGraphs[graph["id"]].destroy();
+			lineGraphs[graph["id"]] = null;
+		}
 
 		switch (graph["type"]) {
 			case "Stacked":
