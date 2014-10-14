@@ -18,9 +18,9 @@ class AlertHistoryModel extends AppModel {
 		get[Date]("date") ~
 		get[Int]("state") ~
 		get[Int]("messages_sent") ~
-		get[BigDecimal]("alert_value") map {
+		get[Option[BigDecimal]]("alert_value") map {
 			case alert_id ~ target ~ date ~ state ~ messages_sent ~ alert_value =>
-				new AlertHistory(alert_id, target, date, AlertState(state), messages_sent,alert_value)
+				new AlertHistory(alert_id, target, date, AlertState(state), messages_sent, alert_value.map(scala.math.BigDecimal(_)))
 		}
 	}
 

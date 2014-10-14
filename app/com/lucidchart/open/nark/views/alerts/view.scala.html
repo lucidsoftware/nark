@@ -352,7 +352,7 @@
 		 									<td>@history.date</td>
 		 									<td>@history.state.toString</td>
 		 									<td>@history.messagesSent</td>
-		 									<td>@history.alertValue</td>
+											<td>@history.alertValue.getOrElse("null")</td>
 		 								</tr>
 		 							}
 		 						</tbody>

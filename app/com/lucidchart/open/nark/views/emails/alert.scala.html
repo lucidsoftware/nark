@@ -11,7 +11,7 @@
     <div style="position:relative;top:20%;left:5%;display:block">
       <table >
         <tr><td><b>Target:</b></td><td>@currentTarget.target</td> 
-      	<tr><td><b>Value:</b></td><td>@currentTarget.datapoints.last.value.get </td>
+        <tr><td><b>Value:</b></td><td>@currentTarget.datapoints.last.value.getOrElse("null") </td>
      	  <tr><td><b>Event:</b></td><td> [ @prevState -> <b>@curState</b> ]</td> 
         <tr><td colspan="2"  align="left">View the alert <a href="http://@url/alert/@alert.id/view">here</a> </td>
     	</table>

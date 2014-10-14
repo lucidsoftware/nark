@@ -9,10 +9,10 @@ case class AlertHistory(
 	date: Date,
 	state: AlertState.Value,
 	messagesSent: Int,
-	alertValue: BigDecimal
+	alertValue: Option[BigDecimal]
 ) extends AppRecord {
 	/**
 	 * Create a new AlertHistory record for inserting into the database
 	 */
-	def this(alertId: UUID, target: String, state: AlertState.Value, messagesSent:Int,alertValue:BigDecimal) = this(alertId, target, new Date(), state, messagesSent,alertValue)
+	def this(alertId: UUID, target: String, state: AlertState.Value, messagesSent:Int,alertValue:Option[BigDecimal]) = this(alertId, target, new Date(), state, messagesSent,alertValue)
 }

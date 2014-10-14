@@ -72,7 +72,30 @@ class Worker extends Actor with Mailer {
 
 				// for each target
 				val previousStates = filteredNullsData.targets.map { target => (target, alertTargetStatesByTarget.get(target.target).map(_.state).getOrElse(AlertState.normal)) }.toMap
-				val currentStates = filteredNullsData.targets.map { target => (target, getState(alert, target.datapoints.last.value)) }.toMap
+
+				val currentStates = filteredNullsData.targets.map { target =>
+					val lastValue = target.datapoints.last.value
+
+					// If there are no datapoints, use the previous state
+					val currentState = if(target.datapoints.isEmpty) {
+							previousStates(target)
+						}
+						else if(Comparisons.nullables.contains(alert.comparison)) {
+							// If the comparison is for a null value, get the state
+							getState(alert, lastValue)
+						}
+						else if(target.datapoints.last.value.isDefined) {
+							// If the last point exists get the state
+							getState(alert, lastValue)
+						} else {
+							// If the last point does not exist, assume the state is the same as previous
+							previousStates(target)
+						}
+
+
+					(target, currentState)
+				}.toMap
+
 				val changedStates = filteredNullsData.targets.filter { target => previousStates(target) != currentStates(target) }
 
 				if(!changedStates.isEmpty) {
@@ -82,7 +105,7 @@ class Worker extends Actor with Mailer {
 					val alertHistories = changedStates.map { currentTarget =>
 						val previousState = previousStates(currentTarget)
 						val currentState = currentStates(currentTarget)
-						val lastValue = currentTarget.datapoints.last.value.get
+						val lastValue = currentTarget.datapoints.last.value
 						//filter out subscribers that actually care about this.
 						val emails = subscribers.map { subscriber =>
 							val includeError = (previousState == AlertState.error || currentState == AlertState.error) && subscriber.errorEnable
@@ -106,7 +129,7 @@ class Worker extends Actor with Mailer {
 							case (AlertState.normal) =>views.txt.emails.alert(true,currentTarget,alert,previousState.toString,currentState.toString,AlertWorker.url).toString.trim
 							case (_) => (views.txt.emails.alert(false,currentTarget,alert,previousState.toString,currentState.toString,AlertWorker.url).toString ) .toString.trim
 						})
-						val subject = "["+currentState.toString+"] "+alert.name+":"+ lastValue
+						val subject = "["+currentState.toString+"] "+alert.name+":"+ lastValue.getOrElse("null")
 						val emailsSent = sendEmails(emails, subject, textMessage, htmlMessage)
 						
 						// send alerts to the plugins
