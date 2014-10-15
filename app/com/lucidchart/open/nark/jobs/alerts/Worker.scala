@@ -106,53 +106,71 @@ class Worker extends Actor with Mailer {
 						val previousState = previousStates(currentTarget)
 						val currentState = currentStates(currentTarget)
 						val lastValue = currentTarget.datapoints.last.value
-						//filter out subscribers that actually care about this.
-						val emails = subscribers.map { subscriber =>
-							val includeError = (previousState == AlertState.error || currentState == AlertState.error) && subscriber.errorEnable
-							val includeWarn = !includeError && (previousState == AlertState.warn || currentState == AlertState.warn) && subscriber.warnEnable
-							if (includeError) {
-								Some(subscriber.errorAddress)
-							} else if (includeWarn) {
-								Some(subscriber.warnAddress)
-							} else {
-								None
-							}
-						}.collect {
-							case Some(email) => email
-						}
 
-						val htmlMessage = ((currentState) match {
-							case (AlertState.normal) => views.html.emails.alert(true,currentTarget,alert,previousState.toString,currentState.toString,AlertWorker.url).toString
-							case (_) => views.html.emails.alert(false,currentTarget,alert,previousState.toString,currentState.toString,AlertWorker.url) .toString
-						})
-						val textMessage = ((currentState) match {
-							case (AlertState.normal) =>views.txt.emails.alert(true,currentTarget,alert,previousState.toString,currentState.toString,AlertWorker.url).toString.trim
-							case (_) => (views.txt.emails.alert(false,currentTarget,alert,previousState.toString,currentState.toString,AlertWorker.url).toString ) .toString.trim
-						})
-						val subject = "["+currentState.toString+"] "+alert.name+":"+ lastValue.getOrElse("null")
-						val emailsSent = sendEmails(emails, subject, textMessage, htmlMessage)
+						// Send an email
+						val emailsSent = try {
+							//filter out subscribers that actually care about this.
+							val emails = subscribers.map { subscriber =>
+								val includeError = (previousState == AlertState.error || currentState == AlertState.error) && subscriber.errorEnable
+								val includeWarn = !includeError && (previousState == AlertState.warn || currentState == AlertState.warn) && subscriber.warnEnable
+								if (includeError) {
+									Some(subscriber.errorAddress)
+								} else if (includeWarn) {
+									Some(subscriber.warnAddress)
+								} else {
+									None
+								}
+							}.collect {
+								case Some(email) => email
+							}
+
+							val htmlMessage = ((currentState) match {
+								case (AlertState.normal) => views.html.emails.alert(true,currentTarget,alert,previousState.toString,currentState.toString,AlertWorker.url).toString
+								case (_) => views.html.emails.alert(false,currentTarget,alert,previousState.toString,currentState.toString,AlertWorker.url) .toString
+							})
+							val textMessage = ((currentState) match {
+								case (AlertState.normal) =>views.txt.emails.alert(true,currentTarget,alert,previousState.toString,currentState.toString,AlertWorker.url).toString.trim
+								case (_) => (views.txt.emails.alert(false,currentTarget,alert,previousState.toString,currentState.toString,AlertWorker.url).toString ) .toString.trim
+							})
+							val subject = "["+currentState.toString+"] "+alert.name+":"+ lastValue.getOrElse("null")
+							sendEmails(emails, subject, textMessage, htmlMessage)
+						}
+						catch {
+							case e : Exception => {
+								Logger.error("Exception when mailing for alert '" + alert.name + "'", e)
+								0
+							}
+						}
 						
 						// send alerts to the plugins
-						val alertTags = AlertTagModel.findTagsForAlert(alert.id).map(_.tag).toSet
-						val alertEvent = AlertEvent(
-							alert.id,
-							alert.name,
-							alert.target,
-							currentTarget.target,
-							plugins.Comparisons(alert.comparison.id),
-							alert.warnThreshold,
-							alert.errorThreshold,
-							lastValue,
-							plugins.AlertState(previousState.id),
-							plugins.AlertState(currentState.id)
-						)
+						try {
+							val alertTags = AlertTagModel.findTagsForAlert(alert.id).map(_.tag).toSet
+							val alertEvent = AlertEvent(
+								alert.id,
+								alert.name,
+								alert.target,
+								currentTarget.target,
+								plugins.Comparisons(alert.comparison.id),
+								alert.warnThreshold,
+								alert.errorThreshold,
+								lastValue,
+								plugins.AlertState(previousState.id),
+								plugins.AlertState(currentState.id)
+							)
 
-						PluginManager.alertPlugins.foreach { plugin =>
-							if (plugin.tags.intersect(alertTags).size > 0) {
-								PluginMaster.send(PluginRequest(plugin, alertEvent))
+							PluginManager.alertPlugins.foreach { plugin =>
+								if (plugin.tags.intersect(alertTags).size > 0) {
+									PluginMaster.send(PluginRequest(plugin, alertEvent))
+								}
+							}
+						}
+						catch {
+							case e : Exception => {
+								Logger.error("Exception when sending alert '" + alert.name + "' to plugins", e)
 							}
 						}
 
+						// Create the alert history
 						new AlertHistory(alert.id, currentTarget.target, currentState, emailsSent, lastValue)
 					}
 
