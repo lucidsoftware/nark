@@ -32,7 +32,10 @@ object ApplicationBuild extends Build {
 	writeToFile("conf/app_compilation_date.txt", System.currentTimeMillis.toString)
 
 	val main = play.Project(appName, appVersion, appDependencies).settings(
-		scalaVersion := "2.10.1"
+		scalaVersion := "2.10.1",
+		resolvers ++= List(
+			"Staging Sonatype repository" at "https://oss.sonatype.org/content/groups/staging/"
+		)
 	)
 
 }
