@@ -16,7 +16,7 @@ object ApplicationBuild extends Build {
 		"org.scala-lang" % "scala-actors" % "2.10.1",
 		"mysql" % "mysql-connector-java" % "5.1.34",
 		"commons-io" % "commons-io" % "2.4",
-		"org.apache.commons" % "commons-email" % "1.3",
+		"org.apache.commons" % "commons-email" % "1.3.3",
 		"org.openid4java" % "openid4java" % "0.9.8",
 		"org.apache.httpcomponents" % "httpclient" % "4.2.5",
 		"com.lucidchart" %% "nark-plugin" % "1.1",
