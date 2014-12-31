@@ -62,12 +62,12 @@ class GraphiteDataController extends AppController {
 	/**
 	 * Get data from graphite and return it
 	 */
-	def dataPoints = AppAction { implicit request =>
+	def dataPoints = AppAction.async { implicit request =>
 		StatsD.increment("graphite.datapoints")
 		dataPointsForm.bindFromRequest().fold(
 			formWithErrors => {
 				Logger.error("Graphite data request failed with errors: " + formWithErrors.errors.toString)
-				BadRequest
+				Future.successful(BadRequest)
 			},
 			data => {
 				val returnedDataFuture = data.secondsOption match {
@@ -84,17 +84,15 @@ class GraphiteDataController extends AppController {
 				val timeout = configuration.getLong("graphite.timeoutMS.metrics.server").get.millis
 				val timeoutFuture = play.api.libs.concurrent.Promise.timeout("Oops", timeout)
 
-				Async {
-					Future.firstCompletedOf(Seq(returnedDataFuture, timeoutFuture)).map {
-						case returnedData: GraphiteData => {
-							val filteredReturnedData = returnedData.filterEmptyTargets()
-							Ok(views.models.graphiteData(filteredReturnedData))
-						}
-						case _ => {
-							val fakeException = new Exception("timeout")
-							Logger.error("Timeout waiting for graphite data points", fakeException)
-							Global.error500(request, Some(fakeException))
-						}
+				Future.firstCompletedOf(Seq(returnedDataFuture, timeoutFuture)).map {
+					case returnedData: GraphiteData => {
+						val filteredReturnedData = returnedData.filterEmptyTargets()
+						Ok(views.models.graphiteData(filteredReturnedData))
+					}
+					case _ => {
+						val fakeException = new Exception("timeout")
+						Logger.error("Timeout waiting for graphite data points", fakeException)
+						Global.error500(request, Some(fakeException))
 					}
 				}
 			}
@@ -104,12 +102,12 @@ class GraphiteDataController extends AppController {
 	/**
 	 * Search for metrics in graphite
 	 */
-	def metrics = AppAction { implicit request =>
+	def metrics = AppAction.async { implicit request =>
 		StatsD.increment("graphite.metrics")
 		metricsForm.bindFromRequest().fold(
 			formWithErrors => {
 				Logger.error("Graphite metric request failed with errors: " + formWithErrors.errors.toString)
-				BadRequest
+				Future.successful(BadRequest)
 			},
 			data => {
 				val metricsFuture = Graphite.metrics(data.target)
@@ -117,16 +115,14 @@ class GraphiteDataController extends AppController {
 				val timeout = configuration.getLong("graphite.timeoutMS.metrics.server").get.millis
 				val timeoutFuture = play.api.libs.concurrent.Promise.timeout("Oops", timeout)
 
-				Async {
-					Future.firstCompletedOf(Seq(metricsFuture, timeoutFuture)).map {
-						case metrics: GraphiteMetricData => {
-							Ok(views.models.graphiteMetricData(metrics))
-						}
-						case _ => {
-							val fakeException = new Exception("timeout")
-							Logger.error("Timeout waiting for graphite metrics", fakeException)
-							Global.error500(request, Some(fakeException))
-						}
+				Future.firstCompletedOf(Seq(metricsFuture, timeoutFuture)).map {
+					case metrics: GraphiteMetricData => {
+						Ok(views.models.graphiteMetricData(metrics))
+					}
+					case _ => {
+						val fakeException = new Exception("timeout")
+						Logger.error("Timeout waiting for graphite metrics", fakeException)
+						Global.error500(request, Some(fakeException))
 					}
 				}
 			}

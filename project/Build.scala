@@ -1,8 +1,10 @@
 import sbt._
 import Keys._
-import play.Project._
 import java.io.PrintWriter
 import java.io.File
+import play.Play.autoImport._
+import play.PlayScala
+import PlayKeys._
 
 object ApplicationBuild extends Build {
 
@@ -11,9 +13,8 @@ object ApplicationBuild extends Build {
 
 	val appDependencies = Seq(
 		jdbc,
-		anorm,
 		filters,
-		"org.scala-lang" % "scala-actors" % "2.10.1",
+		"play" %% "anorm" % "2.1.5",
 		"mysql" % "mysql-connector-java" % "5.1.34",
 		"commons-io" % "commons-io" % "2.4",
 		"org.apache.commons" % "commons-email" % "1.3.3",
@@ -31,11 +32,13 @@ object ApplicationBuild extends Build {
 	writeToFile("conf/app_version.txt", appVersion)
 	writeToFile("conf/app_compilation_date.txt", System.currentTimeMillis.toString)
 
-	val main = play.Project(appName, appVersion, appDependencies).settings(
+	val main = Project(appName, file(".")).enablePlugins(PlayScala).settings(
+		libraryDependencies ++= appDependencies,
 		scalaVersion := "2.10.1",
 		resolvers ++= List(
 			"Staging Sonatype repository" at "https://oss.sonatype.org/content/groups/staging/"
-		)
+		),
+		version := appVersion
 	)
 
 }
