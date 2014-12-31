@@ -16,6 +16,7 @@ import akka.actor.Props
 import scala.concurrent.duration._
 
 import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.Future
 import scala.concurrent.duration._
 import play.api.Play.current
 
@@ -37,16 +38,16 @@ object Global extends WithFilters(CSRFFilter(), KeepFlashFilter()) with GlobalSe
 	
 	override def onError(request: RequestHeader, e: Throwable) = {
 		if (Play.isProd) {
-			error500(request, Some(e))
+			Future.successful(error500(request, Some(e)))
 		}
 		else {
 			super.onError(request, e)
 		}
 	}
 	
-	override def onHandlerNotFound(request: RequestHeader): Result = {
+	override def onHandlerNotFound(request: RequestHeader) = {
 		if (Play.isProd) {
-			error404(request)
+			Future.successful(error404(request))
 		}
 		else {
 			super.onHandlerNotFound(request)

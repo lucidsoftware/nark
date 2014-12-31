@@ -1,8 +1,10 @@
 import sbt._
 import Keys._
-import play.Project._
 import java.io.PrintWriter
 import java.io.File
+import play.Play.autoImport._
+import play.PlayScala
+import PlayKeys._
 
 object ApplicationBuild extends Build {
 
@@ -11,14 +13,14 @@ object ApplicationBuild extends Build {
 
 	val appDependencies = Seq(
 		jdbc,
-		anorm,
 		filters,
-		"org.scala-lang" % "scala-actors" % "2.10.1",
-		"mysql" % "mysql-connector-java" % "5.1.23",
+		"play" %% "anorm" % "2.1.5",
+		"org.scala-lang" % "scala-actors" % "2.10.4",
+		"mysql" % "mysql-connector-java" % "5.1.34",
 		"commons-io" % "commons-io" % "2.4",
-		"org.apache.commons" % "commons-email" % "1.3",
-		"org.openid4java" % "openid4java" % "0.9.7",
-		"org.apache.httpcomponents" % "httpclient" % "4.2.5",
+		"org.apache.commons" % "commons-email" % "1.3.3",
+		"org.openid4java" % "openid4java" % "0.9.8",
+		"org.apache.httpcomponents" % "httpclient" % "4.3.6",
 		"com.lucidchart" %% "nark-plugin" % "1.1",
 		"com.lucidchart" %% "nark-pagerduty-plugin" % "1.0"
 	)
@@ -31,11 +33,13 @@ object ApplicationBuild extends Build {
 	writeToFile("conf/app_version.txt", appVersion)
 	writeToFile("conf/app_compilation_date.txt", System.currentTimeMillis.toString)
 
-	val main = play.Project(appName, appVersion, appDependencies).settings(
-		scalaVersion := "2.10.1",
+	val main = Project(appName, file(".")).enablePlugins(PlayScala).settings(
+		libraryDependencies ++= appDependencies,
 		resolvers ++= List(
 			"Staging Sonatype repository" at "https://oss.sonatype.org/content/groups/staging/"
-		)
+		),
+		scalaVersion := "2.10.4",
+		version := appVersion
 	)
 
 }
