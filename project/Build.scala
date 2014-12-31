@@ -17,7 +17,7 @@ object ApplicationBuild extends Build {
 		"mysql" % "mysql-connector-java" % "5.1.34",
 		"commons-io" % "commons-io" % "2.4",
 		"org.apache.commons" % "commons-email" % "1.3",
-		"org.openid4java" % "openid4java" % "0.9.7",
+		"org.openid4java" % "openid4java" % "0.9.8",
 		"org.apache.httpcomponents" % "httpclient" % "4.2.5",
 		"com.lucidchart" %% "nark-plugin" % "1.1",
 		"com.lucidchart" %% "nark-pagerduty-plugin" % "1.0"
