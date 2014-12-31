@@ -15,6 +15,7 @@ object ApplicationBuild extends Build {
 		jdbc,
 		filters,
 		"play" %% "anorm" % "2.1.5",
+		"org.scala-lang" % "scala-actors" % "2.10.4",
 		"mysql" % "mysql-connector-java" % "5.1.34",
 		"commons-io" % "commons-io" % "2.4",
 		"org.apache.commons" % "commons-email" % "1.3.3",
@@ -34,10 +35,10 @@ object ApplicationBuild extends Build {
 
 	val main = Project(appName, file(".")).enablePlugins(PlayScala).settings(
 		libraryDependencies ++= appDependencies,
-		scalaVersion := "2.10.1",
 		resolvers ++= List(
 			"Staging Sonatype repository" at "https://oss.sonatype.org/content/groups/staging/"
 		),
+		scalaVersion := "2.10.4",
 		version := appVersion
 	)
 
